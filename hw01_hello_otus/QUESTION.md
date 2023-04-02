@@ -3,7 +3,7 @@
 ## Посыл
 
 Мне казалось, что объем самодостаточного варианта `./main.go`, который содержит весь код в себе и не зависит от внешних библиотек, должен быть меньше, чем вариант `./main.go`, имеющий зависимость от внешнего пакета.
-Тем бодее ведь во внешнем пакете еще есть дополнительный код теста `reverse_test.go`. 
+Тем бодее ведь во внешнем пакете еще есть дополнительный код теста `reverse_test.go`.
 
 Однако это не так.
 
@@ -76,7 +76,7 @@ func main() {
 go mod vendor -v
 ```
 
-> ```
+> ```text
 > # golang.org/x/example v0.0.0-20220412213650-2e68773dfca0
 > ## explicit; go 1.15
 > golang.org/x/example/stringutil
@@ -86,7 +86,6 @@ go mod vendor -v
 cat ./vendor/golang.org/x/example/stringutil/reverse.go
 ```
 
-> 
 > ```go
 > // Package stringutil contains utility functions for working with strings.
 > package stringutil
@@ -100,15 +99,12 @@ cat ./vendor/golang.org/x/example/stringutil/reverse.go
 >         return string(r)
 > }
 > ```
-> 
-
 
 ```shell
 cd
 cat ./go/pkg/mod/golang.org/x/example@v0.0.0-20220412213650-2e68773dfca0/stringutil/reverse
 ```
 
-> 
 > ```go
 > // Package stringutil contains utility functions for working with strings.
 > package stringutil
@@ -122,7 +118,6 @@ cat ./go/pkg/mod/golang.org/x/example@v0.0.0-20220412213650-2e68773dfca0/stringu
 >         return string(r)
 > }
 > ```
-> 
 
 после компиляции:
 
