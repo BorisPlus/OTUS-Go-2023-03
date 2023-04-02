@@ -166,6 +166,37 @@ func main() {
 и содержащий абсолютно тот же самый алгоритм, что и внешний репозиторий:
 
 ```shell
+go mod vendor -v
+```
+
+^ ```
+^ # golang.org/x/example v0.0.0-20220412213650-2e68773dfca0
+^ ## explicit; go 1.15
+^ golang.org/x/example/stringutil
+^ ```
+
+```shell
+cat ./vendor/golang.org/x/example/stringutil/reverse.go
+```
+
+^ 
+^ ```go
+^ // Package stringutil contains utility functions for working with strings.
+^ package stringutil
+^ 
+^ // Reverse returns its argument string reversed rune-wise left to right.
+^ func Reverse(s string) string {
+^         r := []rune(s)
+^         for i, j := 0, len(r)-1; i < len(r)/2; i, j = i+1, j-1 {
+^                 r[i], r[j] = r[j], r[i]
+^         }
+^         return string(r)
+^ }
+^ ```
+^ 
+
+
+```shell
 cd
 cat ./go/pkg/mod/golang.org/x/example@v0.0.0-20220412213650-2e68773dfca0/stringutil/reverse
 ```
