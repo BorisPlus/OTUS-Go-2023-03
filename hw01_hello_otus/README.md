@@ -169,11 +169,11 @@ func main() {
 go mod vendor -v
 ```
 
-^ ```
-^ # golang.org/x/example v0.0.0-20220412213650-2e68773dfca0
-^ ## explicit; go 1.15
-^ golang.org/x/example/stringutil
-^ ```
+^```
+^# golang.org/x/example v0.0.0-20220412213650-2e68773dfca0
+^## explicit; go 1.15
+^golang.org/x/example/stringutil
+^```
 
 ```shell
 cat ./vendor/golang.org/x/example/stringutil/reverse.go
