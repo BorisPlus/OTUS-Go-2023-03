@@ -30,3 +30,5 @@ Thumbs.db
 ## My own
 **/main
 **/vendor
+*.log
+*.txt
