@@ -102,7 +102,7 @@ cat ./vendor/golang.org/x/example/stringutil/reverse.go
 
 ```shell
 cd
-cat ./go/pkg/mod/golang.org/x/example@v0.0.0-20220412213650-2e68773dfca0/stringutil/reverse
+cat ./go/pkg/mod/golang.org/x/example@v0.0.0-20220412213650-2e68773dfca0/stringutil/reverse.go
 ```
 
 > ```go
