@@ -249,3 +249,13 @@ b@b:~/vscode/OTUS-Go-2023-03/OTUS-Go-2023-03/hw01_hello_otus$ ls -la ./question/
 ```
 
 Но поведение ранее, согласитесь, интересное.
+
+__Заметка__:
+
+```bash
+go build -gcflags=-S main.go 1> log.txt 2>&1
+```
+
+```bash
+go build -gcflags=-S -o ./question/a/main ./question/a/main.go 1> ./question/a/log.txt 2>&1
+```
