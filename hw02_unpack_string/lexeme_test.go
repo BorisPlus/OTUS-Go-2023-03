@@ -64,6 +64,7 @@ func TestLexemePanic(t *testing.T) {
 		require.Panics(t, panicFunction)
 	}
 }
+
 func TestLexemeUnpack(t *testing.T) {
 	cases := []struct {
 		_rune     rune

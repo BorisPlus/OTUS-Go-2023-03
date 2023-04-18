@@ -6,11 +6,12 @@ import (
 )
 
 // Test by a1b2c9de0 string.
-var a1Lexeme, b2Lexeme, c9Lexeme, dLexeme, e0Lexeme Lexeme
-var msg string
+var (
+	a1Lexeme, b2Lexeme, c9Lexeme, dLexeme, e0Lexeme Lexeme
+	msg                                             string
+)
 
 func TestMain(m *testing.M) {
-
 	fmt.Println("Iterate test for \"a1b2c9de0\" unpacked.")
 
 	fmt.Println("Lexemes for Statements blocks:")
@@ -43,14 +44,13 @@ func TestMain(m *testing.M) {
 }
 
 func TestStatementUnpack(t *testing.T) {
-
 	fmt.Println("Reverse realization.")
 
 	// This is .......e0 block.
 
 	var nilSatetment *StatementBlock
 
-	var e0StatementBlock = StatementBlock{
+	e0StatementBlock := StatementBlock{
 		BlockLexeme: e0Lexeme,
 		NextBlock:   nilSatetment,
 	}
@@ -66,7 +66,7 @@ func TestStatementUnpack(t *testing.T) {
 
 	// This is ......de0 blocks.
 
-	var de0StatementBlock = StatementBlock{
+	de0StatementBlock := StatementBlock{
 		BlockLexeme: dLexeme,
 		NextBlock:   &e0StatementBlock,
 	}
@@ -81,7 +81,7 @@ func TestStatementUnpack(t *testing.T) {
 
 	// This is ....c9de0 blocks.
 
-	var c9de0StatementBlock = StatementBlock{
+	c9de0StatementBlock := StatementBlock{
 		BlockLexeme: c9Lexeme,
 		NextBlock:   &de0StatementBlock,
 	}
@@ -96,7 +96,7 @@ func TestStatementUnpack(t *testing.T) {
 
 	// This is ..b2c9de0 blocks.
 
-	var b2c9de0StatementBlock = StatementBlock{
+	b2c9de0StatementBlock := StatementBlock{
 		BlockLexeme: b2Lexeme,
 		NextBlock:   &c9de0StatementBlock,
 	}
@@ -111,7 +111,7 @@ func TestStatementUnpack(t *testing.T) {
 
 	// This is a1b2c9de0 blocks.
 
-	var a1b2c9de0StatementBlock = StatementBlock{
+	a1b2c9de0StatementBlock := StatementBlock{
 		BlockLexeme: a1Lexeme,
 		NextBlock:   &b2c9de0StatementBlock,
 	}

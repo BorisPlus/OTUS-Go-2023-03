@@ -11,7 +11,7 @@ func Unpack(inputString string) (string, error) {
 	// TODO: Была идея stringutil.Reverse(inputString), но выгоднее идти последовательно назад.
 	var currentBlock *StatementBlock
 	lexeme := Lexeme{}
-	for position, _ := range inputString {
+	for position := range inputString {
 		reverseIndex := length - position - 1
 		symbol := rune(inputString[reverseIndex])
 		symbolUint, errOfRuneToUint := RuneToUint(symbol)
@@ -39,7 +39,6 @@ func Unpack(inputString string) (string, error) {
 
 		msg := fmt.Sprintf("Not valid symbol '%c' in position `%d`.", symbol, reverseIndex)
 		return "", errors.New(msg)
-
 	}
 
 	if !lexeme.isEmpty() {

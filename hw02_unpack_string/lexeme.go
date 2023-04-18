@@ -3,9 +3,8 @@ package hw02unpackstring
 import (
 	"errors"
 	"fmt"
-	"strings"
-
 	"strconv"
+	"strings"
 )
 
 func contains(runes []rune, _rune rune) bool {
@@ -18,7 +17,7 @@ func contains(runes []rune, _rune rune) bool {
 }
 
 // Not valid "ABCDEFGHIJKLMNOPQRSTUVWXYZ".
-var validRunes = []rune("abcdefghijklmnopqrstuvwxyz\n\t") 
+var validRunes = []rune("abcdefghijklmnopqrstuvwxyz\n\t")
 
 func isRune(_rune rune) (rune, error) {
 	if !contains(validRunes, _rune) {
