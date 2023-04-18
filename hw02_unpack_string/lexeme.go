@@ -20,12 +20,12 @@ func contains(runes []rune, _rune rune) bool {
 // Not valid "ABCDEFGHIJKLMNOPQRSTUVWXYZ".
 var validRunes = []rune("abcdefghijklmnopqrstuvwxyz\n\t") 
 
-func isRune(Rune rune) (rune, error) {
-	if !contains(validRunes, Rune) {
-		msg := fmt.Sprintf("Not valid rune: '%c'", Rune)
-		return Rune, errors.New(msg)
+func isRune(_rune rune) (rune, error) {
+	if !contains(validRunes, _rune) {
+		msg := fmt.Sprintf("Not valid rune: '%c'", _rune)
+		return _rune, errors.New(msg)
 	}
-	return Rune, nil
+	return _rune, nil
 }
 
 func isCount(Count uint) (uint, error) {

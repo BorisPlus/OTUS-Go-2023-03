@@ -66,40 +66,40 @@ func TestLexemePanic(t *testing.T) {
 }
 func TestLexemeUnpack(t *testing.T) {
 	cases := []struct {
-		Rune     rune
-		Count    uint
-		Expected string
+		_rune     rune
+		_count    uint
+		_expected string
 	}{
 		{
-			Rune:     'a',
-			Count:    0,
-			Expected: "",
+			_rune:     'a',
+			_count:    0,
+			_expected: "",
 		},
 		{
-			Rune:     'a',
-			Count:    1,
-			Expected: "a",
+			_rune:     'a',
+			_count:    1,
+			_expected: "a",
 		},
 		{
-			Rune:     '\t',
-			Count:    9,
-			Expected: "\t\t\t\t\t\t\t\t\t",
+			_rune:     '\t',
+			_count:    9,
+			_expected: "\t\t\t\t\t\t\t\t\t",
 		},
 	}
 	for _, testCase := range cases {
 		testCase := testCase
 		var lexeme Lexeme
-		lexeme.SetRune(testCase.Rune)
-		lexeme.SetCount(testCase.Count)
+		lexeme.SetRune(testCase._rune)
+		lexeme.SetCount(testCase._count)
 		unpacked := lexeme.Unpack()
 
 		msg := fmt.Sprintf("Lexeme %q*%d unpacked to: %q.", lexeme.GetRune(), lexeme.GetCount(), lexeme.Unpack())
 		fmt.Println(msg)
 
-		if unpacked != testCase.Expected {
+		if unpacked != testCase._expected {
 			t.Errorf(
 				"(Lexeme %q*%d).Unpack() = %q; expected %q.",
-				lexeme.GetRune(), lexeme.GetCount(), unpacked, testCase.Expected)
+				lexeme.GetRune(), lexeme.GetCount(), unpacked, testCase._expected)
 		}
 	}
 }
