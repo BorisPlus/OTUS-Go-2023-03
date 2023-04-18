@@ -1,7 +1,7 @@
 ## Домашние задания курса [OTUS «Разработчик Golang»](https://otus.ru/lessons/golang-professional/?utm_source=github&utm_medium=free&utm_campaign=otus)
 1) [«Hello, OTUS!»](./hw01_hello_otus)
 2) [«Распаковка строки»](./hw02_unpack_string) 
-> Для решения задачи применил подход [`порождающей грамматики`](https://ru.wikipedia.org/wiki/%D0%9F%D0%BE%D1%80%D0%BE%D0%B6%D0%B4%D0%B0%D1%8E%D1%89%D0%B0%D1%8F_%D0%B3%D1%80%D0%B0%D0%BC%D0%BC%D0%B0%D1%82%D0%B8%D0%BA%D0%B0), формализовав грамматические правила составления слов и предложений из них ([см. отчет](./hw02_unpack_string/REPORT.md))
+> Для решения задачи применил подход [порождающей грамматики](https://ru.wikipedia.org/wiki/%D0%9F%D0%BE%D1%80%D0%BE%D0%B6%D0%B4%D0%B0%D1%8E%D1%89%D0%B0%D1%8F_%D0%B3%D1%80%D0%B0%D0%BC%D0%BC%D0%B0%D1%82%D0%B8%D0%BA%D0%B0), формализовав грамматические правила составления слов и предложений из них ([см. отчет](./hw02_unpack_string/REPORT.md))
 3) [«Частотный анализ»](./hw03_frequency_analysis)
 4) [«LRU-кэш»](./hw04_lru_cache)
 5) [«Параллельное исполнение»](./hw05_parallel_execution)
