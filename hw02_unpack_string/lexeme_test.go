@@ -33,7 +33,6 @@ func TestLexeme(t *testing.T) {
 
 			msg := fmt.Sprintf("Lexeme %q*%d is valid. It's OK.", lexeme.GetRune(), lexeme.GetCount())
 			fmt.Println(msg)
-
 		}
 		require.NotPanics(t, noPanicFunction)
 	}
@@ -61,7 +60,6 @@ func TestLexemePanic(t *testing.T) {
 			var lexeme Lexeme
 			lexeme.SetRune(testCase.Rune)
 			lexeme.SetCount(testCase.Count)
-
 		}
 		require.Panics(t, panicFunction)
 	}

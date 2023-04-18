@@ -10,7 +10,6 @@ func Unpack(inputString string) (string, error) {
 
 	// TODO: Была идея stringutil.Reverse(inputString), но выгоднее идти последовательно назад.
 	var currentBlock *StatementBlock
-	var currentBlockTmp StatementBlock
 	lexeme := Lexeme{}
 	for position, _ := range inputString {
 		reverseIndex := length - position - 1
@@ -31,7 +30,8 @@ func Unpack(inputString string) (string, error) {
 		symbolRune, errOfRune := isRune(symbol)
 		if errOfRune == nil {
 			lexeme.SetRune(symbolRune)
-			currentBlockTmp = StatementBlock{BlockLexeme: lexeme, NextBlock: currentBlock}
+
+			currentBlockTmp := StatementBlock{BlockLexeme: lexeme, NextBlock: currentBlock}
 			currentBlock = &currentBlockTmp
 			lexeme = Lexeme{}
 			continue
