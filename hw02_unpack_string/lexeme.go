@@ -28,12 +28,12 @@ func isRune(_rune rune) (rune, error) {
 	return _rune, nil
 }
 
-func isCount(Count uint) (uint, error) {
-	if Count > 9 {
-		msg := fmt.Sprintf("Count '%d' must be between 0 and 9.", Count)
-		return Count, errors.New(msg)
+func isCount(_count uint) (uint, error) {
+	if _count > 9 {
+		msg := fmt.Sprintf("Count '%d' must be between 0 and 9.", _count)
+		return _count, errors.New(msg)
 	}
-	return Count, nil
+	return _count, nil
 }
 
 func RuneToUint(r rune) (uint, error) {

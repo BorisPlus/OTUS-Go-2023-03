@@ -9,27 +9,27 @@ import (
 
 func TestLexeme(t *testing.T) {
 	cases := []struct {
-		Rune  rune
-		Count uint
+		_rune  rune
+		_count uint
 	}{
 		{
-			Rune:  'a',
-			Count: 0,
+			_rune:  'a',
+			_count: 0,
 		},
 		{
-			Rune:  'a',
-			Count: 1,
+			_rune:  'a',
+			_count: 1,
 		},
 		{
-			Rune:  'a',
-			Count: 9,
+			_rune:  'a',
+			_count: 9,
 		},
 	}
 	for _, testCase := range cases {
 		noPanicFunction := func() {
 			var lexeme Lexeme
-			lexeme.SetRune(testCase.Rune)
-			lexeme.SetCount(testCase.Count)
+			lexeme.SetRune(testCase._rune)
+			lexeme.SetCount(testCase._count)
 
 			msg := fmt.Sprintf("Lexeme %q*%d is valid. It's OK.", lexeme.GetRune(), lexeme.GetCount())
 			fmt.Println(msg)
@@ -40,26 +40,26 @@ func TestLexeme(t *testing.T) {
 
 func TestLexemePanic(t *testing.T) {
 	cases := []struct {
-		Rune  rune
-		Count uint
+		_rune  rune
+		_count uint
 	}{
 		{
-			Rune:  'a',
-			Count: 10,
+			_rune:  'a',
+			_count: 10,
 		},
 		{
-			Rune:  'B',
-			Count: 1,
+			_rune:  'B',
+			_count: 1,
 		},
 	}
 	for _, testCase := range cases {
 		panicFunction := func() {
-			msg := fmt.Sprintf("Lexeme %q*%d is not valid. It's OK.", testCase.Rune, testCase.Count)
+			msg := fmt.Sprintf("Lexeme %q*%d is not valid. It's OK.", testCase._rune, testCase._count)
 			fmt.Println(msg)
 
 			var lexeme Lexeme
-			lexeme.SetRune(testCase.Rune)
-			lexeme.SetCount(testCase.Count)
+			lexeme.SetRune(testCase._rune)
+			lexeme.SetCount(testCase._count)
 		}
 		require.Panics(t, panicFunction)
 	}
