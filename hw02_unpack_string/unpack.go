@@ -8,9 +8,9 @@ import (
 func Unpack(inputString string) (string, error) {
 	length := len(inputString)
 
-	// TODO Выгоднее лучше не делать реверс строки, а идти последовательно назад
-	// for position, Rune := range stringutil.Reverse(inputString) {
+	// TODO: Была идея stringutil.Reverse(inputString), но выгоднее идти последовательно назад.
 	var currentBlock *StatementBlock
+	var currentBlockTmp StatementBlock
 	lexeme := Lexeme{}
 	for position, _ := range inputString {
 		reverseIndex := length - position - 1
@@ -31,7 +31,7 @@ func Unpack(inputString string) (string, error) {
 		symbolRune, errOfRune := isRune(symbol)
 		if errOfRune == nil {
 			lexeme.SetRune(symbolRune)
-			var currentBlockTmp StatementBlock = StatementBlock{BlockLexeme: lexeme, NextBlock: currentBlock}
+			currentBlockTmp = StatementBlock{BlockLexeme: lexeme, NextBlock: currentBlock}
 			currentBlock = &currentBlockTmp
 			lexeme = Lexeme{}
 			continue
@@ -48,41 +48,4 @@ func Unpack(inputString string) (string, error) {
 	}
 
 	return currentBlock.Unpack(), nil
-}
-
-func main() {
-	// unpacked, err := Unpack("3abc")
-	// fmt.Println("err", err)
-	// fmt.Println("unpacked", unpacked)
-	// fmt.Println("")
-
-	// unpacked, err := Unpack("45")
-	// fmt.Println("err", err)
-	// fmt.Println("unpacked", unpacked)
-	// fmt.Println("")
-
-	// unpacked, err := Unpack("aaa10b")
-	// fmt.Println("err", err)
-	// fmt.Println("unpacked", unpacked)
-	// fmt.Println("")
-
-	// unpacked, err := Unpack("a4bc2d5e")
-	// fmt.Println("err", err)
-	// fmt.Println("unpacked", unpacked)
-	// fmt.Println("")
-
-	// unpacked, err := Unpack("abccd")
-	// fmt.Println("err", err)
-	// fmt.Println("unpacked", unpacked)
-	// fmt.Println("")
-
-	// unpacked, err := Unpack("")
-	// fmt.Println("err", err)
-	// fmt.Println("unpacked", unpacked)
-	// fmt.Println("")
-
-	// unpacked, err := Unpack("aaa0b")
-	// fmt.Println("err", err)
-	// fmt.Println("unpacked", unpacked)
-	// fmt.Println("")
 }

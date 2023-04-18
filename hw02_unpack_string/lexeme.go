@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	// "golang.org/x/example/stringutil"
 	"strconv"
 )
 
@@ -18,7 +17,8 @@ func contains(Runes []rune, Rune rune) bool {
 	return false
 }
 
-var validRunes = []rune("abcdefghijklmnopqrstuvwxyz\n\t") //not ABCDEFGHIJKLMNOPQRSTUVWXYZ
+// Not valid "ABCDEFGHIJKLMNOPQRSTUVWXYZ".
+var validRunes = []rune("abcdefghijklmnopqrstuvwxyz\n\t") 
 
 func isRune(Rune rune) (rune, error) {
 	if !contains(validRunes, Rune) {
@@ -27,8 +27,6 @@ func isRune(Rune rune) (rune, error) {
 	}
 	return Rune, nil
 }
-
-// var validCounts = []rune("0123456789")
 
 func isCount(Count uint) (uint, error) {
 	if Count > 9 {

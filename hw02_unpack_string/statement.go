@@ -17,8 +17,7 @@ func (statementBlock *StatementBlock) Unpack() string {
 	if statementBlock == nil {
 		return ""
 	}
-	var nextStatementBlock *StatementBlock = statementBlock.GetNext()
-
-	var lexeme Lexeme = statementBlock.GetLexeme()
+	nextStatementBlock := statementBlock.GetNext()
+	lexeme := statementBlock.GetLexeme()
 	return lexeme.Unpack() + nextStatementBlock.Unpack()
 }

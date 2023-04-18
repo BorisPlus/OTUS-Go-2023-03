@@ -5,8 +5,8 @@ import (
 	"testing"
 )
 
-// a1b2c9de0
-var lexeme_a1, lexeme_b2, lexeme_c9, lexeme_d, lexeme_e0 Lexeme
+// Test by a1b2c9de0 string.
+var a1Lexeme, b2Lexeme, c9Lexeme, dLexeme, e0Lexeme Lexeme
 var msg string
 
 func TestMain(m *testing.M) {
@@ -15,28 +15,28 @@ func TestMain(m *testing.M) {
 
 	fmt.Println("Lexemes for Statements blocks:")
 
-	lexeme_a1.SetRune('a')
-	lexeme_a1.SetCount(1)
-	msg = fmt.Sprintf("Lexeme %q*%d unpacked to: %q.", lexeme_a1.GetRune(), lexeme_a1.GetCount(), lexeme_a1.Unpack())
+	a1Lexeme.SetRune('a')
+	a1Lexeme.SetCount(1)
+	msg = fmt.Sprintf("Lexeme %q*%d unpacked to: %q.", a1Lexeme.GetRune(), a1Lexeme.GetCount(), a1Lexeme.Unpack())
 	fmt.Println(msg)
 
-	lexeme_b2.SetRune('b')
-	lexeme_b2.SetCount(2)
-	msg = fmt.Sprintf("Lexeme %q*%d unpacked to: %q.", lexeme_b2.GetRune(), lexeme_b2.GetCount(), lexeme_b2.Unpack())
+	b2Lexeme.SetRune('b')
+	b2Lexeme.SetCount(2)
+	msg = fmt.Sprintf("Lexeme %q*%d unpacked to: %q.", b2Lexeme.GetRune(), b2Lexeme.GetCount(), b2Lexeme.Unpack())
 	fmt.Println(msg)
 
-	lexeme_c9.SetRune('c')
-	lexeme_c9.SetCount(9)
-	msg = fmt.Sprintf("Lexeme %q*%d unpacked to: %q.", lexeme_c9.GetRune(), lexeme_c9.GetCount(), lexeme_c9.Unpack())
+	c9Lexeme.SetRune('c')
+	c9Lexeme.SetCount(9)
+	msg = fmt.Sprintf("Lexeme %q*%d unpacked to: %q.", c9Lexeme.GetRune(), c9Lexeme.GetCount(), c9Lexeme.Unpack())
 	fmt.Println(msg)
 
-	lexeme_d.SetRune('d')
-	msg = fmt.Sprintf("Lexeme %q without any count unpacked to: %q.", lexeme_d.GetRune(), lexeme_d.Unpack())
+	dLexeme.SetRune('d')
+	msg = fmt.Sprintf("Lexeme %q without any count unpacked to: %q.", dLexeme.GetRune(), dLexeme.Unpack())
 	fmt.Println(msg)
 
-	lexeme_e0.SetRune('e')
-	lexeme_e0.SetCount(0)
-	msg = fmt.Sprintf("Lexeme %q*%d unpacked to: %q.", lexeme_e0.GetRune(), lexeme_e0.GetCount(), lexeme_e0.Unpack())
+	e0Lexeme.SetRune('e')
+	e0Lexeme.SetCount(0)
+	msg = fmt.Sprintf("Lexeme %q*%d unpacked to: %q.", e0Lexeme.GetRune(), e0Lexeme.GetCount(), e0Lexeme.Unpack())
 	fmt.Println(msg)
 
 	m.Run()
@@ -46,12 +46,12 @@ func TestStatementUnpack(t *testing.T) {
 
 	fmt.Println("Reverse realization.")
 
-	// .......e0
+	// This is .......e0 block.
 
 	var nilSatetment *StatementBlock
 
 	var statementBlock_e0 = StatementBlock{
-		BlockLexeme: lexeme_e0,
+		BlockLexeme: e0Lexeme,
 		NextBlock:   nilSatetment,
 	}
 
@@ -64,10 +64,10 @@ func TestStatementUnpack(t *testing.T) {
 		t.Errorf("(Statement \"e0\").Unpack() = %q, but expected %q.", e0, expected_e0)
 	}
 
-	// ......de0
+	// This is ......de0 blocks.
 
 	var statementBlock_de0 = StatementBlock{
-		BlockLexeme: lexeme_d,
+		BlockLexeme: dLexeme,
 		NextBlock:   &statementBlock_e0,
 	}
 	de0 := statementBlock_de0.Unpack()
@@ -79,10 +79,10 @@ func TestStatementUnpack(t *testing.T) {
 		t.Errorf("(Statement \"de0\").Unpack() = %q, but expected %q.", de0, expected_de0)
 	}
 
-	// ....c9de0
+	// This is ....c9de0 blocks.
 
 	var statementBlock_c9de0 = StatementBlock{
-		BlockLexeme: lexeme_c9,
+		BlockLexeme: c9Lexeme,
 		NextBlock:   &statementBlock_de0,
 	}
 	c9de0 := statementBlock_c9de0.Unpack()
@@ -94,10 +94,10 @@ func TestStatementUnpack(t *testing.T) {
 		t.Errorf("(Statement \"c9de0\").Unpack() = %q, but expected %q.", c9de0, expected_c9de0)
 	}
 
-	// ..b2c9de0
+	// This is ..b2c9de0 blocks.
 
 	var statementBlock_b2c9de0 = StatementBlock{
-		BlockLexeme: lexeme_b2,
+		BlockLexeme: b2Lexeme,
 		NextBlock:   &statementBlock_c9de0,
 	}
 	b2c9de0 := statementBlock_b2c9de0.Unpack()
@@ -109,10 +109,10 @@ func TestStatementUnpack(t *testing.T) {
 		t.Errorf("(Statement \"b2c9de0\").Unpack() = %q, but expected %q.", b2c9de0, expected_b2c9de0)
 	}
 
-	// a1b2c9de0
+	// This is a1b2c9de0 blocks.
 
 	var statementBlock_a1b2c9de0 = StatementBlock{
-		BlockLexeme: lexeme_a1,
+		BlockLexeme: a1Lexeme,
 		NextBlock:   &statementBlock_b2c9de0,
 	}
 
