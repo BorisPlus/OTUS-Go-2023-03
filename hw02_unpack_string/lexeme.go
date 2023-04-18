@@ -8,9 +8,9 @@ import (
 	"strconv"
 )
 
-func contains(Runes []rune, Rune rune) bool {
-	for _, r := range Runes {
-		if r == Rune {
+func contains(runes []rune, _rune rune) bool {
+	for _, r := range runes {
+		if r == _rune {
 			return true
 		}
 	}
@@ -65,12 +65,12 @@ func (lexeme *Lexeme) IsCountWasSet() bool {
 	return lexeme._countWasSet
 }
 
-func (lexeme *Lexeme) SetRune(Rune rune) {
-	_, err := isRune(Rune)
+func (lexeme *Lexeme) SetRune(_rune rune) {
+	_, err := isRune(_rune)
 	if err != nil {
 		panic(err)
 	}
-	lexeme._rune = Rune
+	lexeme._rune = _rune
 	lexeme._runeWasSet = true
 }
 
