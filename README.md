@@ -1,5 +1,6 @@
 ## Домашние задания курса [OTUS «Разработчик Golang»](https://otus.ru/lessons/golang-professional/?utm_source=github&utm_medium=free&utm_campaign=otus)
 1) [«Hello, OTUS!»](./hw01_hello_otus)
+> В рамках решения задачи дополнительно исследовал объем результирующего бинарного файла, его зависимость от видов импорта и реализации алгоритма ([см. отчет](./hw01_hello_otus/QUESTION.md)).
 2) [«Распаковка строки»](./hw02_unpack_string)
 3) [«Частотный анализ»](./hw03_frequency_analysis)
 4) [«LRU-кэш»](./hw04_lru_cache)
