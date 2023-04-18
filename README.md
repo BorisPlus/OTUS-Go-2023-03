@@ -1,6 +1,16 @@
-## Домашние задания курса [OTUS «Разработчик Golang»](https://otus.ru/lessons/golang-professional/?utm_source=github&utm_medium=free&utm_campaign=otus)
+# Домашние задания курса [OTUS «Разработчик Golang» 2023-03)](https://otus.ru/lessons/golang-professional/)
+
+```text
+"Go, Go, Johnny, Go, Go, Go!"
+
+                  Marty McFly
+       ("Back to the Future")
+```
+
 1) [«Hello, OTUS!»](./hw01_hello_otus)
-> В рамках решения задачи дополнительно исследовал объем результирующего бинарного файла, его зависимость от видов импорта и реализации алгоритма ([см. отчет](./hw01_hello_otus/QUESTION.md)).
+
+    > В рамках решения задачи дополнительно исследовал объем результирующего бинарного файла, его зависимость от видов импорта и реализации алгоритма ([см. отчет](./hw01_hello_otus/QUESTION.md)).
+
 2) [«Распаковка строки»](./hw02_unpack_string)
 3) [«Частотный анализ»](./hw03_frequency_analysis)
 4) [«LRU-кэш»](./hw04_lru_cache)
@@ -21,13 +31,15 @@
 [Инструкция по сдаче ДЗ](https://github.com/OtusGolang/home_work/wiki#%D0%A1%D1%82%D1%83%D0%B4%D0%B5%D0%BD%D1%82%D0%B0%D0%BC).
 
 ---
-Используемая версия [golangci-lint](https://golangci-lint.run/usage/install/#other-ci): <b>v1.50.1</b>
-```
+Используемая версия [golangci-lint](https://golangci-lint.run/usage/install/#other-ci): __v1.50.1__
+
+```shell
 $ golangci-lint version
 golangci-lint has version 1.50.1 built from 8926a95 on 2022-10-22T10:48:48Z
 ```
 
 ---
 Авторы ДЗ:
-- [Дмитрий Смаль](https://github.com/mialinx)
-- [Антон Телышев](https://github.com/Antonboom)
+
+* [Дмитрий Смаль](https://github.com/mialinx)
+* [Антон Телышев](https://github.com/Antonboom)
