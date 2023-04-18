@@ -1,6 +1,6 @@
 ## Домашние задания курса [OTUS «Разработчик Golang»](https://otus.ru/lessons/golang-professional/?utm_source=github&utm_medium=free&utm_campaign=otus)
 1) [«Hello, OTUS!»](./hw01_hello_otus)
-2) [«Распаковка строки»](./hw02_unpack_string)
+2) [«Распаковка строки»](./hw02_unpack_string) - [применил подход `порождающей грамматики` (последовательная цепочка указателей от `лексемы` к `лексеме`)](./hw02_unpack_string/REPORT.md)
 3) [«Частотный анализ»](./hw03_frequency_analysis)
 4) [«LRU-кэш»](./hw04_lru_cache)
 5) [«Параллельное исполнение»](./hw05_parallel_execution)
