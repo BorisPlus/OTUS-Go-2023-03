@@ -26,3 +26,9 @@ ehthumbs.db
 Thumbs.db
 .vscode/
 *.bak
+
+## My own
+**/main
+**/vendor
+*.log
+*.txt
