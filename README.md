@@ -12,7 +12,7 @@
 2) [«Распаковка строки»](./hw02_unpack_string) 
    > Для решения задачи применил подход [порождающей грамматики](https://ru.wikipedia.org/wiki/%D0%9F%D0%BE%D1%80%D0%BE%D0%B6%D0%B4%D0%B0%D1%8E%D1%89%D0%B0%D1%8F_%D0%B3%D1%80%D0%B0%D0%BC%D0%BC%D0%B0%D1%82%D0%B8%D0%BA%D0%B0), формализовав грамматические правила составления слов и предложений из них ([см. отчет](./hw02_unpack_string/REPORT.md))
 3) [«Частотный анализ»](./hw03_frequency_analysis)
-   > TODO: исполнено, но надо будет автоматизированно оценить объем покрытия кода [тестами](./hw03_frequency_analysis/README.md#%D0%B4%D0%B5%D0%BC%D0%BE%D0%BD%D1%81%D1%82%D1%80%D0%B0%D1%86%D0%B8%D1%8F-%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D0%BE%D1%81%D0%BF%D0%BE%D1%81%D0%BE%D0%B1%D0%BD%D0%BE%D1%81%D1%82%D0%B8)  
+   > Исполнено. Объем покрытия кода [тестами](./hw03_frequency_analysis/README.md#%D0%B4%D0%B5%D0%BC%D0%BE%D0%BD%D1%81%D1%82%D1%80%D0%B0%D1%86%D0%B8%D1%8F-%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D0%BE%D1%81%D0%BF%D0%BE%D1%81%D0%BE%D0%B1%D0%BD%D0%BE%D1%81%D1%82%D0%B8) составляет __97.2%__.
 4) [«LRU-кэш»](./hw04_lru_cache)
 5) [«Параллельное исполнение»](./hw05_parallel_execution)
 6) [«Пайплайн»](./hw06_pipeline_execution)

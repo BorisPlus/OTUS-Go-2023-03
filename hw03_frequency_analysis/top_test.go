@@ -212,7 +212,7 @@ func TestWordStructToWordStrings(t *testing.T) {
 
 	for _, testCase := range testCases {
 		result := WordStructToWordStrings(testCase.structWords)
-		
+
 		if len(result) != len(testCase.expected) {
 			t.Errorf("WordStructToWordStrings(%v) = %v, but expected %v.",
 				testCase.structWords, result, testCase.expected)
@@ -225,7 +225,7 @@ func TestWordStructToWordStrings(t *testing.T) {
 			}
 		}
 		fmt.Printf("OK. WordStructToWordStrings(%v) return expected %v.\n", testCase.structWords, testCase.expected)
-	
+
 	}
 }
 

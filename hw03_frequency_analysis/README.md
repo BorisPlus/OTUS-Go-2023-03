@@ -66,29 +66,28 @@ cat and dog, one dog,two cats and one man
 
 ## Демонстрация работоспособности
 
+Стремление к покрытию кода тестами
+
 ```shell
-go test -v top.go top_test.go 
+go test -v -cover top.go top_test.go
 ```
 
 ```text
 === RUN   TestStringSpliter
 OK. StringSpliter("qwe asd zxc qwe") return expected ["qwe" "asd" "zxc" "qwe"].
 --- PASS: TestStringSpliter (0.00s)
-
 === RUN   TestInitDistributionOfMappedWord
 OK. InitDistributionOfMappedWord([]) return expected map[].
 OK. InitDistributionOfMappedWord([x]) return expected map[x:1].
 OK. InitDistributionOfMappedWord([x x]) return expected map[x:2].
 OK. InitDistributionOfMappedWord([y x x]) return expected map[x:2 y:1].
 --- PASS: TestInitDistributionOfMappedWord (0.00s)
-
 === RUN   TestSortedStructWords
 OK. (map[]).GetAsSortedStructWords() return expected [].
 OK. (map[x:1]).GetAsSortedStructWords() return expected [{x 1}].
 OK. (map[x:2]).GetAsSortedStructWords() return expected [{x 2}].
 OK. (map[a:3 x:2 y:1 z:3]).GetAsSortedStructWords() return expected [{a 3} {z 3} {x 2} {y 1}].
 --- PASS: TestSortedStructWords (0.00s)
-
 === RUN   TestGetTopStructWords
 OK. GetTopStructWords([], 10) return expected [].
 OK. GetTopStructWords([{d 3} {e 3} {v 2} {h 1}], 0) return expected [].
@@ -96,13 +95,11 @@ OK. GetTopStructWords([{a 3} {z 3} {x 2} {y 1}], 5) return expected [{a 3} {z 3}
 OK. GetTopStructWords([{a 3} {z 3} {x 2} {y 1}], 2) return expected [{a 3} {z 3}].
 OK. GetTopStructWords([{a 3} {z 3} {x 2} {y 1}], 1) return expected [{a 3}].
 --- PASS: TestGetTopStructWords (0.00s)
-
 === RUN   TestWordStructToWordStrings
 OK. WordStructToWordStrings([]) return expected [].
 OK. WordStructToWordStrings([{ad 3} {ae 3} {vj 2} {h 1}]) return expected [ad ae vj h].
 OK. WordStructToWordStrings([{ccc 10} {aaa 3} {b 1}]) return expected [ccc aaa b].
 --- PASS: TestWordStructToWordStrings (0.00s)
-
 === RUN   TestTop10
 === RUN   TestTop10/no_words_in_empty_string
 === RUN   TestTop10/positive_test_at_HW_example
@@ -113,7 +110,9 @@ OK. WordStructToWordStrings([{ccc 10} {aaa 3} {b 1}]) return expected [ccc aaa b
     --- PASS: TestTop10/positive_test_at_HW_example (0.00s)
     --- PASS: TestTop10/positive_test (0.00s)
     --- PASS: TestTop10/negative_test (0.00s)
-
 PASS
-ok      command-line-arguments  0.008s
+coverage: 97.2% of statements
+ok      command-line-arguments  0.007s  coverage: 97.2% of statements
 ```
+
+coverage: __97.2%__ of statements
