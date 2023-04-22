@@ -115,4 +115,4 @@ coverage: 97.2% of statements
 ok      command-line-arguments  0.007s  coverage: 97.2% of statements
 ```
 
-coverage: __97.2%__ of statements
+coverage: **97.2%** of statements
