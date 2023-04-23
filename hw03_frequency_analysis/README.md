@@ -116,3 +116,96 @@ ok      command-line-arguments  0.007s  coverage: 97.2% of statements
 ```
 
 coverage: **97.2%** of statements
+
+## Документирование
+
+```text
+Top10 - функция с заданной в домашнем задании сигнатурой.
+
+    Реализована в виде последовательного вызова разработанных методов,
+    максимально декомпозирующих исходную задачу на отдельные атомарные
+    этапы, без дублирования кода. По моему мнению не содержит в себе ничего
+    лишнего, необходимого сверх решения поставленной задачи.
+```
+
+<details> 
+<summary> см. подробнее (получено с использованием `go doc -all ./`)</sammary>
+
+```text
+package hw03frequencyanalysis // import "github.com/BorisPlus/OTUS-Go-2023-03/tree/master/hw03_frequency_analysis"
+
+Проект с домашеней работой №3 курса OTUS-Go-2023-03.
+
+FUNCTIONS
+
+func InitDistributionOfMappedWord(words []string) map[string]uint
+    InitDistributionOfMappedWord - метод подсчета частоты встречаемости слов
+    с результатом в виде MAP-значения: "слово № 1" : частота слова № 1 , ... ,
+    "слово № k" : частота слова № k.
+
+    Например:
+
+      - InitDistributionOfMappedWord([]) = map[].
+      - InitDistributionOfMappedWord([x]) = map[x:1].
+      - InitDistributionOfMappedWord([x x]) = map[x:2].
+      - InitDistributionOfMappedWord([y x x]) = map[x:2 y:1].
+
+func StringSpliter(str string) []string
+    StringSpliter - разбивает строку на слова.
+
+    Например:
+
+      - StringSpliter("qwe asd zxc qwe") = ["qwe" "asd" "zxc" "qwe"].
+
+func Top10(s string) []string
+    Top10 - функция с заданной в домашнем задании сигнатурой.
+
+    Реализована в виде последовательного вызова разработанных методов,
+    максимально декомпозирующих исходную задачу на отдельные атомарные этапы,
+    без дублирования кода. По моему мнению не содержит в себе ничего лишнего,
+    необходимого сверх решения поставленной задачи.
+
+func WordStructToWordStrings(structWords []StructWord) []string
+    WordStructToWordStrings - метод конвертации StructWord-слайса в
+    string-слайс.
+
+    Например:
+
+      - WordStructToWordStrings([]) = [].
+      - WordStructToWordStrings([{ad 3} {ae 3} {vj 2} {h 1}]) = [ad ae vj h].
+      - WordStructToWordStrings([{ccc 10} {aaa 3} {b 1}]) = [ccc aaa b].
+
+
+TYPES
+
+type StructWord struct {
+  // Has unexported fields.
+}
+    StructWord - структура, описывающая частоту встречаемости слова.
+
+func GetAsSortedStructWords(distributionOfMappedWord map[string]uint) []StructWord
+    GetAsSortedStructWords - метод представления MAP-значения частоты слова в
+    виде лексикографически упорядоченного StructWord-слайса.
+
+    Например:
+
+      - GetAsSortedStructWords(map[]) = [].
+      - GetAsSortedStructWords(map[x:1]) = [{x 1}].
+      - GetAsSortedStructWords(map[x:2]) = [{x 2}].
+      - GetAsSortedStructWords(map[a:3 x:2 y:1 z:3]) = [{a 3}{z 3}{x 2}{y 1}].
+
+func GetTopStructWords(structWords []StructWord, limit uint) []StructWord
+    GetTopStructWords - метод выборки первых N по очереди элементов с защитой от
+    `slice bounds out of range`.
+
+    Например:
+
+      - GetTopStructWords([], 10) = [].
+      - GetTopStructWords([{d 3}{e 3}{v 2}{h 1}], 0) = [].
+      - GetTopStructWords([{a 3}{z 3}{x 2}{y 1}], 5) = [{a 3}{z 3}{x 2}{y 1}].
+      - GetTopStructWords([{a 3}{z 3}{x 2}{y 1}], 2) = [{a 3}{z 3}].
+      - GetTopStructWords([{a 3}{z 3}{x 2}{y 1}], 1) = [{a 3}].
+
+```
+
+</details>

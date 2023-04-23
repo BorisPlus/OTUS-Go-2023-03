@@ -2,8 +2,9 @@ package hw03frequencyanalysis
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 // Change to true if needed.
@@ -60,7 +61,6 @@ func TestStringSpliter(t *testing.T) {
 }
 
 func TestInitDistributionOfMappedWord(t *testing.T) {
-
 	testCases := []struct {
 		stringWords         []string
 		expectedMappedWords map[string]uint
@@ -85,17 +85,18 @@ func TestInitDistributionOfMappedWord(t *testing.T) {
 
 	for _, testCase := range testCases {
 		resultMappedWords := InitDistributionOfMappedWord(testCase.stringWords)
-		if len(resultMappedWords.Distribution) != len(testCase.expectedMappedWords) {
+		if len(resultMappedWords) != len(testCase.expectedMappedWords) {
 			t.Errorf("InitDistributionOfMappedWord(%v) = %v, but expected %v.",
 				testCase.stringWords, resultMappedWords, testCase.expectedMappedWords)
 		}
 		for v := range testCase.expectedMappedWords {
-			if testCase.expectedMappedWords[v] != resultMappedWords.Distribution[v] {
+			if testCase.expectedMappedWords[v] != resultMappedWords[v] {
 				t.Errorf("InitDistributionOfMappedWord(%v) = %v, but expected %v.",
 					testCase.stringWords, resultMappedWords, testCase.expectedMappedWords)
 			}
 		}
-		fmt.Printf("OK. InitDistributionOfMappedWord(%v) return expected %v.\n", testCase.stringWords, testCase.expectedMappedWords)
+		fmt.Printf("OK. InitDistributionOfMappedWord(%v) return expected %v.\n",
+			testCase.stringWords, testCase.expectedMappedWords)
 	}
 }
 
@@ -123,9 +124,8 @@ func TestSortedStructWords(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		dMappedWords := DistributionOfMappedWord{}
-		dMappedWords.Distribution = testCase.mappedWords
-		structWords := dMappedWords.GetAsSortedStructWords()
+		dMappedWords := testCase.mappedWords
+		structWords := GetAsSortedStructWords(dMappedWords)
 		if len(testCase.expected) != len(structWords) {
 			t.Errorf("(%v).GetAsSortedStructWords = %v, but expected %v.",
 				testCase.mappedWords, structWords, testCase.expected)
@@ -174,7 +174,6 @@ func TestGetTopStructWords(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-
 		top := GetTopStructWords(testCase.structWords, testCase.limit)
 		if len(top) != len(testCase.expected) {
 			t.Errorf("GetTopStructWords(%v, %v) = %v, but expected %v.",
@@ -187,7 +186,8 @@ func TestGetTopStructWords(t *testing.T) {
 					testCase.structWords, testCase.limit, top, testCase.expected)
 			}
 		}
-		fmt.Printf("OK. GetTopStructWords(%v, %v) return expected %v.\n", testCase.structWords, testCase.limit, testCase.expected)
+		fmt.Printf("OK. GetTopStructWords(%v, %v) return expected %v.\n",
+			testCase.structWords, testCase.limit, testCase.expected)
 	}
 }
 
@@ -225,7 +225,6 @@ func TestWordStructToWordStrings(t *testing.T) {
 			}
 		}
 		fmt.Printf("OK. WordStructToWordStrings(%v) return expected %v.\n", testCase.structWords, testCase.expected)
-
 	}
 }
 

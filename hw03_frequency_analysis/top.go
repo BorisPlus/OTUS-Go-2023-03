@@ -1,3 +1,4 @@
+// Проект с домашеней работой №3 курса OTUS-Go-2023-03.
 package hw03frequencyanalysis
 
 import (
@@ -5,53 +6,45 @@ import (
 	"strings"
 )
 
-
-// Разбиение строки на слова
-// Tests:
-// OK. StringSpliter("qwe asd zxc qwe") return expected ["qwe" "asd" "zxc" "qwe"].
+// StringSpliter - разбивает строку на слова.
+//
+// Например:
+//
+//   - StringSpliter("qwe asd zxc qwe") = ["qwe" "asd" "zxc" "qwe"].
 func StringSpliter(str string) []string {
-	// Все слова без иных пробельных символов
-	whitespace := " "
-	for _, spacevalue := range []string{"\n", "\t", "\r", "\f", "\v"} {
-		str = strings.ReplaceAll(str, spacevalue, whitespace)
-	}
-	return strings.Split(str, whitespace)
+	return strings.Fields(str)
 }
 
-// Частота встречаемости слов
-// в виде структуры.
+// StructWord - структура, описывающая частоту встречаемости слова.
 type StructWord struct {
 	word  string // Слово
 	count uint   // Частота встречаемости
 }
 
-// Частота встречаемости слов
-// в виде map.
-type DistributionOfMappedWord struct {
-	Distribution map[string]uint
-}
-
-// Метод получения распределения слов в виде Мap.
-// Tests:
-// OK. InitDistributionOfMappedWord([]) return expected map[].
-// OK. InitDistributionOfMappedWord([x]) return expected map[x:1].
-// OK. InitDistributionOfMappedWord([x x]) return expected map[x:2].
-// OK. InitDistributionOfMappedWord([y x x]) return expected map[x:2 y:1].
-func InitDistributionOfMappedWord(words []string) DistributionOfMappedWord {
-	distributionOfMappedWord := DistributionOfMappedWord{make(map[string]uint)}
+// InitDistributionOfMappedWord - метод подсчета частоты встречаемости слов с результатом в виде MAP-значения:
+// "слово № 1" : частота слова № 1 , ... , "слово № k" : частота слова № k.
+//
+// Например:
+//
+//   - InitDistributionOfMappedWord([]) = map[].
+//   - InitDistributionOfMappedWord([x]) = map[x:1].
+//   - InitDistributionOfMappedWord([x x]) = map[x:2].
+//   - InitDistributionOfMappedWord([y x x]) = map[x:2 y:1].
+func InitDistributionOfMappedWord(words []string) map[string]uint {
+	distributionOfMappedWord := make(map[string]uint)
 	for _, word := range words {
 		if word == "" {
 			continue
 		}
-		distributionOfMappedWord.Distribution[word]++
+		distributionOfMappedWord[word]++
 	}
 	return distributionOfMappedWord
 }
 
-// Метод представления Мap в виде []WordObject.
-func (distributionOfMappedWord *DistributionOfMappedWord) convertToDistributionOfStructWord() []StructWord {
+// convertToDistributionOfStructWord - метод представления MAP-значения частоты слова в виде StructWord-слайса.
+func convertToDistributionOfStructWord(distributionOfMappedWord map[string]uint) []StructWord {
 	structWords := []StructWord{}
-	for stringWord, count := range distributionOfMappedWord.Distribution {
+	for stringWord, count := range distributionOfMappedWord {
 		if stringWord == "" {
 			continue
 		}
@@ -60,14 +53,18 @@ func (distributionOfMappedWord *DistributionOfMappedWord) convertToDistributionO
 	return structWords
 }
 
-// Tests:
-// OK. (map[]).GetAsSortedStructWords() return expected [].
-// OK. (map[x:1]).GetAsSortedStructWords() return expected [{x 1}].
-// OK. (map[x:2]).GetAsSortedStructWords() return expected [{x 2}].
-// OK. (map[a:3 x:2 y:1 z:3]).GetAsSortedStructWords() return expected [{a 3} {z 3} {x 2} {y 1}].
-func (distributionOfMappedWord *DistributionOfMappedWord) GetAsSortedStructWords() []StructWord {
+// GetAsSortedStructWords - метод представления MAP-значения частоты слова в виде
+// лексикографически упорядоченного StructWord-слайса.
+//
+// Например:
+//
+//   - GetAsSortedStructWords(map[]) = [].
+//   - GetAsSortedStructWords(map[x:1]) = [{x 1}].
+//   - GetAsSortedStructWords(map[x:2]) = [{x 2}].
+//   - GetAsSortedStructWords(map[a:3 x:2 y:1 z:3]) = [{a 3}{z 3}{x 2}{y 1}].
+func GetAsSortedStructWords(distributionOfMappedWord map[string]uint) []StructWord {
 	// Сортировка в условии задачи: `ORDER BY count DESC, lexical ASC`
-	structWords := distributionOfMappedWord.convertToDistributionOfStructWord()
+	structWords := convertToDistributionOfStructWord(distributionOfMappedWord)
 	sort.Slice(
 		structWords,
 		func(i, j int) bool {
@@ -77,27 +74,29 @@ func (distributionOfMappedWord *DistributionOfMappedWord) GetAsSortedStructWords
 	return structWords
 }
 
-// Tests:
-// OK. GetTopStructWords([], 10) return expected [].
-// OK. GetTopStructWords([{d 3} {e 3} {v 2} {h 1}], 0) return expected [].
-// OK. GetTopStructWords([{a 3} {z 3} {x 2} {y 1}], 5) return expected [{a 3} {z 3} {x 2} {y 1}].
-// OK. GetTopStructWords([{a 3} {z 3} {x 2} {y 1}], 2) return expected [{a 3} {z 3}].
-// OK. GetTopStructWords([{a 3} {z 3} {x 2} {y 1}], 1) return expected [{a 3}].
+// GetTopStructWords - метод выборки первых N по очереди элементов с защитой от `slice bounds out of range`.
+//
+// Например:
+//
+//   - GetTopStructWords([], 10) = [].
+//   - GetTopStructWords([{d 3}{e 3}{v 2}{h 1}], 0) = [].
+//   - GetTopStructWords([{a 3}{z 3}{x 2}{y 1}], 5) = [{a 3}{z 3}{x 2}{y 1}].
+//   - GetTopStructWords([{a 3}{z 3}{x 2}{y 1}], 2) = [{a 3}{z 3}].
+//   - GetTopStructWords([{a 3}{z 3}{x 2}{y 1}], 1) = [{a 3}].
 func GetTopStructWords(structWords []StructWord, limit uint) []StructWord {
-	min := func(x, y uint) uint {
-		if x < y {
-			return x
-		}
-		return y
+	if uint(len(structWords)) < limit {
+		limit = uint(len(structWords))
 	}
-	wordStructsCount := uint(len(structWords))
-	return structWords[:min(wordStructsCount, limit)]
+	return structWords[:limit]
 }
 
-// Tests:
-// OK. WordStructToWordStrings([]) return expected [].
-// OK. WordStructToWordStrings([{ad 3} {ae 3} {vj 2} {h 1}]) return expected [ad ae vj h].
-// OK. WordStructToWordStrings([{ccc 10} {aaa 3} {b 1}]) return expected [ccc aaa b].
+// WordStructToWordStrings - метод конвертации StructWord-слайса в string-слайс.
+//
+// Например:
+//
+//   - WordStructToWordStrings([]) = [].
+//   - WordStructToWordStrings([{ad 3} {ae 3} {vj 2} {h 1}]) = [ad ae vj h].
+//   - WordStructToWordStrings([{ccc 10} {aaa 3} {b 1}]) = [ccc aaa b].
 func WordStructToWordStrings(structWords []StructWord) []string {
 	stringWords := []string{}
 	for _, structWord := range structWords {
@@ -106,10 +105,16 @@ func WordStructToWordStrings(structWords []StructWord) []string {
 	return stringWords
 }
 
+// Top10 - функция с заданной в домашнем задании сигнатурой.
+//
+// Реализована в виде последовательного вызова разработанных методов,
+// максимально декомпозирующих исходную задачу на отдельные атомарные этапы,
+// без дублирования кода.
+// По моему мнению не содержит в себе ничего лишнего, необходимого сверх решения поставленной задачи.
 func Top10(s string) []string {
 	stringWords := StringSpliter(s)
 	mappedWords := InitDistributionOfMappedWord(stringWords)
-	structWords := mappedWords.GetAsSortedStructWords()
+	structWords := GetAsSortedStructWords(mappedWords)
 	top10StructWords := GetTopStructWords(structWords, 10)
 	top10StringWords := WordStructToWordStrings(top10StructWords)
 	return top10StringWords
