@@ -5,7 +5,6 @@ import (
 	"strings"
 )
 
-var LIMIT = 10
 
 // Разбиение строки на слова
 // Tests:
