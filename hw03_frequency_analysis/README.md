@@ -129,7 +129,7 @@ Top10 - функция с заданной в домашнем задании с
 ```
 
 <details> 
-<summary> см. подробнее (получено с использованием `go doc -all ./`) </summary>
+<summary> см. подробнее (получено с использованием go doc -all ./) </summary>
 
 ```text
 package hw03frequencyanalysis // import "github.com/BorisPlus/OTUS-Go-2023-03/tree/master/hw03_frequency_analysis"
