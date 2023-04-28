@@ -382,6 +382,13 @@ func (cache *LruCache) Set(key Key, value interface{}) bool
 
 ## Результаты тестирование
 
+```shell
+go test -cover ./
+ok      github.com/BorisPlus/OTUS-Go-2023-03/tree/master/hw04_lru_cache 0.009s  coverage: 96.1% of statements
+```
+
+coverage: **96.1%** of statements
+
 ### Результаты тестирование двусвязного списка
 
 ```shell
