@@ -3,7 +3,7 @@ package hw04lrucache
 type Key string
 
 // KeyValue - в хранилище будет учтена пара.
-// 
+//
 // Пара пригодится при извлесении элемента из списка и
 // необходимостью поиска в карте, в частности, при
 // очистке абсолютно заполненного кэша.
@@ -36,17 +36,16 @@ func (cache *LruCache) Set(key Key, value interface{}) bool {
 		item.Data = KeyValue{key, value}
 		cache.list.MoveToFront(item)
 		return true
-	} else {
-		if cache.capacity == cache.list.Len() {
-			back := cache.list.Back()
-			delete(cache.items, back.Data.(KeyValue).key)
-			cache.list.Remove(back)
-			back = nil
-		}
-		newItem := cache.list.PushFront(KeyValue{key, value})
-		cache.items[key] = newItem
-		return false
 	}
+	if cache.capacity == cache.list.Len() {
+		back := cache.list.Back()
+		delete(cache.items, back.Data.(KeyValue).key)
+		cache.list.Remove(back)
+		back = nil
+	}
+	newItem := cache.list.PushFront(KeyValue{key, value})
+	cache.items[key] = newItem
+	return false
 }
 
 // Get - получение элемента из кэша.
@@ -55,9 +54,8 @@ func (cache *LruCache) Get(key Key) (interface{}, bool) {
 	if exists {
 		cache.list.MoveToFront(item)
 		return item.Data.(KeyValue).value, true
-	} else {
-		return nil, false
 	}
+	return nil, false
 }
 
 // Clear - "очистка" кэша.

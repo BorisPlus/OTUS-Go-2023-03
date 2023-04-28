@@ -8,8 +8,8 @@ import (
 )
 
 // go test -v list.go list_string.go cache.go
-func TestList(t *testing.T) {
 
+func TestList(t *testing.T) {
 	t.Run("zero-value list-item test", func(t *testing.T) {
 		zeroValueItem := ListItem{}
 		require.Nil(t, zeroValueItem.Data)
@@ -19,7 +19,6 @@ func TestList(t *testing.T) {
 	})
 
 	t.Run("list-items referencies test", func(t *testing.T) {
-
 		fmt.Println("\n[1] <--> [2] <--> [3]")
 		first := &ListItem{
 			Data: 1,
@@ -124,7 +123,9 @@ func TestList(t *testing.T) {
 		require.Nil(t, list.Front())
 		require.Nil(t, list.Back())
 	})
+}
 
+func TestListComplex(t *testing.T) {
 	t.Run("complex processing test", func(t *testing.T) {
 		list := NewList()
 

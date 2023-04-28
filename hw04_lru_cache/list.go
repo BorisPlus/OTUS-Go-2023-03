@@ -1,6 +1,6 @@
 package hw04lrucache
 
-// Lister - интерфейс двусвязного списка
+// Lister - интерфейс двусвязного списка.
 type Lister interface {
 	Len() int
 	Front() *ListItem
@@ -11,36 +11,36 @@ type Lister interface {
 	MoveToFront(i *ListItem)
 }
 
-// ListItem - элемент двусвязного списка
+// ListItem - элемент двусвязного списка.
 type ListItem struct {
 	Data interface{}
 	Prev *ListItem
 	Next *ListItem
 }
 
-// List - структура двусвязного списка
+// List - структура двусвязного списка.
 type List struct {
 	len   int
 	front *ListItem
 	back  *ListItem
 }
 
-// Len() - получить длину двусвязного списка
+// Len() - получить длину двусвязного списка.
 func (list *List) Len() int {
 	return list.len
 }
 
-// Front() - получить первый элемент двусвязного списка
+// Front() - получить первый элемент двусвязного списка.
 func (list *List) Front() *ListItem {
 	return list.front
 }
 
-// Back() - получить последний элемент двусвязного списка
+// Back() - получить последний элемент двусвязного списка.
 func (list *List) Back() *ListItem {
 	return list.back
 }
 
-// PushFront() - добавить значение в начало двусвязного списка
+// PushFront() - добавить значение в начало двусвязного списка.
 func (list *List) PushFront(data interface{}) *ListItem {
 	item := &ListItem{
 		Data: data,
@@ -59,12 +59,12 @@ func (list *List) PushFront(data interface{}) *ListItem {
 	return item
 }
 
-// PushBack() - добавить значение в конец двусвязного списка
+// PushBack() - добавить значение в конец двусвязного списка.
 func (list *List) PushBack(data interface{}) *ListItem {
 	item := &ListItem{
 		Data: data,
-		Prev:  nil,
-		Next:  nil,
+		Prev: nil,
+		Next: nil,
 	}
 	if list.len == 0 {
 		list.front = item
@@ -78,7 +78,7 @@ func (list *List) PushBack(data interface{}) *ListItem {
 	return item
 }
 
-// Remove() - удалить элемент из двусвязного списка
+// Remove() - удалить элемент из двусвязного списка.
 func (list *List) Remove(i *ListItem) {
 	// TODO:
 	// не наглядно, но интересно
@@ -96,9 +96,8 @@ func (list *List) Remove(i *ListItem) {
 	list.len--
 }
 
-// MoveToFront() - переместить элемент в начало двусвязного списка
+// MoveToFront() - переместить элемент в начало двусвязного списка.
 func (list *List) MoveToFront(i *ListItem) {
-
 	if i.Prev != nil {
 		i.Prev.Next = i.Next
 	} else {

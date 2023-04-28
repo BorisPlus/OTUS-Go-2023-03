@@ -10,7 +10,7 @@
 ```go
 package hw04lrucache
 
-// Lister - интерфейс двусвязного списка
+// Lister - интерфейс двусвязного списка.
 type Lister interface {
 	Len() int
 	Front() *ListItem
@@ -21,36 +21,36 @@ type Lister interface {
 	MoveToFront(i *ListItem)
 }
 
-// ListItem - элемент двусвязного списка
+// ListItem - элемент двусвязного списка.
 type ListItem struct {
 	Data interface{}
 	Prev *ListItem
 	Next *ListItem
 }
 
-// List - структура двусвязного списка
+// List - структура двусвязного списка.
 type List struct {
 	len   int
 	front *ListItem
 	back  *ListItem
 }
 
-// Len() - получить длину двусвязного списка
+// Len() - получить длину двусвязного списка.
 func (list *List) Len() int {
 	return list.len
 }
 
-// Front() - получить первый элемент двусвязного списка
+// Front() - получить первый элемент двусвязного списка.
 func (list *List) Front() *ListItem {
 	return list.front
 }
 
-// Back() - получить последний элемент двусвязного списка
+// Back() - получить последний элемент двусвязного списка.
 func (list *List) Back() *ListItem {
 	return list.back
 }
 
-// PushFront() - добавить значение в начало двусвязного списка
+// PushFront() - добавить значение в начало двусвязного списка.
 func (list *List) PushFront(data interface{}) *ListItem {
 	item := &ListItem{
 		Data: data,
@@ -69,12 +69,12 @@ func (list *List) PushFront(data interface{}) *ListItem {
 	return item
 }
 
-// PushBack() - добавить значение в конец двусвязного списка
+// PushBack() - добавить значение в конец двусвязного списка.
 func (list *List) PushBack(data interface{}) *ListItem {
 	item := &ListItem{
 		Data: data,
-		Prev:  nil,
-		Next:  nil,
+		Prev: nil,
+		Next: nil,
 	}
 	if list.len == 0 {
 		list.front = item
@@ -88,7 +88,7 @@ func (list *List) PushBack(data interface{}) *ListItem {
 	return item
 }
 
-// Remove() - удалить элемент из двусвязного списка
+// Remove() - удалить элемент из двусвязного списка.
 func (list *List) Remove(i *ListItem) {
 	// TODO:
 	// не наглядно, но интересно
@@ -106,9 +106,8 @@ func (list *List) Remove(i *ListItem) {
 	list.len--
 }
 
-// MoveToFront() - переместить элемент в начало двусвязного списка
+// MoveToFront() - переместить элемент в начало двусвязного списка.
 func (list *List) MoveToFront(i *ListItem) {
-
 	if i.Prev != nil {
 		i.Prev.Next = i.Next
 	} else {
@@ -150,7 +149,7 @@ package hw04lrucache
 type Key string
 
 // KeyValue - в хранилище будет учтена пара.
-// 
+//
 // Пара пригодится при извлесении элемента из списка и
 // необходимостью поиска в карте, в частности, при
 // очистке абсолютно заполненного кэша.
@@ -183,17 +182,16 @@ func (cache *LruCache) Set(key Key, value interface{}) bool {
 		item.Data = KeyValue{key, value}
 		cache.list.MoveToFront(item)
 		return true
-	} else {
-		if cache.capacity == cache.list.Len() {
-			back := cache.list.Back()
-			delete(cache.items, back.Data.(KeyValue).key)
-			cache.list.Remove(back)
-			back = nil
-		}
-		newItem := cache.list.PushFront(KeyValue{key, value})
-		cache.items[key] = newItem
-		return false
 	}
+	if cache.capacity == cache.list.Len() {
+		back := cache.list.Back()
+		delete(cache.items, back.Data.(KeyValue).key)
+		cache.list.Remove(back)
+		back = nil
+	}
+	newItem := cache.list.PushFront(KeyValue{key, value})
+	cache.items[key] = newItem
+	return false
 }
 
 // Get - получение элемента из кэша.
@@ -202,9 +200,8 @@ func (cache *LruCache) Get(key Key) (interface{}, bool) {
 	if exists {
 		cache.list.MoveToFront(item)
 		return item.Data.(KeyValue).value, true
-	} else {
-		return nil, false
 	}
+	return nil, false
 }
 
 // Clear - "очистка" кэша.
@@ -267,28 +264,28 @@ func (kv KeyValue) String() string
 type List struct {
 	// Has unexported fields.
 }
-    List - структура двусвязного списка
+    List - структура двусвязного списка.
 
 func (list *List) Back() *ListItem
-    Back() - получить последний элемент двусвязного списка
+    Back() - получить последний элемент двусвязного списка.
 
 func (list *List) Front() *ListItem
-    Front() - получить первый элемент двусвязного списка
+    Front() - получить первый элемент двусвязного списка.
 
 func (list *List) Len() int
-    Len() - получить длину двусвязного списка
+    Len() - получить длину двусвязного списка.
 
 func (list *List) MoveToFront(i *ListItem)
-    MoveToFront() - переместить элемент в начало двусвязного списка
+    MoveToFront() - переместить элемент в начало двусвязного списка.
 
 func (list *List) PushBack(data interface{}) *ListItem
-    PushBack() - добавить значение в конец двусвязного списка
+    PushBack() - добавить значение в конец двусвязного списка.
 
 func (list *List) PushFront(data interface{}) *ListItem
-    PushFront() - добавить значение в начало двусвязного списка
+    PushFront() - добавить значение в начало двусвязного списка.
 
 func (list *List) Remove(i *ListItem)
-    Remove() - удалить элемент из двусвязного списка
+    Remove() - удалить элемент из двусвязного списка.
 
 func (list *List) String() string
     String - наглядное представление всего двусвязного списка.
@@ -332,7 +329,7 @@ type ListItem struct {
 	Prev *ListItem
 	Next *ListItem
 }
-    ListItem - элемент двусвязного списка
+    ListItem - элемент двусвязного списка.
 
 func (listItem *ListItem) String() string
     String - наглядное представление значения элемента двусвязного списка.
@@ -356,7 +353,7 @@ type Lister interface {
 	Remove(i *ListItem)
 	MoveToFront(i *ListItem)
 }
-    Lister - интерфейс двусвязного списка
+    Lister - интерфейс двусвязного списка.
 
 func NewList() Lister
 
@@ -384,10 +381,9 @@ func (cache *LruCache) Set(key Key, value interface{}) bool
 
 ```shell
 go test -cover ./
-ok      github.com/BorisPlus/OTUS-Go-2023-03/tree/master/hw04_lru_cache 0.009s  coverage: 96.1% of statements
 ```
 
-coverage: **96.1%** of statements
+hw04_lru_cache 0.007s coverage: **96.1%** of statements
 
 ### Результаты тестирование двусвязного списка
 
@@ -398,7 +394,7 @@ go test -v ./list.go list_stringer.go list_test.go > list_testing.txt
 <details>
 <summary>см. "list_testing.txt"</summary>
 
-```
+```text
 
 === RUN   TestList
 === RUN   TestList/zero-value_list-item_test
@@ -680,7 +676,14 @@ List become:
 	|
 	V
     (nil:0x0)
-=== RUN   TestList/complex_processing_test
+--- PASS: TestList (0.00s)
+    --- PASS: TestList/zero-value_list-item_test (0.00s)
+    --- PASS: TestList/list-items_referencies_test (0.00s)
+    --- PASS: TestList/empty_list_test (0.00s)
+    --- PASS: TestList/little_list_test_#1 (0.00s)
+    --- PASS: TestList/little_list_test_#2 (0.00s)
+=== RUN   TestListComplex
+=== RUN   TestListComplex/complex_processing_test
 
 [10] become:
  
@@ -860,15 +863,10 @@ Next: 0x0
 	|
 	V
     (nil:0x0)
---- PASS: TestList (0.00s)
-    --- PASS: TestList/zero-value_list-item_test (0.00s)
-    --- PASS: TestList/list-items_referencies_test (0.00s)
-    --- PASS: TestList/empty_list_test (0.00s)
-    --- PASS: TestList/little_list_test_#1 (0.00s)
-    --- PASS: TestList/little_list_test_#2 (0.00s)
-    --- PASS: TestList/complex_processing_test (0.00s)
+--- PASS: TestListComplex (0.00s)
+    --- PASS: TestListComplex/complex_processing_test (0.00s)
 PASS
-ok  	command-line-arguments	0.007s
+ok  	command-line-arguments	0.009s
 
 
 ```
@@ -884,7 +882,7 @@ go test -v list.go list_stringer.go cache.go cache_stringer.go cache_test.go > c
 <details>
 <summary>см. "cache_testing.txt"</summary>
 
-```
+```text
 
 === RUN   TestCache
 === RUN   TestCache/empty_cache
@@ -899,10 +897,10 @@ go test -v list.go list_stringer.go cache.go cache_stringer.go cache_test.go > c
     --- PASS: TestCache/simple (0.00s)
     --- PASS: TestCache/purge_logic (0.00s)
 === RUN   TestCacheMultithreading
-    cache_test.go:96: 
+    cache_test.go:98: 
 --- SKIP: TestCacheMultithreading (0.00s)
 PASS
-ok  	command-line-arguments	0.006s
+ok  	command-line-arguments	0.007s
 
 
 ```
