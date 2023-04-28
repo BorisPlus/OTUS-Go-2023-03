@@ -41,7 +41,7 @@ func escaping(content string) string {
 }
 
 func tab_escaping(content string) string {
-	content = strings.Replace(content, "\t", "    ", -1)
+	content = strings.Replace(content, "\t", "\t", -1)
 	return content
 }
 

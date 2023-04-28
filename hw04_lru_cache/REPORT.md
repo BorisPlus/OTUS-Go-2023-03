@@ -242,9 +242,9 @@ package hw04lrucache // import "github.com/BorisPlus/OTUS-Go-2023-03/tree/master
 TYPES
 
 type Cacher interface {
-    Set(key Key, value interface{}) bool
-    Get(key Key) (interface{}, bool)
-    Clear()
+	Set(key Key, value interface{}) bool
+	Get(key Key) (interface{}, bool)
+	Clear()
 }
     Cacher - интерфейс хранения кэша.
 
@@ -254,7 +254,7 @@ func NewCache(capacity int) Cacher
 type Key string
 
 type KeyValue struct {
-    // Has unexported fields.
+	// Has unexported fields.
 }
     KeyValue - в хранилище будет учтена пара.
 
@@ -265,7 +265,7 @@ func (kv KeyValue) String() string
     String - наглядное представление значения KeyValue-структуры.
 
 type List struct {
-    // Has unexported fields.
+	// Has unexported fields.
 }
     List - структура двусвязного списка
 
@@ -298,39 +298,39 @@ func (list *List) String() string
     - пустой список:
 
         (nil:0x0)
-            |
-            V
+        	|
+        	V
         (nil:0x0)
 
     - список из двух элементов:
 
-            (nil:0x0)
-                |
-                V
+        	(nil:0x0)
+        		|
+        		V
         -------------------
         Item: 0xc00002e3a0 <--------┐
-        -------------------            |
-        Data: 2                        |
-        Prev: 0x0                    |
-        Next: 0xc00002e380    >>>-----|---┐
-        -------------------            |    | ссылается на...
-                |                    |    |
-                V                    |    |
-        -------------------            |    |
-        Item: 0xc00002e380    <-----------┘
-        -------------------            |
-        Data: 1                        | ссылается на...
-        Prev: 0xc00002e3a0    >>>-----┘
+        -------------------			|
+        Data: 2						|
+        Prev: 0x0					|
+        Next: 0xc00002e380	>>>-----|---┐
+        -------------------			|	| ссылается на...
+        		|					|	|
+        		V					|	|
+        -------------------			|	|
+        Item: 0xc00002e380	<-----------┘
+        -------------------			|
+        Data: 1						| ссылается на...
+        Prev: 0xc00002e3a0	>>>-----┘
         Next: 0x0
         -------------------
-                |
-                V
-            (nil:0x0)
+        		|
+        		V
+        	(nil:0x0)
 
 type ListItem struct {
-    Data interface{}
-    Prev *ListItem
-    Next *ListItem
+	Data interface{}
+	Prev *ListItem
+	Next *ListItem
 }
     ListItem - элемент двусвязного списка
 
@@ -339,29 +339,29 @@ func (listItem *ListItem) String() string
 
     Например,
 
-        -------------------             -------------------
-        Item: 0xc00002e400                Item: 0xc00002e400
-        -------------------                -------------------
-        Data: 30                или        Data: 30
-        Prev: 0xc00002e3c0                Prev: 0x0
-        Next: 0xc00002e440                Next: 0x0
-        -------------------                -------------------
+        ------------------- 			-------------------
+        Item: 0xc00002e400				Item: 0xc00002e400
+        -------------------				-------------------
+        Data: 30				или		Data: 30
+        Prev: 0xc00002e3c0				Prev: 0x0
+        Next: 0xc00002e440				Next: 0x0
+        -------------------				-------------------
 
 type Lister interface {
-    Len() int
-    Front() *ListItem
-    Back() *ListItem
-    PushFront(v interface{}) *ListItem
-    PushBack(v interface{}) *ListItem
-    Remove(i *ListItem)
-    MoveToFront(i *ListItem)
+	Len() int
+	Front() *ListItem
+	Back() *ListItem
+	PushFront(v interface{}) *ListItem
+	PushBack(v interface{}) *ListItem
+	Remove(i *ListItem)
+	MoveToFront(i *ListItem)
 }
     Lister - интерфейс двусвязного списка
 
 func NewList() Lister
 
 type LruCache struct {
-    // Has unexported fields.
+	// Has unexported fields.
 }
     LruCache - структура кэша.
 
