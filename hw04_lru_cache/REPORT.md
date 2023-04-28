@@ -234,7 +234,7 @@ func NewCache(capacity int) Cacher {
 <details>
 <summary>см. "go doc -all ./ > doc.txt"</summary>
 
-```text
+```
 
 package hw04lrucache // import "github.com/BorisPlus/OTUS-Go-2023-03/tree/master/hw04_lru_cache"
 
@@ -391,7 +391,7 @@ go test -v ./list.go list_stringer.go list_test.go > list_testing.txt
 <details>
 <summary>см. "list_testing.txt"</summary>
 
-```text
+```
 
 === RUN   TestList
 === RUN   TestList/zero-value_list-item_test
@@ -877,7 +877,7 @@ go test -v list.go list_stringer.go cache.go cache_stringer.go cache_test.go > c
 <details>
 <summary>см. "cache_testing.txt"</summary>
 
-```text
+```
 
 === RUN   TestCache
 === RUN   TestCache/empty_cache

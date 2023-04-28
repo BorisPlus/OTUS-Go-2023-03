@@ -29,7 +29,7 @@
 <details>
 <summary>см. "go doc -all ./ > doc.txt"</summary>
 
-```text
+```
 
 {{ doc.txt }}
 
@@ -48,7 +48,7 @@ go test -v ./list.go list_stringer.go list_test.go > list_testing.txt
 <details>
 <summary>см. "list_testing.txt"</summary>
 
-```text
+```
 
 {{ list_testing.txt }}
 
@@ -65,7 +65,7 @@ go test -v list.go list_stringer.go cache.go cache_stringer.go cache_test.go > c
 <details>
 <summary>см. "cache_testing.txt"</summary>
 
-```text
+```
 
 {{ cache_testing.txt }}
 
