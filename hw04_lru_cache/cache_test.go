@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// go test -v list.go list_stringer.go cache.go cache_stringer.go  cache_test.go 
 func TestCache(t *testing.T) {
 	t.Run("empty cache", func(t *testing.T) {
 		c := NewCache(10)
@@ -18,6 +19,43 @@ func TestCache(t *testing.T) {
 
 		_, ok = c.Get("bbb")
 		require.False(t, ok)
+	})
+
+	t.Run("small-cache test", func(t *testing.T) {
+		zeroCache := NewCache(0)
+		_, ok_zero := zeroCache.Get("0")
+		require.False(t, ok_zero)
+		ok_zero = zeroCache.Set("0", "zero")
+
+		cache := NewCache(2)
+
+		ok_one := cache.Set("1", "one")
+		require.False(t, ok_one)
+
+		ok_first := cache.Set("1", "first")
+		require.True(t, ok_first)
+
+		_, ok_one = cache.Get("1")
+		require.True(t, ok_one)
+
+		ok_second := cache.Set("2", "second")
+		require.False(t, ok_second)
+
+		ok_third := cache.Set("3", "third")
+		require.False(t, ok_third)
+		
+		_, ok_one = cache.Get("1")
+		require.False(t, ok_one)
+	})
+
+	t.Run("clear", func(t *testing.T) {
+		cache := NewCache(3)
+		cache.Set("1", "first")
+		cache.Set("2", "second")
+		cache.Clear()
+
+		_, ok_one := cache.Get("1")
+		require.False(t, ok_one)
 	})
 
 	t.Run("simple", func(t *testing.T) {
