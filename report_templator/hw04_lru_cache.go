@@ -15,7 +15,7 @@ func main() {
 	//
 	doc_txt := Template{}
 	doc_txt.loadFromFile("../hw04_lru_cache/doc.txt", false)
-	substitutions["doc.txt"] = doc_txt.render()
+	substitutions["doc.txt"] = tab_escaping(doc_txt.render())
 	//
 	list_testing_txt := Template{}
 	list_testing_txt.loadFromFile("../hw04_lru_cache/list_testing.txt", false)
