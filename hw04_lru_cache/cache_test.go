@@ -121,39 +121,36 @@ func TestCacheMultithreading(t *testing.T) {
 }
 
 // go test -bench=. -benchmem list.go cache.go cache_stringer.go  cache_test.go
-// go test -bench=Prime list.go cache.go cache_stringer.go  cache_test.go
 // Операции, необходимые для подсчета статистики времени добавления
 
-// Степень двойки
 func x2(x float64) float64 {
 	return x * x
 }
 
-// Сумма
 func sum(arr []float64) float64 {
-	var sum float64 = 0
+	var sum float64
 	for _, value := range arr {
 		sum += value
 	}
 	return sum
 }
 
-// Среднее значение (времени проведения операции Set/Get)
+// Среднее значение (времени проведения операции Set/Get).
 func mediana(data []float64) float64 {
-	return float64(sum(data)) / float64(len(data))
+	return sum(data) / float64(len(data))
 }
 
-// Дисперсия (времени проведения операции Set/Get)
+// Дисперсия (времени проведения операции Set/Get).
 func dispersion(data []float64) float64 {
 	dataMediana := mediana(data)
-	var x2up = []float64{}
+	x2up := make([]float64, 0, len(data))
 	for _, value := range data {
 		x2up = append(x2up, x2(value-dataMediana))
 	}
 	return sum(x2up) / float64(len(data))
 }
 
-// Тестирование на объемах
+// Тестирование на объемах.
 func generateData(count int) []KeyValue {
 	keyValues := []KeyValue{}
 
@@ -163,7 +160,7 @@ func generateData(count int) []KeyValue {
 	return keyValues
 }
 
-// тестовые данные
+// Тестовые данные.
 var TestCases = []struct {
 	data []KeyValue
 }{
@@ -172,18 +169,15 @@ var TestCases = []struct {
 	{data: generateData(10000)},
 }
 
-var keyValues = []KeyValue{}
-
 func BenchmarkSet(b *testing.B) {
 	for _, testCase := range TestCases {
 		b.Run(fmt.Sprintf("%d", len(testCase.data)), func(b *testing.B) {
 			// чтоб не было операций вымещения capasity=valuesCount
 			cache := NewCache(5)
-			var durationsSet, durationsGet []float64 = []float64{}, []float64{}
+			durationsSet, durationsGet := []float64{}, []float64{}
 			b.ResetTimer()
 			// Собираем данные для статистики в отношении метода Set
 			for _, keyValue := range testCase.data {
-
 				start := time.Now()
 				b.StartTimer()
 
@@ -192,7 +186,7 @@ func BenchmarkSet(b *testing.B) {
 				b.StopTimer()
 				duration := time.Since(start)
 
-				durationsSet = append(durationsSet, float64(duration.Seconds()))
+				durationsSet = append(durationsSet, float64(duration.Microseconds()))
 			}
 
 			// Собираем данные для статистики в отношении метода Get
