@@ -43,8 +43,8 @@ func (cache *LruCache) Set(key Key, value interface{}) bool {
 		cache.list.Remove(back)
 		back = nil
 	}
-	newItem := cache.list.PushFront(KeyValue{key, value})
-	cache.items[key] = newItem
+	// newItem := cache.list.PushFront(KeyValue{key, value})
+	cache.items[key] = cache.list.PushFront(KeyValue{key, value})
 	return false
 }
 

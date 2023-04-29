@@ -189,8 +189,8 @@ func (cache *LruCache) Set(key Key, value interface{}) bool {
 		cache.list.Remove(back)
 		back = nil
 	}
-	newItem := cache.list.PushFront(KeyValue{key, value})
-	cache.items[key] = newItem
+	// newItem := cache.list.PushFront(KeyValue{key, value})
+	cache.items[key] = cache.list.PushFront(KeyValue{key, value})
 	return false
 }
 
@@ -904,6 +904,78 @@ ok  	command-line-arguments	0.007s
 
 
 ```
+
+</details>
+
+## 0(1) сложность?
+
+Откровенно скажу, я не нашел штатной возможности через Benchmark-тест продемонстрировать оценку времени испонения шага цикла - среднее значение времени, затрачиваемое на операции кэша - Set или Get. Поэтому сам реализовал сбор данных о времени исполнения той или иной операции, а в тоге в Benchmark-тест добавил метрики по:
+
+* среднему времени, затрачиваемому на добавление элемента в кэш (med_t/set);
+* дисперсии/отклонению времени, затрачиваемому на  добавление эдемента в кэш
+дисперсии (disp_t/set);
+* среднему времени на извлечение элемента из кэша (med_t/get);
+* дисперсии/отклонению времен на извлечение элемента из кэша (disp_t/get).
+
+```shell
+go test -v -bench=. -count=5 -benchmem list.go cache.go cache_test.go > O?.txt
+```
+
+<details>
+<summary>см. "cache_testing.txt"</summary>
+
+```text
+
+goos: linux
+goarch: amd64
+cpu: Intel(R) Core(TM) i3-2310M CPU @ 2.10GHz
+BenchmarkSet
+BenchmarkSet/1
+BenchmarkSet/1-4 	1000000000	         0.0000087 ns/op	         0 disp_t/get	         0 disp_t/set	     41836 med_t/get	         0.0000195 med_t/set	       0 B/op	       0 allocs/op
+BenchmarkSet/1-4 	1000000000	         0.0000103 ns/op	         0 disp_t/get	         0 disp_t/set	     51545 med_t/get	         0.0000298 med_t/set	       0 B/op	       0 allocs/op
+BenchmarkSet/1-4 	1000000000	         0.0000101 ns/op	         0 disp_t/get	         0 disp_t/set	    123273 med_t/get	         0.0000585 med_t/set	       0 B/op	       0 allocs/op
+BenchmarkSet/1-4 	1000000000	         0.0000107 ns/op	         0 disp_t/get	         0 disp_t/set	     49169 med_t/get	         0.0000242 med_t/set	       0 B/op	       0 allocs/op
+BenchmarkSet/1-4 	1000000000	         0.0000094 ns/op	         0 disp_t/get	         0 disp_t/set	     43093 med_t/get	         0.0000194 med_t/set	       0 B/op	       0 allocs/op
+BenchmarkSet/100
+BenchmarkSet/100-4         	1000000000	         0.0005530 ns/op	  11188478 disp_t/get	         0.0000000 disp_t/set	     48718 med_t/get	         0.0000499 med_t/set	       0 B/op	       0 allocs/op
+BenchmarkSet/100-4         	1000000000	         0.0005655 ns/op	  45719711 disp_t/get	         0.0000000 disp_t/set	     46080 med_t/get	         0.0000590 med_t/set	       0 B/op	       0 allocs/op
+BenchmarkSet/100-4         	1000000000	         0.0005962 ns/op	  20888291 disp_t/get	         0.0000000 disp_t/set	     45047 med_t/get	         0.0000555 med_t/set	       0 B/op	       0 allocs/op
+BenchmarkSet/100-4         	1000000000	         0.0005701 ns/op	  25700855 disp_t/get	         0.0000000 disp_t/set	     49476 med_t/get	         0.0000552 med_t/set	       0 B/op	       0 allocs/op
+BenchmarkSet/100-4         	1000000000	         0.0005445 ns/op	  28605871 disp_t/get	         0.0000000 disp_t/set	     43033 med_t/get	         0.0000524 med_t/set	       0 B/op	       0 allocs/op
+BenchmarkSet/10000
+BenchmarkSet/10000-4       	1000000000	         0.07642 ns/op	110489575006 disp_t/get	         0.0000000 disp_t/set	     71010 med_t/get	         0.0000990 med_t/set	       0 B/op	       0 allocs/op
+BenchmarkSet/10000-4       	1000000000	         0.06729 ns/op	63383030103 disp_t/get	         0.0000000 disp_t/set	     74181 med_t/get	         0.0000648 med_t/set	       0 B/op	       0 allocs/op
+BenchmarkSet/10000-4       	1000000000	         0.05804 ns/op	1443327760 disp_t/get	         0.0000000 disp_t/set	     54419 med_t/get	         0.0000572 med_t/set	       0 B/op	       0 allocs/op
+BenchmarkSet/10000-4       	1000000000	         0.05763 ns/op	7718550376 disp_t/get	         0.0000000 disp_t/set	     56246 med_t/get	         0.0000527 med_t/set	       0 B/op	       0 allocs/op
+BenchmarkSet/10000-4       	1000000000	         0.05772 ns/op	1806996526 disp_t/get	         0.0000000 disp_t/set	     54864 med_t/get	         0.0000541 med_t/set	       0 B/op	       0 allocs/op
+PASS
+ok  	command-line-arguments	48.636s
+
+
+```
+
+</details>
+
+| Данных    | Ср.вр.Set |Дисп.вр.Set| Ср.вр.Get |Дисп.вр.Get|
+|:----------|:---------:|:---------:|:---------:|:---------:|
+|         1 | 0.0000195 | 0         |  41836    | 0         |
+|         1 | 0.0000298 | 0         |  51545    | 0         |
+|         1 | 0.0000585 | 0         | 123273    | 0         |
+|         1 | 0.0000242 | 0         |  49169    | 0         |
+|         1 | 0.0000194 | 0         |  43093    | 0         |
+|       100 | 0.0000499 | 0         |  48718    | 11188478  |
+|       100 | 0.0000590 | 0         |  46080    | 45719711  |
+|       100 | 0.0000555 | 0         |  45047    | 20888291  |
+|       100 | 0.0000552 | 0         |  49476    | 25700855  |
+|       100 | 0.0000524 | 0         |  43033    | 28605871  |
+|     10000 | 0.0000990 | 0         |  71010    | 110489575006|
+|     10000 | 0.0000648 | 0         |  74181    | 63383030103|
+|     10000 | 0.0000572 | 0         |  54419    | 1443327760|
+|     10000 | 0.0000527 | 0         |  56246    | 7718550376|
+|     10000 | 0.0000541 | 0         |  54864    | 1806996526|
+
+Как видно, скорость добавления и извлечения мз Кэша не зависит от объема исходных данных (для Set с некоторой дисперсией, неустановленной причины).
+При росте данных на несколько порядков среднее время имеет рост, хотя совсем незначительный (это тоже загадка пока), но точно не линейный.
 
 ## Развитие
 

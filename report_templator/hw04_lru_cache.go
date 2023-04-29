@@ -17,6 +17,10 @@ func main() {
 	doc_txt.loadFromFile("../hw04_lru_cache/doc.txt", false)
 	substitutions["doc.txt"] = doc_txt.render()
 	//
+	O__txt := Template{}
+	O__txt.loadFromFile("../hw04_lru_cache/O?.txt", false)
+	substitutions["O?.txt"] = O__txt.render()
+	//
 	list_testing_txt := Template{}
 	list_testing_txt.loadFromFile("../hw04_lru_cache/list_testing.txt", false)
 	substitutions["list_testing.txt"] = list_testing_txt.render()

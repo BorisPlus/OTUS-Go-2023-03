@@ -1,10 +1,12 @@
 package hw04lrucache
 
 import (
+	"fmt"
 	"math/rand"
 	"strconv"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -116,4 +118,105 @@ func TestCacheMultithreading(t *testing.T) {
 	}()
 
 	wg.Wait()
+}
+
+// go test -bench=. -benchmem list.go cache.go cache_stringer.go  cache_test.go
+// go test -bench=Prime list.go cache.go cache_stringer.go  cache_test.go
+// Операции, необходимые для подсчета статистики времени добавления
+
+// Степень двойки
+func x2(x float64) float64 {
+	return x * x
+}
+
+// Сумма
+func sum(arr []float64) float64 {
+	var sum float64 = 0
+	for _, value := range arr {
+		sum += value
+	}
+	return sum
+}
+
+// Среднее значение (времени проведения операции Set/Get)
+func mediana(data []float64) float64 {
+	return float64(sum(data)) / float64(len(data))
+}
+
+// Дисперсия (времени проведения операции Set/Get)
+func dispersion(data []float64) float64 {
+	dataMediana := mediana(data)
+	var x2up = []float64{}
+	for _, value := range data {
+		x2up = append(x2up, x2(value-dataMediana))
+	}
+	return sum(x2up) / float64(len(data))
+}
+
+// Тестирование на объемах
+func generateData(count int) []KeyValue {
+	keyValues := []KeyValue{}
+
+	for key, value := range rand.Perm(count) {
+		keyValues = append(keyValues, KeyValue{key: Key(fmt.Sprint(key)), value: value})
+	}
+	return keyValues
+}
+
+// тестовые данные
+var TestCases = []struct {
+	data []KeyValue
+}{
+	{data: generateData(1)},
+	{data: generateData(100)},
+	{data: generateData(10000)},
+}
+
+var keyValues = []KeyValue{}
+
+func BenchmarkSet(b *testing.B) {
+	for _, testCase := range TestCases {
+		b.Run(fmt.Sprintf("%d", len(testCase.data)), func(b *testing.B) {
+			// чтоб не было операций вымещения capasity=valuesCount
+			cache := NewCache(5)
+			var durationsSet, durationsGet []float64 = []float64{}, []float64{}
+			b.ResetTimer()
+			// Собираем данные для статистики в отношении метода Set
+			for _, keyValue := range testCase.data {
+
+				start := time.Now()
+				b.StartTimer()
+
+				cache.Set(keyValue.key, keyValue.value)
+
+				b.StopTimer()
+				duration := time.Since(start)
+
+				durationsSet = append(durationsSet, float64(duration.Seconds()))
+			}
+
+			// Собираем данные для статистики в отношении метода Get
+			for _, keyValue := range testCase.data {
+				start := time.Now()
+				b.StartTimer()
+
+				cache.Get(keyValue.key)
+
+				b.StopTimer()
+				duration := time.Since(start)
+
+				// durationsGet = append(durationsGet, float64(duration.Microseconds()))
+				durationsGet = append(durationsGet, float64(duration.Nanoseconds()))
+			}
+
+			// Среднее времени добавления в LRU
+			b.ReportMetric(mediana(durationsSet), "med_t/set")
+			// Дисперсия времени добавления в LRU
+			b.ReportMetric(dispersion(durationsSet), "disp_t/set")
+			// Среднее времени взятия из LRU
+			b.ReportMetric(mediana(durationsGet), "med_t/get")
+			// Дисперсия времени взятия из LRU
+			b.ReportMetric(dispersion(durationsGet), "disp_t/get")
+		})
+	}
 }
