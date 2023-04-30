@@ -917,6 +917,21 @@ ok  	command-line-arguments	0.007s
 * среднему времени на извлечение элемента из кэша (med_t/get);
 * дисперсии/отклонению времен на извлечение элемента из кэша (disp_t/get).
 
+**Замечание**: В Go1.20.3 [имеется]("https://cs.opensource.google/go/go/+/refs/tags/go1.20.3:src/testing/benchmark.go"):
+
+```go
+// Elapsed returns the measured elapsed time of the benchmark.
+// The duration reported by Elapsed matches the one measured by
+// StartTimer, StopTimer, and ResetTimer.
+func (b *B) Elapsed() time.Duration {
+    d := b.duration
+    if b.timerOn {
+        d += time.Since(b.start)
+    }
+    return d
+}
+```
+
 ```shell
 go test -bench=. -count=5 -benchmem list.go cache.go cache_test.go > O?.txt
 ```
@@ -925,26 +940,8 @@ go test -bench=. -count=5 -benchmem list.go cache.go cache_test.go > O?.txt
 <summary>см. "cache_testing.txt"</summary>
 
 ```text
-goos: linux
-goarch: amd64
-cpu: Intel(R) Core(TM) i3-2310M CPU @ 2.10GHz
-BenchmarkSet/1-4 	1000000000	         0.0000125 ns/op	         0 disp_t/get	         0 disp_t/set	     59297 med_t/get	        32.00 med_t/set	       0 B/op	       0 allocs/op
-BenchmarkSet/1-4 	1000000000	         0.0000080 ns/op	         0 disp_t/get	         0 disp_t/set	     41836 med_t/get	        25.00 med_t/set	       0 B/op	       0 allocs/op
-BenchmarkSet/1-4 	1000000000	         0.0000104 ns/op	         0 disp_t/get	         0 disp_t/set	     49309 med_t/get	        23.00 med_t/set	       0 B/op	       0 allocs/op
-BenchmarkSet/1-4 	1000000000	         0.0000090 ns/op	         0 disp_t/get	         0 disp_t/set	     41766 med_t/get	        20.00 med_t/set	       0 B/op	       0 allocs/op
-BenchmarkSet/1-4 	1000000000	         0.0000085 ns/op	         0 disp_t/get	         0 disp_t/set	     41138 med_t/get	        20.00 med_t/set	       0 B/op	       0 allocs/op
-BenchmarkSet/100-4         	1000000000	         0.0005861 ns/op	1677217042 disp_t/get	      1827 disp_t/set	     67508 med_t/get	        54.39 med_t/set	       0 B/op	       0 allocs/op
-BenchmarkSet/100-4         	1000000000	         0.0005398 ns/op	  18684628 disp_t/get	        41.60 disp_t/set	     44424 med_t/get	        47.98 med_t/set	       0 B/op	       0 allocs/op
-BenchmarkSet/100-4         	1000000000	         0.0005317 ns/op	  49212145 disp_t/get	       271.0 disp_t/set	     46876 med_t/get	        51.11 med_t/set	       0 B/op	       0 allocs/op
-BenchmarkSet/100-4         	1000000000	         0.0005808 ns/op	  97700546 disp_t/get	        38.83 disp_t/set	     52078 med_t/get	        50.07 med_t/set	       0 B/op	       0 allocs/op
-BenchmarkSet/100-4         	1000000000	         0.0004991 ns/op	  71320026 disp_t/get	        73.23 disp_t/set	     49749 med_t/get	        46.97 med_t/set	       0 B/op	       0 allocs/op
-BenchmarkSet/10000-4       	1000000000	         0.05216 ns/op	  55447311 disp_t/get	       133.8 disp_t/set	     44588 med_t/get	        48.90 med_t/set	       0 B/op	       0 allocs/op
-BenchmarkSet/10000-4       	1000000000	         0.05335 ns/op	  94853871 disp_t/get	       129.3 disp_t/set	     47146 med_t/get	        49.51 med_t/set	       0 B/op	       0 allocs/op
-BenchmarkSet/10000-4       	1000000000	         0.05237 ns/op	  27611129 disp_t/get	        93.48 disp_t/set	     45159 med_t/get	        48.26 med_t/set	       0 B/op	       0 allocs/op
-BenchmarkSet/10000-4       	1000000000	         0.05325 ns/op	 186596984 disp_t/get	      2123 disp_t/set	     46514 med_t/get	        50.83 med_t/set	       0 B/op	       0 allocs/op
-BenchmarkSet/10000-4       	1000000000	         0.05221 ns/op	  39767296 disp_t/get	       115.6 disp_t/set	     44955 med_t/get	        48.58 med_t/set	       0 B/op	       0 allocs/op
-PASS
-ok  	command-line-arguments	41.659s
+FAIL	command-line-arguments [build failed]
+FAIL
 
 ```
 

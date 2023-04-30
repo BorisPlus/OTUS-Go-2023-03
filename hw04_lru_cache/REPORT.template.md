@@ -89,6 +89,21 @@ go test -v list.go list_stringer.go cache.go cache_stringer.go cache_test.go > c
 * среднему времени на извлечение элемента из кэша (med_t/get);
 * дисперсии/отклонению времен на извлечение элемента из кэша (disp_t/get).
 
+**Замечание**: В Go1.20.3 [имеется]("https://cs.opensource.google/go/go/+/refs/tags/go1.20.3:src/testing/benchmark.go"):
+
+```go
+// Elapsed returns the measured elapsed time of the benchmark.
+// The duration reported by Elapsed matches the one measured by
+// StartTimer, StopTimer, and ResetTimer.
+func (b *B) Elapsed() time.Duration {
+    d := b.duration
+    if b.timerOn {
+        d += time.Since(b.start)
+    }
+    return d
+}
+```
+
 ```shell
 go test -bench=. -count=5 -benchmem list.go cache.go cache_test.go > O?.txt
 ```
