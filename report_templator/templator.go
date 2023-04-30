@@ -10,20 +10,20 @@ type Template struct {
 	substitutions map[string]string
 }
 
-func (template *Template) loadFromFile(filepath string, with_escaping bool) error {
+func (template *Template) loadFromFile(filepath string) error {
 	data, err := os.ReadFile(filepath)
 	if err != nil {
 		template.content = ""
 	}
 	template.content = string(data)
-	if with_escaping {
-		template.content = escaping(template.content)
-	}
 	return err
 }
 
-func (template *Template) render() string {
+func (template *Template) render(with_escaping bool) string {
 	result := template.content
+	if with_escaping {
+		result = tab_escaping(result)
+	}
 	for k := range template.substitutions {
 		result = strings.Replace(result, "{{ "+k+" }}", template.substitutions[k], -1)
 	}
@@ -41,7 +41,7 @@ func escaping(content string) string {
 }
 
 func tab_escaping(content string) string {
-	content = strings.Replace(content, "\t", "\t", -1)
+	content = strings.Replace(content, "\t", "    ", -1)
 	return content
 }
 
@@ -50,7 +50,7 @@ func (template *Template) renderToFile(filepath string) error {
 	if errCreate != nil {
 		return errCreate
 	}
-	result := template.render()
+	result := template.render(false)
 	defer f.Close()
 
 	_, errWrite := f.WriteString(result)
