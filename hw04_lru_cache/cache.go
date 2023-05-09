@@ -41,7 +41,6 @@ func (cache *LruCache) Set(key Key, value interface{}) bool {
 		back := cache.list.Back()
 		delete(cache.items, back.Data.(KeyValue).key)
 		cache.list.Remove(back)
-		back = nil
 	}
 	// newItem := cache.list.PushFront(KeyValue{key, value})
 	cache.items[key] = cache.list.PushFront(KeyValue{key, value})
@@ -60,10 +59,6 @@ func (cache *LruCache) Get(key Key) (interface{}, bool) {
 
 // Clear - "очистка" кэша.
 func (cache *LruCache) Clear() {
-	// TODO:
-	// а так эффективно?
-	// cache.queue = nil
-	// cache.items = nil
 	*cache = *(NewCache(cache.capacity).(*LruCache))
 }
 

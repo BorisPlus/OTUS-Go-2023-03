@@ -44,8 +44,6 @@ func (list *List) Back() *ListItem {
 func (list *List) PushFront(data interface{}) *ListItem {
 	item := &ListItem{
 		Data: data,
-		Prev: nil,
-		Next: nil,
 	}
 	if list.len == 0 {
 		list.front = item
@@ -63,8 +61,6 @@ func (list *List) PushFront(data interface{}) *ListItem {
 func (list *List) PushBack(data interface{}) *ListItem {
 	item := &ListItem{
 		Data: data,
-		Prev: nil,
-		Next: nil,
 	}
 	if list.len == 0 {
 		list.front = item

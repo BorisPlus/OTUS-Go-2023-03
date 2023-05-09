@@ -24,17 +24,17 @@ func sum(arr []float64) float64 {
 	return sum
 }
 
-// mediana - среднее значение (времени проведения операции Set/Get).
-func mediana(data []float64) float64 {
+// average - среднее значение (времени проведения операции Set/Get).
+func average(data []float64) float64 {
 	return sum(data) / float64(len(data))
 }
 
 // dispersion - дисперсия (времени проведения операции Set/Get).
 func dispersion(data []float64) float64 {
-	dataMediana := mediana(data)
+	dataAverage := average(data)
 	x2up := make([]float64, 0, len(data))
 	for _, value := range data {
-		x2up = append(x2up, x2(value-dataMediana))
+		x2up = append(x2up, x2(value-dataAverage))
 	}
 	return sum(x2up) / float64(len(data))
 }
@@ -74,11 +74,11 @@ func BenchmarkSet(b *testing.B) {
 			}
 
 			// Среднее времени добавления в LRU
-			b.ReportMetric(mediana(durationsSet), "med_t/set")
+			b.ReportMetric(average(durationsSet), "med_t/set")
 			// Дисперсия времени добавления в LRU
 			b.ReportMetric(dispersion(durationsSet), "disp_t/set")
 			// Среднее времени взятия из LRU
-			b.ReportMetric(mediana(durationsGet), "med_t/get")
+			b.ReportMetric(average(durationsGet), "med_t/get")
 			// Дисперсия времени взятия из LRU
 			b.ReportMetric(dispersion(durationsGet), "disp_t/get")
 		})
