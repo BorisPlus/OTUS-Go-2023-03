@@ -424,7 +424,7 @@ func TestStatisticsMonitorBasic(t *testing.T) {
 
 ```shell
 $ go test -cover ./statistic.go ./statistic_test.go 
-    ok      command-line-arguments  0.006s  coverage: 95.8% of statements
+    ok      command-line-arguments  0.007s  coverage: 99.0% of statements
 ```
 
 ### Воркеры
