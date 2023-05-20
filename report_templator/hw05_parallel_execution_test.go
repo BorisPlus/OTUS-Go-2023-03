@@ -6,11 +6,11 @@ import (
 )
 
 // go run -test templator.go hw05_parallel_execution.go
-func TestHw05(t *testing.T) {
 
-	//
+func TestHw05(t *testing.T) {
+	_ = t
 	directory := "../hw05_parallel_execution/"
-	files := []string {
+	files := []string{
 		"run.go",
 		"run_test.go",
 		"statistic.go",
@@ -20,14 +20,14 @@ func TestHw05(t *testing.T) {
 		"TestRunFirstMTasksErrors.txt",
 		"TestRunWithUnlimitedErrorsCount.txt",
 	}
-	// 
+
 	substitutions := make(map[string]string)
 	for _, file := range files {
 		tmplt := Template{}
 		tmplt.loadFromFile(fmt.Sprintf("%s%s", directory, file))
 		substitutions[file] = tmplt.render(true)
 	}
-	// 
+
 	report := Template{}
 	report.loadFromFile(fmt.Sprintf("%s%s", directory, "REPORT.template.md"))
 	report.substitutions = substitutions

@@ -19,29 +19,29 @@ func (template *Template) loadFromFile(filepath string) error {
 	return err
 }
 
-func (template *Template) render(with_escaping bool) string {
+func (template *Template) render(withEscaping bool) string {
 	result := template.content
-	if with_escaping {
-		result = tab_escaping(result)
+	if withEscaping {
+		result = tabEscaping(result)
 	}
 	for k := range template.substitutions {
-		result = strings.Replace(result, "{{ "+k+" }}", template.substitutions[k], -1)
+		result = strings.ReplaceAll(result, "{{ "+k+" }}", template.substitutions[k])
 	}
 	return result
 }
 
-func escaping(content string) string {
-	content = tab_escaping(content)
-	content = strings.Replace(content, "\n```\n", "\n'''\n", -1)
-	content = strings.Replace(content, "\n```text\n", "\n'''text\n", -1)
-	content = strings.Replace(content, "\n```go\n", "\n'''go\n", -1)
-	content = strings.Replace(content, "{{ ", "{"+string('\x02')+"{ ", -1)
-	content = strings.Replace(content, " }}", " }"+string('\x02')+"}", -1)
-	return content
-}
+// func escaping(content string) string {
+// 	content = tabEscaping(content)
+// 	content = strings.ReplaceAll(content, "\n```\n", "\n'''\n")
+// 	content = strings.ReplaceAll(content, "\n```text\n", "\n'''text\n")
+// 	content = strings.ReplaceAll(content, "\n```go\n", "\n'''go\n")
+// 	content = strings.ReplaceAll(content, "{{ ", "{"+string('\x02')+"{ ")
+// 	content = strings.ReplaceAll(content, " }}", " }"+string('\x02')+"}")
+// 	return content
+// }
 
-func tab_escaping(content string) string {
-	content = strings.Replace(content, "\t", "    ", -1)
+func tabEscaping(content string) string {
+	content = strings.ReplaceAll(content, "\t", "    ")
 	return content
 }
 
