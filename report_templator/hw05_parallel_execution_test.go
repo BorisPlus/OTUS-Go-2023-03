@@ -17,7 +17,7 @@ func TestHw05(t *testing.T) {
 		"statistic_test.go",
 		"TestRun4TaskWith5Gorutine.txt",
 		"TestRunAllTasksWithoutAnyError.txt",
-		"TestRunFirstMErrors.txt",
+		"TestRunFirstMTasksErrors.txt",
 		"TestRunWithUnlimitedErrorsCount.txt",
 	}
 	// 
