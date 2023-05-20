@@ -1,7 +1,7 @@
-package main
+package reporttemplator
 
 // go run templator.go hw04_lru_cache.go
-func main() {
+func TestHw04() {
 
 	substitutions := make(map[string]string)
 	//

@@ -1,0 +1,6 @@
+go 1.19
+
+use (
+	hw05_parallel_execution
+	report_templator
+)

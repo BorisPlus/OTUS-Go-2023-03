@@ -2,14 +2,74 @@ package hw05parallelexecution
 
 import (
 	"errors"
+	"fmt"
+	"sync"
 )
 
 var ErrErrorsLimitExceeded = errors.New("errors limit exceeded")
 
 type Task func() error
 
+func worker(wtg *sync.WaitGroup, tasksChan <-chan Task, stat *StatisticsMonitor) {
+	defer func(stat *StatisticsMonitor) {
+		stat.IncDoneGoroutinesCount()
+		wtg.Done()
+	}(stat)
+
+	stat.IncStartedGoroutinesCount()
+
+	for task := range tasksChan {
+		stat.IncTasksCountInit()
+		if !stat.DoesErrorsLimitExceeded() {
+			stat.IncStartedTasksCount()
+			taskReturnError := task() != nil
+			if taskReturnError {
+				stat.IncErrorsTasksCount()
+			} else {
+				stat.IncDoneTasksCount()
+			}
+		} else {
+			break
+		}
+	}
+}
+
 // Run starts tasks in n goroutines and stops its work when receiving m errors from tasks.
-func Run(tasks []Task, n, m int) error {
-	// Place your code here.
+func Run(tasks []Task, workTogetherTasksCountLimit, errorsCountLimit int) error {
+	mtx := sync.RWMutex{}
+
+	stat := StatisticsMonitor{rwMutex: &mtx}
+
+	stat.SetErrorsTasksCountLimit(uint(errorsCountLimit))
+	stat.SetTasksCount(uint(len(tasks)))
+	stat.SetGoroutinesCountLimit(uint(workTogetherTasksCountLimit))
+
+	fmt.Printf("\nИСХОДНАЯ\n%s\n", stat)
+
+	defer func() {
+		fmt.Printf("\nИТОГОВАЯ\n%s\n", stat)
+	}()
+
+	tasksChan := make(chan Task, len(tasks))
+	for _, task := range tasks {
+		tasksChan <- task
+	}
+	close(tasksChan)
+
+	var workerIndex uint
+	wtGr := sync.WaitGroup{}
+	for workerIndex = 1; workerIndex <= stat.GoroutinesCountLimit(true); workerIndex++ {
+		stat.IncGoroutinesCountInit()
+
+		wtGr.Add(1)
+		go worker(&wtGr, tasksChan, &stat)
+	}
+
+	wtGr.Wait()
+
+	if stat.DoesErrorsLimitExceeded() {
+		fmt.Println("Errors was limit!!!")
+		return ErrErrorsLimitExceeded
+	}
 	return nil
 }

@@ -1,4 +1,4 @@
-module github.com/fixme_my_friend/hw05_parallel_execution
+module hw05parallelexecution
 
 go 1.19
 
