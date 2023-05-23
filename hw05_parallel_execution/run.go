@@ -37,12 +37,6 @@ func worker(wg *sync.WaitGroup, tasksChan <-chan Task, stat *StatisticsMonitor) 
 func Run(tasks []Task, workTogetherTasksCountLimit, errorsCountLimit int) error {
 	mtx := sync.RWMutex{}
 
-	// stat := StatisticsMonitor{rwMutex: &mtx}
-
-	// stat.SetErrorsTasksCountLimit(uint(errorsCountLimit))
-	// stat.SetTasksCount(uint(len(tasks)))
-	// stat.SetGoroutinesCountLimit(uint(workTogetherTasksCountLimit))
-
 	stat := NewStatisticsMonitor(&mtx, uint(errorsCountLimit), uint(workTogetherTasksCountLimit), uint(len(tasks)))
 	fmt.Printf("\nИСХОДНАЯ\n%s\n", stat)
 
@@ -50,7 +44,9 @@ func Run(tasks []Task, workTogetherTasksCountLimit, errorsCountLimit int) error 
 		fmt.Printf("\nИТОГОВАЯ\n%s\n", stat)
 	}()
 
+	// COMMIT_REQUEST 
 	tasksChan := make(chan Task, len(tasks))
+	// tasksChan := make(chan Task)
 	for _, task := range tasks {
 		tasksChan <- task
 	}
