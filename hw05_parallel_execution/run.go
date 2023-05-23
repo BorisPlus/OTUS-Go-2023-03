@@ -10,10 +10,10 @@ var ErrErrorsLimitExceeded = errors.New("errors limit exceeded")
 
 type Task func() error
 
-func worker(wtg *sync.WaitGroup, tasksChan <-chan Task, stat *StatisticsMonitor) {
+func worker(wg *sync.WaitGroup, tasksChan <-chan Task, stat *StatisticsMonitor) {
 	defer func(stat *StatisticsMonitor) {
 		stat.IncDoneGoroutinesCount()
-		wtg.Done()
+		wg.Done()
 	}(stat)
 
 	stat.IncStartedGoroutinesCount()
@@ -57,15 +57,15 @@ func Run(tasks []Task, workTogetherTasksCountLimit, errorsCountLimit int) error 
 	close(tasksChan)
 
 	var workerIndex uint
-	wtGr := sync.WaitGroup{}
+	wg := sync.WaitGroup{}
 	for workerIndex = 1; workerIndex <= stat.GoroutinesCountLimit(true); workerIndex++ {
 		stat.IncGoroutinesCountInit()
 
-		wtGr.Add(1)
-		go worker(&wtGr, tasksChan, &stat)
+		wg.Add(1)
+		go worker(&wg, tasksChan, &stat)
 	}
 
-	wtGr.Wait()
+	wg.Wait()
 
 	if stat.DoesErrorsLimitExceeded() {
 		fmt.Println("Errors was limit!!!")
