@@ -20,16 +20,15 @@ func worker(wg *sync.WaitGroup, tasksChan <-chan Task, stat *StatisticsMonitor) 
 
 	for task := range tasksChan {
 		stat.IncTasksCountInit()
-		if !stat.DoesErrorsLimitExceeded() {
-			stat.IncStartedTasksCount()
-			taskReturnError := task() != nil
-			if taskReturnError {
-				stat.IncErrorsTasksCount()
-			} else {
-				stat.IncDoneTasksCount()
-			}
-		} else {
+		if stat.DoesErrorsLimitExceeded() {
 			break
+		}
+		stat.IncStartedTasksCount()
+		taskReturnError := task() != nil
+		if taskReturnError {
+			stat.IncErrorsTasksCount()
+		} else {
+			stat.IncDoneTasksCount()
 		}
 	}
 }
