@@ -25,6 +25,15 @@ type StatisticsMonitor struct {
 	errorsTasksCount      uint // Всего задач завершилось с ошибками
 }
 
+// StatisticsMonitor - конструктор с обязательными полями.
+func NewStatisticsMonitor(errorsCountLimit, workTogetherTasksCountLimit, tasksCount uint) StatisticsMonitor {
+	stat := StatisticsMonitor{}
+	stat.SetErrorsTasksCountLimit(errorsCountLimit)
+	stat.SetTasksCount(tasksCount)
+	stat.SetGoroutinesCountLimit(workTogetherTasksCountLimit)
+	return stat
+}
+
 func (statMonitor StatisticsMonitor) String() string {
 	return fmt.Sprintf(`СТАТИСТИКА РАБОТЫ
     ГОРУТИНЫ
