@@ -26,12 +26,12 @@ type StatisticsMonitor struct {
 }
 
 // StatisticsMonitor - конструктор с обязательными полями.
-func NewStatisticsMonitor(mtx *sync.RWMutex, errorsCountLimit, workTogetherTasksCountLimit, tasksCount uint) StatisticsMonitor {
+func NewStatisticsMonitor(mtx *sync.RWMutex, m, n, tasksCount uint) StatisticsMonitor {
 	stat := StatisticsMonitor{}
 	stat.rwMutex = mtx
-	stat.SetErrorsTasksCountLimit(errorsCountLimit)
+	stat.SetErrorsTasksCountLimit(m)
 	stat.SetTasksCount(tasksCount)
-	stat.SetGoroutinesCountLimit(workTogetherTasksCountLimit)
+	stat.SetGoroutinesCountLimit(n)
 	return stat
 }
 

@@ -46,6 +46,16 @@ type StatisticsMonitor struct {
     errorsTasksCount      uint // Всего задач завершилось с ошибками
 }
 
+// StatisticsMonitor - конструктор с обязательными полями.
+func NewStatisticsMonitor(mtx *sync.RWMutex, m, n, tasksCount uint) StatisticsMonitor {
+    stat := StatisticsMonitor{}
+    stat.rwMutex = mtx
+    stat.SetErrorsTasksCountLimit(m)
+    stat.SetTasksCount(tasksCount)
+    stat.SetGoroutinesCountLimit(n)
+    return stat
+}
+
 func (statMonitor StatisticsMonitor) String() string {
     return fmt.Sprintf(`СТАТИСТИКА РАБОТЫ
     ГОРУТИНЫ
@@ -447,26 +457,25 @@ var ErrErrorsLimitExceeded = errors.New("errors limit exceeded")
 
 type Task func() error
 
-func worker(wtg *sync.WaitGroup, tasksChan <-chan Task, stat *StatisticsMonitor) {
+func worker(wg *sync.WaitGroup, tasksChan <-chan Task, stat *StatisticsMonitor) {
     defer func(stat *StatisticsMonitor) {
         stat.IncDoneGoroutinesCount()
-        wtg.Done()
+        wg.Done()
     }(stat)
 
     stat.IncStartedGoroutinesCount()
 
     for task := range tasksChan {
         stat.IncTasksCountInit()
-        if !stat.DoesErrorsLimitExceeded() {
-            stat.IncStartedTasksCount()
-            taskReturnError := task() != nil
-            if taskReturnError {
-                stat.IncErrorsTasksCount()
-            } else {
-                stat.IncDoneTasksCount()
-            }
-        } else {
+        if stat.DoesErrorsLimitExceeded() {
             break
+        }
+        stat.IncStartedTasksCount()
+        err := task()
+        if err != nil {
+            stat.IncErrorsTasksCount()
+        } else {
+            stat.IncDoneTasksCount()
         }
     }
 }
@@ -475,34 +484,34 @@ func worker(wtg *sync.WaitGroup, tasksChan <-chan Task, stat *StatisticsMonitor)
 func Run(tasks []Task, workTogetherTasksCountLimit, errorsCountLimit int) error {
     mtx := sync.RWMutex{}
 
-    stat := StatisticsMonitor{rwMutex: &mtx}
-
-    stat.SetErrorsTasksCountLimit(uint(errorsCountLimit))
-    stat.SetTasksCount(uint(len(tasks)))
-    stat.SetGoroutinesCountLimit(uint(workTogetherTasksCountLimit))
-
+    stat := NewStatisticsMonitor(&mtx, uint(errorsCountLimit), uint(workTogetherTasksCountLimit), uint(len(tasks)))
     fmt.Printf("\nИСХОДНАЯ\n%s\n", stat)
 
     defer func() {
         fmt.Printf("\nИТОГОВАЯ\n%s\n", stat)
     }()
 
-    tasksChan := make(chan Task, len(tasks))
-    for _, task := range tasks {
-        tasksChan <- task
-    }
-    close(tasksChan)
+    tasksChan := make(chan Task)
+    go func() {
+        defer close(tasksChan)
+        for _, t := range tasks {
+            if stat.DoesErrorsLimitExceeded() {
+                break
+            }
+            tasksChan <- t
+        }
+    }()
 
     var workerIndex uint
-    wtGr := sync.WaitGroup{}
+    wg := sync.WaitGroup{}
     for workerIndex = 1; workerIndex <= stat.GoroutinesCountLimit(true); workerIndex++ {
         stat.IncGoroutinesCountInit()
 
-        wtGr.Add(1)
-        go worker(&wtGr, tasksChan, &stat)
+        wg.Add(1)
+        go worker(&wg, tasksChan, &stat)
     }
 
-    wtGr.Wait()
+    wg.Wait()
 
     if stat.DoesErrorsLimitExceeded() {
         fmt.Println("Errors was limit!!!")
@@ -754,3 +763,87 @@ ok      hw05parallelexecution    0.095s
 ```
 
 это **Всего подготавливалось к запуcку горутин: 4**, а не **5**
+
+## Сокращение кода
+
+Правда где-то по середине.
+
+При отказе от структуры "Монитора статистики" полностью, заменив ее на единственное значение `errorsCount` c доступом по `atomic`, исходный код значительно сократился (сжат до ~46 строк) и даже стал меньше авторского (заявлено ~55 строк, код не видел). Но по моему мнению дублирование вычислительных конструкций `if m > 0 && errorsCount >= int64(m) ...` (как минимум три раза) и периодически вынужденное приведение типов к `int64` (из-за отсутствия `atomic.AddInt`) привело к снижению наглядности и изящности кода, стало когнитивно сложнее.
+
+Именованием переменных сие не спасти, надо декомпозировать и все-таки выделять сущность "Монитора статистики".
+
+<details>
+<summary>см. "run_with_atomic.go"</summary>
+
+```go
+package hw05parallelexecution
+
+import (
+    "sync"
+    atomic "sync/atomic"
+)
+
+func workerWithAtomic(wg *sync.WaitGroup, tasksChan <-chan Task, errorsCount *int64, m int) {
+    defer wg.Done()
+    for task := range tasksChan {
+        if m > 0 && *errorsCount >= int64(m) {
+            break
+        }
+        err := task()
+        if err != nil {
+            atomic.AddInt64(errorsCount, 1)
+        }
+    }
+}
+
+// Run starts tasks in n goroutines and stops its work when receiving m errors from tasks.
+func RunWithAtomic(tasks []Task, n, m int) error {
+    var errorsCount int64
+    tasksChan := make(chan Task)
+    go func() {
+        defer close(tasksChan)
+        for _, t := range tasks {
+            if m > 0 && errorsCount >= int64(m) {
+                break
+            }
+            tasksChan <- t
+        }
+    }()
+    wg := sync.WaitGroup{}
+    for workerIndex := 1; workerIndex <= n; workerIndex++ {
+        wg.Add(1)
+        go workerWithAtomic(&wg, tasksChan, &errorsCount, m)
+    }
+    wg.Wait()
+
+    if m > 0 && errorsCount >= int64(m) {
+        return ErrErrorsLimitExceeded
+    }
+    return nil
+}
+
+```
+
+</details>
+
+```shell
+go test -v ./statistic.go ./run.go ./run_with_atomic.go ./run_with_atomic_test.go > TestRunWithAtomic.txt
+```
+
+```text
+=== RUN   TestRunWithAtomicFirstMTasksErrors
+=== RUN   TestRunWithAtomicFirstMTasksErrors/If_were_errors_in_first_M_tasks,_than_finished_not_more_N+M_tasks
+--- PASS: TestRunWithAtomicFirstMTasksErrors (0.20s)
+    --- PASS: TestRunWithAtomicFirstMTasksErrors/If_were_errors_in_first_M_tasks,_than_finished_not_more_N+M_tasks (0.20s)
+=== RUN   TestRunWithAtomicAllTasksWithoutAnyError
+=== RUN   TestRunWithAtomicAllTasksWithoutAnyError/Tasks_without_errors
+--- PASS: TestRunWithAtomicAllTasksWithoutAnyError (0.52s)
+    --- PASS: TestRunWithAtomicAllTasksWithoutAnyError/Tasks_without_errors (0.52s)
+=== RUN   TestRunWithAtomicWithUnlimitedErrorsCount
+=== RUN   TestRunWithAtomicWithUnlimitedErrorsCount/Unlimited_errors_count
+--- PASS: TestRunWithAtomicWithUnlimitedErrorsCount (0.26s)
+    --- PASS: TestRunWithAtomicWithUnlimitedErrorsCount/Unlimited_errors_count (0.26s)
+PASS
+ok      command-line-arguments    0.989s
+
+```

@@ -12,6 +12,7 @@ func TestHw05(t *testing.T) {
 	directory := "../hw05_parallel_execution/"
 	files := []string{
 		"run.go",
+		"run_with_atomic.go",
 		"run_test.go",
 		"statistic.go",
 		"statistic_test.go",
@@ -19,6 +20,7 @@ func TestHw05(t *testing.T) {
 		"TestRunAllTasksWithoutAnyError.txt",
 		"TestRunFirstMTasksErrors.txt",
 		"TestRunWithUnlimitedErrorsCount.txt",
+		"TestRunWithAtomic.txt",
 	}
 
 	substitutions := make(map[string]string)
