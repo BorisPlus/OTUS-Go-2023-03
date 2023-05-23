@@ -44,13 +44,16 @@ func Run(tasks []Task, workTogetherTasksCountLimit, errorsCountLimit int) error 
 		fmt.Printf("\nИТОГОВАЯ\n%s\n", stat)
 	}()
 
-	// COMMIT_REQUEST 
-	tasksChan := make(chan Task, len(tasks))
-	// tasksChan := make(chan Task)
-	for _, task := range tasks {
-		tasksChan <- task
-	}
-	close(tasksChan)
+	tasksChan := make(chan Task)
+	go func() {
+		defer close(tasksChan)
+		for _, t := range tasks {
+			if stat.DoesErrorsLimitExceeded() {
+				break
+			}
+			tasksChan <- t
+		}
+	}()
 
 	var workerIndex uint
 	wg := sync.WaitGroup{}
