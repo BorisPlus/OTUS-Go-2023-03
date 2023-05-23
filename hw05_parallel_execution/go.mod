@@ -1,4 +1,4 @@
-module hw05parallelexecution
+module github.com/BorisPlus/OTUS-Go-2023-03/hw05parallelexecution
 
 go 1.19
 
