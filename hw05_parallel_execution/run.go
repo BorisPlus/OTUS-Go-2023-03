@@ -24,8 +24,8 @@ func worker(wg *sync.WaitGroup, tasksChan <-chan Task, stat *StatisticsMonitor) 
 			break
 		}
 		stat.IncStartedTasksCount()
-		taskReturnError := task() != nil
-		if taskReturnError {
+		err := task()
+		if err != nil {
 			stat.IncErrorsTasksCount()
 		} else {
 			stat.IncDoneTasksCount()
