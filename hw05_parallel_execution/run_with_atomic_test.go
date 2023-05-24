@@ -16,7 +16,7 @@ func TestRunWithAtomicFirstMTasksErrors(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	t.Run("If were errors in first M tasks, than finished not more N+M tasks", func(t *testing.T) {
 		tasksCount := 50
-		tasks := make([]Task, 0, tasksCount)
+		tasks := make([]TaskWithAtomic, 0, tasksCount)
 
 		var runTasksCount int32
 
@@ -33,7 +33,7 @@ func TestRunWithAtomicFirstMTasksErrors(t *testing.T) {
 		maxErrorsCount := 23
 		err := RunWithAtomic(tasks, workersCount, maxErrorsCount)
 
-		require.Truef(t, errors.Is(err, ErrErrorsLimitExceeded), "actual err - %v", err)
+		require.Truef(t, errors.Is(err, ErrErrorsLimitExceededWithAtomic), "actual err - %v", err)
 		require.LessOrEqual(t, runTasksCount, int32(workersCount+maxErrorsCount), "extra tasks were started")
 	})
 }
@@ -42,7 +42,7 @@ func TestRunWithAtomicAllTasksWithoutAnyError(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	t.Run("Tasks without errors", func(t *testing.T) {
 		tasksCount := 50
-		tasks := make([]Task, 0, tasksCount)
+		tasks := make([]TaskWithAtomic, 0, tasksCount)
 
 		var runTasksCount int32
 		var sumTime time.Duration
@@ -75,7 +75,7 @@ func TestRunWithAtomicWithUnlimitedErrorsCount(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	t.Run("Unlimited errors count", func(t *testing.T) {
 		tasksCount := 10
-		tasks := make([]Task, 0, tasksCount)
+		tasks := make([]TaskWithAtomic, 0, tasksCount)
 
 		for i := 0; i < tasksCount; i++ {
 			if rand.Intn(2) == 1 {
