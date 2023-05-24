@@ -768,7 +768,7 @@ ok      hw05parallelexecution    0.095s
 
 Правда где-то по середине.
 
-При отказе от структуры "Монитора статистики" полностью, заменив ее на единственное значение `errorsCount` c доступом по `atomic`, исходный код значительно сократился (сжат до ~46 строк) и даже стал меньше авторского (заявлено ~55 строк, код не видел). Но по моему мнению дублирование вычислительных конструкций `if m > 0 && errorsCount >= int64(m) ...` (как минимум три раза) и периодически вынужденное приведение типов к `int64` (из-за отсутствия `atomic.AddInt`) привело к снижению наглядности и изящности кода, стало когнитивно сложнее.
+При отказе от структуры "Монитора статистики" полностью, заменив ее на единственное значение `errorsCount` с доступом по `atomic`, исходный код значительно сократился и стал по объему на уровне авторского (заявлено ~55 строк, код не видел). Но по моему мнению дублирование вычислительных конструкций `if m > 0 && errorsCount >= int64(m) ...` (как минимум три раза) и периодически вынужденное приведение типов к `int64` (из-за отсутствия `atomic.AddInt`) привело к снижению наглядности и изящности кода, стало когнитивно сложнее.
 
 Именованием переменных сие не спасти, надо декомпозировать и все-таки выделять сущность "Монитора статистики".
 
@@ -779,45 +779,53 @@ ok      hw05parallelexecution    0.095s
 package hw05parallelexecution
 
 import (
+    "errors"
     "sync"
     atomic "sync/atomic"
 )
 
-func workerWithAtomic(wg *sync.WaitGroup, tasksChan <-chan Task, errorsCount *int64, m int) {
+var ErrErrorsLimitExceededWithAtomic = errors.New("errors limit exceeded")
+
+type TaskWithAtomic func() error
+
+func workerWithAtomic(wg *sync.WaitGroup, taskChan <-chan TaskWithAtomic, m int, eCount *int32) {
     defer wg.Done()
-    for task := range tasksChan {
-        if m > 0 && *errorsCount >= int64(m) {
+    for task := range taskChan {
+        if m > 0 && int(atomic.LoadInt32(eCount)) >= m {
             break
         }
         err := task()
         if err != nil {
-            atomic.AddInt64(errorsCount, 1)
+            atomic.AddInt32(eCount, 1)
         }
     }
 }
 
 // Run starts tasks in n goroutines and stops its work when receiving m errors from tasks.
-func RunWithAtomic(tasks []Task, n, m int) error {
-    var errorsCount int64
-    tasksChan := make(chan Task)
+func RunWithAtomic(tasks []TaskWithAtomic, n, m int) error {
+    var errorsCount int32
+
+    tasksChan := make(chan TaskWithAtomic)
     go func() {
         defer close(tasksChan)
         for _, t := range tasks {
-            if m > 0 && errorsCount >= int64(m) {
+            if m > 0 && int(atomic.LoadInt32(&errorsCount)) >= m {
                 break
             }
             tasksChan <- t
         }
     }()
+
     wg := sync.WaitGroup{}
     for workerIndex := 1; workerIndex <= n; workerIndex++ {
         wg.Add(1)
-        go workerWithAtomic(&wg, tasksChan, &errorsCount, m)
+        go workerWithAtomic(&wg, tasksChan, m, &errorsCount)
     }
+
     wg.Wait()
 
-    if m > 0 && errorsCount >= int64(m) {
-        return ErrErrorsLimitExceeded
+    if m > 0 && int(atomic.LoadInt32(&errorsCount)) >= m {
+        return ErrErrorsLimitExceededWithAtomic
     }
     return nil
 }
@@ -827,7 +835,7 @@ func RunWithAtomic(tasks []Task, n, m int) error {
 </details>
 
 ```shell
-go test -v ./statistic.go ./run.go ./run_with_atomic.go ./run_with_atomic_test.go > TestRunWithAtomic.txt
+go test -v -count=1 -race -timeout=1m ./run_with_atomic.go ./run_with_atomic_test.go > TestRunWithAtomic.txt
 ```
 
 ```text
@@ -844,6 +852,6 @@ go test -v ./statistic.go ./run.go ./run_with_atomic.go ./run_with_atomic_test.g
 --- PASS: TestRunWithAtomicWithUnlimitedErrorsCount (0.26s)
     --- PASS: TestRunWithAtomicWithUnlimitedErrorsCount/Unlimited_errors_count (0.26s)
 PASS
-ok      command-line-arguments    0.989s
+ok      command-line-arguments    1.027s
 
 ```
