@@ -2,5 +2,6 @@ go 1.19
 
 use (
 	hw05_parallel_execution
+	hw06_pipeline_execution
 	report_templator
 )
