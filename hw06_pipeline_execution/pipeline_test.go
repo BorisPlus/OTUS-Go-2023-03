@@ -50,6 +50,9 @@ func TestPipeline(t *testing.T) {
 		result := make([]string, 0, 10)
 		start := time.Now()
 		for s := range ExecutePipeline(in, nil, stages...) {
+			// fmt.Println(s)
+			// fmt.Println(&s)
+			// fmt.Println(s.(chan interface))
 			result = append(result, s.(string))
 		}
 		elapsed := time.Since(start)
@@ -67,7 +70,7 @@ func TestPipeline(t *testing.T) {
 		data := []int{1, 2, 3, 4, 5}
 
 		// Abort after 200ms
-		abortDur := sleepPerStage * 2
+		abortDur := sleepPerStage * 1
 		go func() {
 			<-time.After(abortDur)
 			close(done)

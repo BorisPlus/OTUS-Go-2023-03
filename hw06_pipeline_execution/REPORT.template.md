@@ -1,0 +1,136 @@
+# Домашнее задание №6 «Пайплайн»
+
+Описание [задания](./README.md).
+
+> **Для формирования данного отчета запустить**
+>
+> ```shell
+> $ cd ../report_templator/
+> $ go test templator.go hw06_pipeline_execution_test.go
+> ```
+
+## Реализация
+
+Основная идея разработанного варианта решения в том, что согласно сигнатуре/интерфейсу функции пайплайна `func ExecutePipeline(in In, done In, stages ...Stage) Out` предварительно реализуются каналы на каждого Стейджа: входящий и исходящий. При этом исходящий канал для текущего Стейджа является входящим для Стейджа, следующего по списку из `...Stage` за текщим.
+
+```go
+func ExecutePipeline(in In, done In, stages ...Stage) Out {
+    stageInput := in
+    fmt.Println("Configute STAGING: in", stageInput)
+
+    stageOutput := make(Bi)
+    for stageID, stage := range stages {
+        go func(stageId int, in In, done In, stage Stage, out Bi) {
+            executePipepoint(stageId, in, done, stage, out)
+        }(stageID, stageInput, done, stage, stageOutput)
+
+        fmt.Println("Configute STAGING: stage", stageID)
+        fmt.Println("Configute STAGING: stage", stageID, "with done", fmt.Sprintf("%p", done))
+        fmt.Println("Configute STAGING: stage", stageID, "with in", fmt.Sprintf("%p", stageInput))
+        fmt.Println("Configute STAGING: stage", stageID, "with out", fmt.Sprintf("%p", stageOutput))
+
+        stageInput = stageOutput
+        stageOutput = make(Bi)
+    }
+
+    fmt.Println("Configute STAGING: out", stageInput)
+    fmt.Println()
+    return stageInput
+}
+```
+
+<details>
+<summary>см. подробный код "pipeline.go"</summary>
+
+```go
+{{ pipeline.go }}
+```
+
+</details>
+
+в вербоуз-тестовом запуске будет продемонстирована построенная "цепочка" из каналов для каждого Этапа
+
+```text
+...
+Configute STAGING: in 0xc00008e120 ====================╗ Это один
+Configute STAGING: stage 0                             ║ и тот же канал.
+Configute STAGING: stage 0 with done 0xc00008e180      ║
+Configute STAGING: stage 0 with in 0xc00008e120    ====╝ --------╮ Тут срабатывает Стейдж 0 - как
+Configute STAGING: stage 0 with out 0xc00008e1e0   ====╗ <-------╯ перекладчик из канала в канал.
+Configute STAGING: stage 1                             ║ Это один  
+Configute STAGING: stage 1 with done 0xc00008e180      ║ и тот же канал.
+Configute STAGING: stage 1 with in 0xc00008e1e0    ====╝ --------╮ Тут срабатывает Стейдж 1 - как
+Configute STAGING: stage 1 with out 0xc00008e240   ====╗ <-------╯ перекладчик из канала в канал.
+Configute STAGING: stage 2                             ║ Это один 
+Configute STAGING: stage 2 with done 0xc00008e180      ║ и тот же канал.
+Configute STAGING: stage 2 with in 0xc00008e240    ====╝ --------╮ Тут срабатывает Стейдж 2 - как
+Configute STAGING: stage 2 with out 0xc00008e2a0   ====╗ <-------╯ перекладчик из канала в канал.
+Configute STAGING: stage 3                             ║ Это один  
+Configute STAGING: stage 3 with done 0xc00008e180      ║ и тот же канал.
+Configute STAGING: stage 3 with in 0xc00008e2a0    ====╝ --------╮ Тут срабатывает Стейдж 3 - как
+Configute STAGING: stage 3 with out 0xc00008e300   ====╗ <-------╯ перекладчик из канала в канал.
+Configute STAGING: out 0xc00008e300 ===================╝ Это один и тот же канал.
+...
+```
+
+В целях неблокирования работы Стейджей их функционал обернут в горутины.
+
+Внутри горутин:
+
+* происходит обработка поступающей информации из входящего канала данного Стейджа;
+* перенаправление результата в выходной канал данного Стейджа;
+* посредством конструкиции `value, ok := <-staged` учитывается факт получения сигнала, что входящий канал Стейджа стал закрыт и было получено значение по умолчанию;
+* учитывается ветвление логики с принудительным завершением Стейджа при срабатывании `done`-канала (он для всех Стейджей один и тот же).
+
+Решение об отсутствии в необходимости в горутине принимается на основе доступности специального пустого канала `<-terminated` в результате его закрытия, происходящего совместного с закрытием входящего канала соотвествующего Стейджа.
+
+Если взглянуть на журнал работы в вербоуз-теста, то видно, что:
+
+* Стейджи запускаются изначально хаотично;
+  
+>```text
+> ...
+>stage 3 try terminated
+>stage 1 try terminated
+>stage 2 try terminated
+>stage 0 try terminated
+> ...
+>```
+
+* Стейджи работают параллельно;
+
+>```text
+> ...
+>stage 0 processor get from input value 1 ok true                   Получили Стейджем № 0 как есть 1 - "Dummy"
+>stage 0 processor get from input value 1 ok true try put to out    
+>stage 0 processor get from input value 1 ok true was put to out    Переложили в выходной канал Стейджа № 0
+>stage 0 processor get from input value 2 ok true                   Получили Стейджем № 0 как есть 2 - "Dummy"
+>stage 0 processor get from input value 2 ok true try put to out
+>stage 0 processor get from input value 2 ok true was put to out    Переложили в выходной канал Стейджа № 0
+>stage 1 processor get from input value 2 ok true                   Преобразовали 1 в 2 Стейджем № 1 - "Multiplier (* 2)"
+>stage 1 processor get from input value 2 ok true try put to out
+>stage 1 processor get from input value 2 ok true was put to out    Переложили в выходной канал Стейджа № 1
+>stage 1 processor get from input value 4 ok true                   Преобразовали 2 в 4 Стейджем № 1 - "Multiplier (* 2)"
+>stage 1 processor get from input value 4 ok true try put to out
+> ... и так далее
+>```
+
+Запустим тест без вербоуз-режима (инече мой лог будет большой)
+
+```bash
+go test -race -count=100 ./pipeline.go ./pipeline_test.go > N100TimesTesting.txt
+```
+
+Результат 100 запусков:
+
+```text
+{{ N100TimesTesting.txt }}
+```
+
+## Вывод
+
+Как продемонстрировано, присутствует конкурентный доступ горутин к каналам, неблокирующим параллельное выполнение Стейджей.
+
+### На возможную доработку
+
+На мой взгляд не хватает разве что ограничений на число одновременно работающих Стейджей, как делалось в предыдущей главе в задаче лимитирования числа одновременных `worker`.
