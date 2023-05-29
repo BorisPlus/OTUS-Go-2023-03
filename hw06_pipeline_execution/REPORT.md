@@ -19,15 +19,15 @@ func ExecutePipeline(in In, done In, stages ...Stage) Out {
     fmt.Println("Configute STAGING: in", stageInput)
 
     stageOutput := make(Bi)
-    for stageId, stage := range stages {
+    for stageID, stage := range stages {
         go func(stageId int, in In, done In, stage Stage, out Bi) {
             executePipepoint(stageId, in, done, stage, out)
-        }(stageId, stageInput, done, stage, stageOutput)
+        }(stageID, stageInput, done, stage, stageOutput)
 
-        fmt.Println("Configute STAGING: stage", stageId)
-        fmt.Println("Configute STAGING: stage", stageId, "with done", fmt.Sprintf("%p", done))
-        fmt.Println("Configute STAGING: stage", stageId, "with in", fmt.Sprintf("%p", stageInput))
-        fmt.Println("Configute STAGING: stage", stageId, "with out", fmt.Sprintf("%p", stageOutput))
+        fmt.Println("Configute STAGING: stage", stageID)
+        fmt.Println("Configute STAGING: stage", stageID, "with done", fmt.Sprintf("%p", done))
+        fmt.Println("Configute STAGING: stage", stageID, "with in", fmt.Sprintf("%p", stageInput))
+        fmt.Println("Configute STAGING: stage", stageID, "with out", fmt.Sprintf("%p", stageOutput))
 
         stageInput = stageOutput
         stageOutput = make(Bi)
@@ -62,15 +62,15 @@ func ExecutePipeline(in In, done In, stages ...Stage) Out {
     fmt.Println("Configute STAGING: in", stageInput)
 
     stageOutput := make(Bi)
-    for stageId, stage := range stages {
+    for stageID, stage := range stages {
         go func(stageId int, in In, done In, stage Stage, out Bi) {
             executePipepoint(stageId, in, done, stage, out)
-        }(stageId, stageInput, done, stage, stageOutput)
+        }(stageID, stageInput, done, stage, stageOutput)
 
-        fmt.Println("Configute STAGING: stage", stageId)
-        fmt.Println("Configute STAGING: stage", stageId, "with done", fmt.Sprintf("%p", done))
-        fmt.Println("Configute STAGING: stage", stageId, "with in", fmt.Sprintf("%p", stageInput))
-        fmt.Println("Configute STAGING: stage", stageId, "with out", fmt.Sprintf("%p", stageOutput))
+        fmt.Println("Configute STAGING: stage", stageID)
+        fmt.Println("Configute STAGING: stage", stageID, "with done", fmt.Sprintf("%p", done))
+        fmt.Println("Configute STAGING: stage", stageID, "with in", fmt.Sprintf("%p", stageInput))
+        fmt.Println("Configute STAGING: stage", stageID, "with out", fmt.Sprintf("%p", stageOutput))
 
         stageInput = stageOutput
         stageOutput = make(Bi)
@@ -81,8 +81,7 @@ func ExecutePipeline(in In, done In, stages ...Stage) Out {
     return stageInput
 }
 
-func executePipepoint(stageId int, in In, done In, stage Stage, out Bi) {
-
+func executePipepoint(stageID int, in In, done In, stage Stage, out Bi) {
     processor := func(stageId int, stage Stage, in In, out Bi) Out {
         staged := stage(in)
         terminated := make(Bi)
@@ -117,11 +116,10 @@ func executePipepoint(stageId int, in In, done In, stage Stage, out Bi) {
         }()
         return terminated
     }
-    terminated := processor(stageId, stage, in, out)
-    
-    fmt.Println("stage", stageId, "try", "terminated")
+    terminated := processor(stageID, stage, in, out)
+    fmt.Println("stage", stageID, "try", "terminated")
     <-terminated
-    fmt.Println("stage", stageId, "was", "terminated")
+    fmt.Println("stage", stageID, "was", "terminated")
 }
 
 ```
@@ -208,10 +206,56 @@ ok      command-line-arguments    90.950s
 
 ```
 
+### Дополнительное тестирование
+
+Пусть Стейджи представлены двумя Слиперами по 2 и 8 секунд
+
+```go
+stages := []Stage{
+    g("Sleep (2 sec)", func(v interface{}) interface{} { time.Sleep(2 * time.Second); return v }),
+    g("Sleep (8_sec)", func(v interface{}) interface{} { time.Sleep(8 * time.Second); return v }),
+}
+```
+
+Соответственно при запуске для данных
+
+```go
+data := []int{1, 2, 3}
+```
+
+Результат должен быть меньше 30 секунд
+
+```go
+start := time.Now()
+for s := range ExecutePipeline(in, nil, stages...) {
+    _ = s
+}
+elapsed := time.Since(start).Seconds()
+
+require.Less(t,
+    int64(elapsed),      // Засеченное время
+    int64(10*len(data))) // 10*3 = 30 сек
+```
+
+Практический результат теста:
+
+```bash
+go test -run TestPipelineConcurencyTime ./pipeline.go ./pipeline_test.go
+```
+
+подтверждает теорию:
+
+```text
+ok      command-line-arguments    26.020s
+
+```
+
 ## Вывод
 
 Как продемонстрировано, присутствует конкурентный доступ горутин к каналам, неблокирующим параллельное выполнение Стейджей.
 
-### На возможную доработку
+Если удалить комментарии, то объем кода станет соотвествовать требуемому в ~55 строк (авторская реализация не известна).
+
+## На возможную доработку
 
 На мой взгляд не хватает разве что ограничений на число одновременно работающих Стейджей, как делалось в предыдущей главе в задаче лимитирования числа одновременных `worker`.

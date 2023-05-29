@@ -13,6 +13,7 @@ func TestHw06(t *testing.T) {
 	files := []string{
 		"pipeline.go",
 		"N100TimesTesting.txt",
+		"TestPipelineConcurencyTime.txt",
 	}
 
 	substitutions := make(map[string]string)

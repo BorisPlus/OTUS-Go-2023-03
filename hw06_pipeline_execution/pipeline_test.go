@@ -50,9 +50,6 @@ func TestPipeline(t *testing.T) {
 		result := make([]string, 0, 10)
 		start := time.Now()
 		for s := range ExecutePipeline(in, nil, stages...) {
-			// fmt.Println(s)
-			// fmt.Println(&s)
-			// fmt.Println(s.(chan interface))
 			result = append(result, s.(string))
 		}
 		elapsed := time.Since(start)
@@ -92,5 +89,48 @@ func TestPipeline(t *testing.T) {
 
 		require.Len(t, result, 0)
 		require.Less(t, int64(elapsed), int64(abortDur)+int64(fault))
+	})
+}
+
+func TestPipelineConcurencyTime(t *testing.T) {
+	// Stage generator
+	g := func(_ string, f func(v interface{}) interface{}) Stage {
+		return func(in In) Out {
+			out := make(Bi)
+			go func() {
+				defer close(out)
+				for v := range in {
+					out <- f(v)
+				}
+			}()
+			return out
+		}
+	}
+
+	stages := []Stage{
+		g("Sleep (2 sec)", func(v interface{}) interface{} { time.Sleep(2 * time.Second); return v }),
+		g("Sleep (8_sec)", func(v interface{}) interface{} { time.Sleep(8 * time.Second); return v }),
+	}
+
+	t.Run("fast execute with concurrency work", func(t *testing.T) {
+		in := make(Bi)
+		data := []int{1, 2, 3}
+
+		go func() {
+			for _, v := range data {
+				in <- v
+			}
+			close(in)
+		}()
+
+		start := time.Now()
+		for s := range ExecutePipeline(in, nil, stages...) {
+			_ = s
+		}
+		elapsed := time.Since(start).Seconds()
+
+		require.Less(t,
+			int64(elapsed),
+			int64(10*len(data)))
 	})
 }

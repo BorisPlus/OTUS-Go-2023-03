@@ -127,11 +127,55 @@ go test -race -count=100 ./pipeline.go ./pipeline_test.go > N100TimesTesting.txt
 {{ N100TimesTesting.txt }}
 ```
 
+### Дополнительное тестирование
+
+Пусть Стейджи представлены двумя Слиперами по 2 и 8 секунд
+
+```go
+stages := []Stage{
+    g("Sleep (2 sec)", func(v interface{}) interface{} { time.Sleep(2 * time.Second); return v }),
+    g("Sleep (8_sec)", func(v interface{}) interface{} { time.Sleep(8 * time.Second); return v }),
+}
+```
+
+Соответственно при запуске для данных
+
+```go
+data := []int{1, 2, 3}
+```
+
+Результат должен быть меньше 30 секунд
+
+```go
+start := time.Now()
+for s := range ExecutePipeline(in, nil, stages...) {
+    _ = s
+}
+elapsed := time.Since(start).Seconds()
+
+require.Less(t,
+    int64(elapsed),      // Засеченное время
+    int64(10*len(data))) // 10*3 = 30 сек
+```
+
+Практический результат теста:
+
+```bash
+go test -run TestPipelineConcurencyTime ./pipeline.go ./pipeline_test.go
+```
+
+подтверждает теорию:
+
+```text
+{{ TestPipelineConcurencyTime.txt }}
+```
+
 ## Вывод
 
 Как продемонстрировано, присутствует конкурентный доступ горутин к каналам, неблокирующим параллельное выполнение Стейджей.
 
 Если удалить комментарии, то объем кода станет соотвествовать требуемому в ~55 строк (авторская реализация не известна).
-### На возможную доработку
+
+## На возможную доработку
 
 На мой взгляд не хватает разве что ограничений на число одновременно работающих Стейджей, как делалось в предыдущей главе в задаче лимитирования числа одновременных `worker`.
