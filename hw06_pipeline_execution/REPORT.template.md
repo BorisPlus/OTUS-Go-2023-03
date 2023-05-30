@@ -75,6 +75,20 @@ Configute STAGING: out 0xc00008e300 ===================╝ Это один и т
 ...
 ```
 
+В частности? в случае отсутствия Стейджей исходящий канал пайплайна является "прозрачным" входящим (тестирование ниже)
+
+```text
+=== RUN   TestNoStages
+=== RUN   TestNoStages/there_are_no_stages
+Configute STAGING: in 0xc00008e480 ========╗ Это один и 
+Configute STAGING: out 0xc00008e480 =======╝ тот же канал.
+
+--- PASS: TestNoStages (0.00s)
+    --- PASS: TestNoStages/there_are_no_stages (0.00s)
+PASS
+ok  command-line-arguments 0.005s
+```
+
 В целях неблокирования работы Стейджей их функционал обернут в горутины.
 
 Внутри горутин:
@@ -131,6 +145,8 @@ go test -race -count=100 ./pipeline.go ./pipeline_test.go > N100TimesTesting.txt
 
 ### Дополнительное тестирование
 
+### Длительность снижается
+
 Пусть Стейджи представлены двумя Слиперами по 2 и 8 секунд
 
 ```go
@@ -170,6 +186,20 @@ go test -run TestPipelineConcurencyTime ./pipeline.go ./pipeline_test.go
 
 ```text
 {{ TestPipelineConcurencyTime.txt }}
+```
+
+### Отсутствие Стейджей
+
+В отсутствии Стейджей, входящий канал превращается в "прозрачный" исходящий
+
+```bash
+go test -run TestNoStages ./pipeline.go ./pipeline_test.go > TestNoStages.txt
+```
+
+подтверждает теорию:
+
+```text
+{{ TestNoStages.txt }}
 ```
 
 ## Вывод

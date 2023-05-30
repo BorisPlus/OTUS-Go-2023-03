@@ -63,11 +63,9 @@ func ExecutePipeline(in In, done In, stages ...Stage) Out {
     stageInput := in
     fmt.Println("Configute STAGING: in", stageInput)
 
-    stageOutput := make(Bi)
     for stageID, stage := range stages {
-        go func(stageId int, in In, done In, stage Stage, out Bi) {
-            executePipepoint(stageId, in, done, stage, out)
-        }(stageID, stageInput, done, stage, stageOutput)
+        stagedInput := stage(stageInput)
+        stageOutput := executePipepoint(stageID, stagedInput, done)
 
         fmt.Println("Configute STAGING: stage", stageID)
         fmt.Println("Configute STAGING: stage", stageID, "with done", fmt.Sprintf("%p", done))
@@ -75,7 +73,6 @@ func ExecutePipeline(in In, done In, stages ...Stage) Out {
         fmt.Println("Configute STAGING: stage", stageID, "with out", fmt.Sprintf("%p", stageOutput))
 
         stageInput = stageOutput
-        stageOutput = make(Bi)
     }
 
     fmt.Println("Configute STAGING: out", stageInput)
@@ -83,45 +80,33 @@ func ExecutePipeline(in In, done In, stages ...Stage) Out {
     return stageInput
 }
 
-func executePipepoint(stageID int, in In, done In, stage Stage, out Bi) {
-    processor := func(stageId int, stage Stage, in In, out Bi) Out {
-        staged := stage(in)
-        terminated := make(Bi)
-        go func() {
-            defer func() {
-                fmt.Println("stage", stageId, "processor", "end")
-
-                fmt.Println("stage", stageId, "processor", "try to close(out)")
-                close(out)
-                fmt.Println("stage", stageId, "processor", "close(out)")
-
-                fmt.Println("stage", stageId, "processor", "try setup terminated")
-                close(terminated)
-                fmt.Println("stage", stageId, "processor", "was setup terminated")
-            }()
-            for {
-                select {
-                case value, ok := <-staged:
-                    fmt.Println("stage", stageId, "processor", "get from input", "value", value, "ok", ok)
-                    if !ok {
-                        fmt.Println("stage", stageId, "processor", "!ok - return")
-                        return
-                    }
-                    fmt.Println("stage", stageId, "processor", "get from input", "value", value, "ok", ok, "try put to out")
-                    out <- value
-                    fmt.Println("stage", stageId, "processor", "get from input", "value", value, "ok", ok, "was put to out")
-                case <-done:
-                    fmt.Println("stage", stageId, "processor", "done - return")
+func executePipepoint(stageID int, in In, done In) Bi {
+    out := make(Bi)
+    go func() {
+        defer func() {
+            fmt.Println("stage", stageID, "processor", "end")
+            fmt.Println("stage", stageID, "processor", "try to close(out)")
+            close(out)
+            fmt.Println("stage", stageID, "processor", "close(out)")
+        }()
+        for {
+            select {
+            case value, ok := <-in:
+                fmt.Println("stage", stageID, "processor", "get from input", "value", value, "ok", ok)
+                if !ok {
+                    fmt.Println("stage", stageID, "processor", "!ok - return")
                     return
                 }
+                fmt.Println("stage", stageID, "processor", "get from input", "value", value, "ok", ok, "try put to out")
+                out <- value
+                fmt.Println("stage", stageID, "processor", "get from input", "value", value, "ok", ok, "was put to out")
+            case <-done:
+                fmt.Println("stage", stageID, "processor", "done - return")
+                return
             }
-        }()
-        return terminated
-    }
-    terminated := processor(stageID, stage, in, out)
-    fmt.Println("stage", stageID, "try", "terminated")
-    <-terminated
-    fmt.Println("stage", stageID, "was", "terminated")
+        }
+    }()
+    return out
 }
 
 ```
@@ -151,6 +136,20 @@ Configute STAGING: stage 3 with in 0xc00008e2a0    ====╝ --------╮ Тут с
 Configute STAGING: stage 3 with out 0xc00008e300   ====╗ <-------╯ перекладчик из канала в канал.
 Configute STAGING: out 0xc00008e300 ===================╝ Это один и тот же канал.
 ...
+```
+
+В частности? в случае отсутствия Стейджей исходящий канал пайплайна является "прозрачным" входящим (тестирование ниже)
+
+```text
+=== RUN   TestNoStages
+=== RUN   TestNoStages/there_are_no_stages
+Configute STAGING: in 0xc00008e480 ========╗ Это один и 
+Configute STAGING: out 0xc00008e480 =======╝ тот же канал.
+
+--- PASS: TestNoStages (0.00s)
+    --- PASS: TestNoStages/there_are_no_stages (0.00s)
+PASS
+ok  command-line-arguments 0.005s
 ```
 
 В целях неблокирования работы Стейджей их функционал обернут в горутины.
@@ -210,6 +209,8 @@ ok      command-line-arguments    90.950s
 
 ### Дополнительное тестирование
 
+### Длительность снижается
+
 Пусть Стейджи представлены двумя Слиперами по 2 и 8 секунд
 
 ```go
@@ -250,6 +251,20 @@ go test -run TestPipelineConcurencyTime ./pipeline.go ./pipeline_test.go
 ```text
 ok      command-line-arguments    26.020s
 
+```
+
+### Отсутствие Стейджей
+
+В отсутствии Стейджей, входящий канал превращается в "прозрачный" исходящий
+
+```bash
+go test -run TestNoStages ./pipeline.go ./pipeline_test.go > TestNoStages.txt
+```
+
+подтверждает теорию:
+
+```text
+{{ TestNoStages.txt }}
 ```
 
 ## Вывод

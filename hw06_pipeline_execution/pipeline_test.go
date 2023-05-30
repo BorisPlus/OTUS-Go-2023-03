@@ -134,3 +134,25 @@ func TestPipelineConcurencyTime(t *testing.T) {
 			int64(10*len(data)))
 	})
 }
+
+func TestNoStages(t *testing.T) {
+	stages := []Stage{}
+
+	t.Run("there are no stages", func(t *testing.T) {
+		in := make(Bi)
+		data := []int{1, 2, 3}
+
+		go func() {
+			for _, v := range data {
+				in <- v
+			}
+			close(in)
+		}()
+
+		result := make([]int, 0, len(data))
+		for s := range ExecutePipeline(in, nil, stages...) {
+			result = append(result, s.(int))
+		}
+		require.Equal(t, data, result)
+	})
+}
