@@ -264,7 +264,16 @@ go test -run TestNoStages ./pipeline.go ./pipeline_test.go > TestNoStages.txt
 подтверждает теорию:
 
 ```text
-{{ TestNoStages.txt }}
+=== RUN   TestNoStages
+=== RUN   TestNoStages/there_are_no_stages
+Configute STAGING: in 0xc00008e480
+Configute STAGING: out 0xc00008e480
+
+--- PASS: TestNoStages (0.00s)
+    --- PASS: TestNoStages/there_are_no_stages (0.00s)
+PASS
+ok      command-line-arguments    0.005s
+
 ```
 
 ## Вывод

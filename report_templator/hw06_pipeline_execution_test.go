@@ -14,6 +14,7 @@ func TestHw06(t *testing.T) {
 		"pipeline.go",
 		"N100TimesTesting.txt",
 		"TestPipelineConcurencyTime.txt",
+		"TestNoStages.txt",
 	}
 
 	substitutions := make(map[string]string)
