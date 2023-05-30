@@ -18,9 +18,12 @@ func ExecutePipeline(in In, done In, stages ...Stage) Out {
 
 	stageOutput := make(Bi)
 	for stageID, stage := range stages {
-		go func(stageId int, in In, done In, stage Stage, out Bi) {
-			executePipepoint(stageId, in, done, stage, out)
-		}(stageID, stageInput, done, stage, stageOutput)
+
+		staged := stage(stageInput)
+
+		go func(stageId int, in In, done In, out Bi) {
+			executePipepoint(stageId, in, done, out)
+		}(stageID, staged, done, stageOutput)
 
 		fmt.Println("Configute STAGING: stage", stageID)
 		fmt.Println("Configute STAGING: stage", stageID, "with done", fmt.Sprintf("%p", done))
@@ -36,9 +39,8 @@ func ExecutePipeline(in In, done In, stages ...Stage) Out {
 	return stageInput
 }
 
-func executePipepoint(stageID int, in In, done In, stage Stage, out Bi) {
-	processor := func(stageId int, stage Stage, in In, out Bi) Out {
-		staged := stage(in)
+func executePipepoint(stageID int, in In, done In, out Bi) {
+	processor := func(stageId int, in In, out Bi) Out {
 		terminated := make(Bi)
 		go func() {
 			defer func() {
@@ -54,7 +56,7 @@ func executePipepoint(stageID int, in In, done In, stage Stage, out Bi) {
 			}()
 			for {
 				select {
-				case value, ok := <-staged:
+				case value, ok := <-in:
 					fmt.Println("stage", stageId, "processor", "get from input", "value", value, "ok", ok)
 					if !ok {
 						fmt.Println("stage", stageId, "processor", "!ok - return")
@@ -71,7 +73,7 @@ func executePipepoint(stageID int, in In, done In, stage Stage, out Bi) {
 		}()
 		return terminated
 	}
-	terminated := processor(stageID, stage, in, out)
+	terminated := processor(stageID, in, out)
 	fmt.Println("stage", stageID, "try", "terminated")
 	<-terminated
 	fmt.Println("stage", stageID, "was", "terminated")
