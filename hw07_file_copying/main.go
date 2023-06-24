@@ -15,7 +15,7 @@ var (
 func init() {
 	flag.StringVar(&from, "from", "", "file to read from")
 	flag.StringVar(&to, "to", "", "file to write to")
-	flag.Int64Var(&limit, "limit", 4096, "byte-limit to copy (default: 4096)")
+	flag.Int64Var(&limit, "limit", 0, "byte-limit to copy (default: 0)")
 	flag.Int64Var(&offset, "offset", 0, "byte-offset of input file (default: 0)")
 	//
 	flag.BoolVar(&v, "v", false, "verbose log output (default: false)")

@@ -28,7 +28,7 @@ go build -o copier.goc
         -to
           file to write to
         -limit
-          byte-limit to copy (default: 4096)
+          byte-limit to copy (default: 0)
         -offset
           byte-offset of input file (default: 0)
         -perc
@@ -68,7 +68,7 @@ Copy ...100.00%
         -to
           file to write to
         -limit
-          byte-limit to copy (default: 4096)
+          byte-limit to copy (default: 0)
         -offset
          byte-offset of input file (default: 0)
         -segment
