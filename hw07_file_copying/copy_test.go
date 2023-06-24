@@ -224,43 +224,43 @@ func TestCopySegmentedBigFile(t *testing.T) {
 	}{
 		{
 			message: "Побайтное копирование 50000 байт с 1 врайтером.",
-			offset:  100, limit: 50000, segmentSize: 1, writersCount: 1,
+			offset:  0, limit: 50000, segmentSize: 1, writersCount: 1,
 		},
 		{
 			message: "Копирование 50000 байт с буфером 256-байт с 1 врайтером.",
-			offset:  100, limit: 50000, segmentSize: 256, writersCount: 1,
+			offset:  0, limit: 50000, segmentSize: 256, writersCount: 1,
 		},
 		{
 			message: "Копирование 50000 байт с буфером 256-байт с 4 врайтерами.",
-			offset:  100, limit: 50000, segmentSize: 256, writersCount: 4,
+			offset:  0, limit: 50000, segmentSize: 256, writersCount: 4,
 		},
 		{
 			message: "Копирование 50000 байт с буфером 256-байт с 10 врайтерами.",
-			offset:  100, limit: 50000, segmentSize: 256, writersCount: 10,
+			offset:  0, limit: 50000, segmentSize: 256, writersCount: 10,
 		},
 		{
 			message: "Копирование 50000 байт с буфером 500-байт с 1 врайтерами.",
-			offset:  100, limit: 50000, segmentSize: 500, writersCount: 1,
+			offset:  0, limit: 50000, segmentSize: 500, writersCount: 1,
 		},
 		{
 			message: "Копирование 50000 байт с буфером 500-байт с 10 врайтером.",
-			offset:  100, limit: 50000, segmentSize: 500, writersCount: 10,
+			offset:  0, limit: 50000, segmentSize: 500, writersCount: 10,
 		},
 		{
 			message: "Копирование 50000 байт с буфером 500-байт с 100 врайтерами.",
-			offset:  100, limit: 50000, segmentSize: 500, writersCount: 100,
+			offset:  0, limit: 50000, segmentSize: 500, writersCount: 100,
 		},
 		{
 			message: "Копирование 50000 байт с буфером 1000-байт с 5 врайтерами.",
-			offset:  100, limit: 50000, segmentSize: 1000, writersCount: 5,
+			offset:  0, limit: 50000, segmentSize: 1000, writersCount: 5,
 		},
 		{
 			message: "Копирование 50000 байт с буфером 1000-байт с 50 врайтерами.",
-			offset:  100, limit: 50000, segmentSize: 1000, writersCount: 50,
+			offset:  0, limit: 50000, segmentSize: 1000, writersCount: 50,
 		},
 		{
 			message: "Копирую 50000 байт в 1 врайтер :)",
-			offset:  100, limit: 50000, segmentSize: -1, writersCount: 1,
+			offset:  0, limit: 50000, segmentSize: -1, writersCount: 1,
 		},
 	}
 
