@@ -53,7 +53,7 @@ func СopySegmented(params CopySegmentedParams) error {
 	if err != nil {
 		defer input.Close()
 		log.Println(err)
-		return fmt.Errorf("\"from\" - %s", err.Error())
+		return fmt.Errorf("\"from\" - %q", err.Error())
 	}
 	defer input.Close()
 
@@ -90,7 +90,7 @@ func СopySegmented(params CopySegmentedParams) error {
 	if err != nil {
 		defer output.Close()
 		log.Println(err)
-		return fmt.Errorf("\"to\" - %s", err.Error())
+		return fmt.Errorf("\"to\" - %q", err.Error())
 	}
 	if err := output.Truncate(repairLimit); err != nil {
 		log.Println(err)
