@@ -79,7 +79,7 @@ func main() {
 		perc,
 		v,
 	}
-	err := СopySegmented(params)
+	err := CopySegmented(params)
 	if err != nil {
 		fmt.Println("Error", err)
 	}

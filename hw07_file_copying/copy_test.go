@@ -110,7 +110,7 @@ func TestCopySegmented(t *testing.T) {
 			false,
 			false,
 		}
-		err := СopySegmented(params)
+		err := CopySegmented(params)
 		if err != nil {
 			fmt.Println("Copy Error", err)
 		}
@@ -176,7 +176,7 @@ func TestCopySegmentedCustomParams(t *testing.T) {
 			false,
 			false,
 		}
-		err := СopySegmented(params)
+		err := CopySegmented(params)
 		if err != nil {
 			fmt.Println("Copy Error", err)
 		}
@@ -290,7 +290,7 @@ func TestCopySegmentedBigFile(t *testing.T) {
 					verbose,
 					percentaging,
 				}
-				err := СopySegmented(params)
+				err := CopySegmented(params)
 				if err != nil {
 					fmt.Println("СopySegmented Error", err)
 				}
@@ -456,7 +456,7 @@ func BenchmarkCopySegmented(b *testing.B) {
 					verbose,
 					percentaging,
 				}
-				err := СopySegmented(params)
+				err := CopySegmented(params)
 				if err != nil {
 					fmt.Println("СopySegmented Error", err)
 				}

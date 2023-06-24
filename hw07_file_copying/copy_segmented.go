@@ -25,10 +25,10 @@ func percenteger(part, full int64) {
 	suffix := "\r"
 	if part == full {
 		suffix = "\n"
-		// fmt.Fprintf(os.Stdout, "\rСopySegmented ...%.2f%%%s", 100., suffix)
+		// fmt.Fprintf(os.Stdout, "\rCopySegmented ...%.2f%%%s", 100., suffix)
 		// return
 	}
-	fmt.Fprintf(os.Stdout, "\rСopySegmented ...%.2f%%%s", float32(part)/float32(full)*100, suffix)
+	fmt.Fprintf(os.Stdout, "\rCopySegmented ...%.2f%%%s", float32(part)/float32(full)*100, suffix)
 	// fmt.Println()
 }
 
@@ -39,7 +39,7 @@ type CopySegmentedParams struct {
 	perc, v                bool
 }
 
-func СopySegmented(params CopySegmentedParams) error {
+func CopySegmented(params CopySegmentedParams) error {
 	if !params.v {
 		log.SetOutput(io.Discard)
 	}
@@ -47,13 +47,14 @@ func СopySegmented(params CopySegmentedParams) error {
 		return ErrNotPositiveWritersCount
 	}
 
-	log.Printf("СopySegmented")
+	log.Printf("CopySegmented")
 	log.Printf("from = %s\n", params.from)
 	input, err := os.Open(params.from)
 	if err != nil {
 		defer input.Close()
 		log.Println(err)
-		return fmt.Errorf("\"from\" - %q", err.Error())
+		// return fmt.Errorf("\"to\" - %q", err.Error())
+		return err
 	}
 	defer input.Close()
 
@@ -90,7 +91,8 @@ func СopySegmented(params CopySegmentedParams) error {
 	if err != nil {
 		defer output.Close()
 		log.Println(err)
-		return fmt.Errorf("\"to\" - %q", err.Error())
+		// return fmt.Errorf("\"to\" - %q", err.Error())
+		return err
 	}
 	if err := output.Truncate(repairLimit); err != nil {
 		log.Println(err)
