@@ -405,49 +405,49 @@ OK. Результат соотвествует эталону: testdata/out_off
 === RUN   TestCopySegmentedBigFile
 Run [ID 1]: Побайтное копирование 50000 байт с 1 врайтером.
 === RUN   TestCopySegmentedBigFile/Побайтное_копирование_50000_байт_с_1_врайтером.
-OK. Результат соотвествует MD5-хешу (заранее посчитан): testdata/output.1.txt
+OK. Результат testdata/output.1.txt соотвествует эталону: ./testdata/alice29.ethalon.txt
 Run [ID 2]: Копирование 50000 байт с буфером 256-байт с 1 врайтером.
 === RUN   TestCopySegmentedBigFile/Копирование_50000_байт_с_буфером_256-байт_с_1_врайтером.
-OK. Результат соотвествует MD5-хешу (заранее посчитан): testdata/output.2.txt
+OK. Результат testdata/output.2.txt соотвествует эталону: ./testdata/alice29.ethalon.txt
 Run [ID 3]: Копирование 50000 байт с буфером 256-байт с 4 врайтерами.
 === RUN   TestCopySegmentedBigFile/Копирование_50000_байт_с_буфером_256-байт_с_4_врайтерами.
-OK. Результат соотвествует MD5-хешу (заранее посчитан): testdata/output.3.txt
+OK. Результат testdata/output.3.txt соотвествует эталону: ./testdata/alice29.ethalon.txt
 Run [ID 4]: Копирование 50000 байт с буфером 256-байт с 10 врайтерами.
 === RUN   TestCopySegmentedBigFile/Копирование_50000_байт_с_буфером_256-байт_с_10_врайтерами.
-OK. Результат соотвествует MD5-хешу (заранее посчитан): testdata/output.4.txt
+OK. Результат testdata/output.4.txt соотвествует эталону: ./testdata/alice29.ethalon.txt
 Run [ID 5]: Копирование 50000 байт с буфером 500-байт с 1 врайтерами.
 === RUN   TestCopySegmentedBigFile/Копирование_50000_байт_с_буфером_500-байт_с_1_врайтерами.
-OK. Результат соотвествует MD5-хешу (заранее посчитан): testdata/output.5.txt
+OK. Результат testdata/output.5.txt соотвествует эталону: ./testdata/alice29.ethalon.txt
 Run [ID 6]: Копирование 50000 байт с буфером 500-байт с 10 врайтером.
 === RUN   TestCopySegmentedBigFile/Копирование_50000_байт_с_буфером_500-байт_с_10_врайтером.
-OK. Результат соотвествует MD5-хешу (заранее посчитан): testdata/output.6.txt
+OK. Результат testdata/output.6.txt соотвествует эталону: ./testdata/alice29.ethalon.txt
 Run [ID 7]: Копирование 50000 байт с буфером 500-байт с 100 врайтерами.
 === RUN   TestCopySegmentedBigFile/Копирование_50000_байт_с_буфером_500-байт_с_100_врайтерами.
-OK. Результат соотвествует MD5-хешу (заранее посчитан): testdata/output.7.txt
+OK. Результат testdata/output.7.txt соотвествует эталону: ./testdata/alice29.ethalon.txt
 Run [ID 8]: Копирование 50000 байт с буфером 1000-байт с 5 врайтерами.
 === RUN   TestCopySegmentedBigFile/Копирование_50000_байт_с_буфером_1000-байт_с_5_врайтерами.
-OK. Результат соотвествует MD5-хешу (заранее посчитан): testdata/output.8.txt
+OK. Результат testdata/output.8.txt соотвествует эталону: ./testdata/alice29.ethalon.txt
 Run [ID 9]: Копирование 50000 байт с буфером 1000-байт с 50 врайтерами.
 === RUN   TestCopySegmentedBigFile/Копирование_50000_байт_с_буфером_1000-байт_с_50_врайтерами.
-OK. Результат соотвествует MD5-хешу (заранее посчитан): testdata/output.9.txt
+OK. Результат testdata/output.9.txt соотвествует эталону: ./testdata/alice29.ethalon.txt
 Run [ID 10]: Копирую 50000 байт в 1 врайтер :)
 === RUN   TestCopySegmentedBigFile/Копирую_50000_байт_в_1_врайтер_:)
-OK. Результат соотвествует MD5-хешу (заранее посчитан): testdata/output.10.txt
---- PASS: TestCopySegmentedBigFile (0.82s)
-    --- PASS: TestCopySegmentedBigFile/Побайтное_копирование_50000_байт_с_1_врайтером. (0.73s)
+OK. Результат testdata/output.10.txt соотвествует эталону: ./testdata/alice29.ethalon.txt
+--- PASS: TestCopySegmentedBigFile (1.01s)
+    --- PASS: TestCopySegmentedBigFile/Побайтное_копирование_50000_байт_с_1_врайтером. (0.91s)
     --- PASS: TestCopySegmentedBigFile/Копирование_50000_байт_с_буфером_256-байт_с_1_врайтером. (0.01s)
     --- PASS: TestCopySegmentedBigFile/Копирование_50000_байт_с_буфером_256-байт_с_4_врайтерами. (0.01s)
     --- PASS: TestCopySegmentedBigFile/Копирование_50000_байт_с_буфером_256-байт_с_10_врайтерами. (0.01s)
-    --- PASS: TestCopySegmentedBigFile/Копирование_50000_байт_с_буфером_500-байт_с_1_врайтерами. (0.01s)
+    --- PASS: TestCopySegmentedBigFile/Копирование_50000_байт_с_буфером_500-байт_с_1_врайтерами. (0.03s)
     --- PASS: TestCopySegmentedBigFile/Копирование_50000_байт_с_буфером_500-байт_с_10_врайтером. (0.01s)
     --- PASS: TestCopySegmentedBigFile/Копирование_50000_байт_с_буфером_500-байт_с_100_врайтерами. (0.01s)
-    --- PASS: TestCopySegmentedBigFile/Копирование_50000_байт_с_буфером_1000-байт_с_5_врайтерами. (0.02s)
+    --- PASS: TestCopySegmentedBigFile/Копирование_50000_байт_с_буфером_1000-байт_с_5_врайтерами. (0.01s)
     --- PASS: TestCopySegmentedBigFile/Копирование_50000_байт_с_буфером_1000-байт_с_50_врайтерами. (0.01s)
     --- PASS: TestCopySegmentedBigFile/Копирую_50000_байт_в_1_врайтер_:) (0.01s)
 PASS
 ```
 
-##### Вывод о соотвествии
+##### Вывод о соответствии
 
 Обе реализации верны.
 
