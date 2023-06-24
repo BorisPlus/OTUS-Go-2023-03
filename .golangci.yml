@@ -6,8 +6,8 @@ run:
 
 linters-settings:
   funlen:
-    lines: 150
-    statements: 80
+    lines: 200
+    statements: 120
 
 issues:
   exclude-rules:
