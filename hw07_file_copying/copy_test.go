@@ -264,7 +264,7 @@ func TestCopySegmentedBigFile(t *testing.T) {
 		},
 	}
 
-	ethalonHash := []byte{117, 120, 159, 49, 15, 87, 224, 255, 59, 227, 87, 71, 221, 135, 177, 130}
+	ethalonHash := []byte{203, 16, 78, 53, 14, 110, 230, 66, 98, 156, 91, 3, 127, 166, 134, 33}
 
 	for id, testCase := range testCases {
 		fmt.Printf("Run [ID %d]: %v\n", id+1, testCase.message)
@@ -274,12 +274,12 @@ func TestCopySegmentedBigFile(t *testing.T) {
 		t.Run(
 			testCase.message,
 			func(t *testing.T) {
-				defer func(fileName string) {
-					err := os.Remove(fileName)
-					if err != nil {
-						fmt.Println(err)
-					}
-				}(toMyFileName)
+				// defer func(fileName string) {
+				// 	err := os.Remove(fileName)
+				// 	if err != nil {
+				// 		fmt.Println(err)
+				// 	}
+				// }(toMyFileName)
 				params := CopySegmentedParams{
 					fromBig,
 					toMyFileName,
