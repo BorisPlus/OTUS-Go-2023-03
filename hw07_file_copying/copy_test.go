@@ -264,7 +264,7 @@ func TestCopySegmentedBigFile(t *testing.T) {
 		},
 	}
 
-	ethalonHash := []byte{203, 16, 78, 53, 14, 110, 230, 66, 98, 156, 91, 3, 127, 166, 134, 33}
+	ethalonFileName := "./testdata/alice29.ethalon.txt"
 
 	for id, testCase := range testCases {
 		fmt.Printf("Run [ID %d]: %v\n", id+1, testCase.message)
@@ -274,12 +274,12 @@ func TestCopySegmentedBigFile(t *testing.T) {
 		t.Run(
 			testCase.message,
 			func(t *testing.T) {
-				// defer func(fileName string) {
-				// 	err := os.Remove(fileName)
-				// 	if err != nil {
-				// 		fmt.Println(err)
-				// 	}
-				// }(toMyFileName)
+				defer func(fileName string) {
+					err := os.Remove(fileName)
+					if err != nil {
+						fmt.Println(err)
+					}
+				}(toMyFileName)
 				params := CopySegmentedParams{
 					fromBig,
 					toMyFileName,
@@ -306,12 +306,25 @@ func TestCopySegmentedBigFile(t *testing.T) {
 				if err != nil {
 					panic(err)
 				}
-				if fmt.Sprintf("%v", hashMyFile.Sum(nil)) != fmt.Sprintf("%v", ethalonHash) {
+
+				ethalonFile, errOpenEthalon := os.Open(ethalonFileName)
+				if errOpenEthalon != nil {
+					panic(errOpenEthalon)
+				}
+				defer ethalonFile.Close()
+
+				hashEthalonFile := md5.New()
+				_, err = io.Copy(hashEthalonFile, ethalonFile)
+				if err != nil {
+					panic(err)
+				}
+
+				if fmt.Sprintf("%v", hashMyFile.Sum(nil)) != fmt.Sprintf("%v", hashEthalonFile.Sum(nil)) {
 					fmt.Printf("hashMyFile  %v\n", hashMyFile.Sum(nil))
-					fmt.Printf("ethalonHash %v\n", ethalonHash)
+					fmt.Printf("ethalonHash %v\n", hashEthalonFile.Sum(nil))
 					t.Errorf("Run [ID %d]: file %s has bad hash-sum\n", id+1, toMyFileName)
 				}
-				fmt.Printf("OK. Результат соотвествует MD5-хешу (заранее посчитан): %s\n", toMyFileName)
+				fmt.Printf("OK. Результат %s соотвествует эталону: %s\n", toMyFileName, ethalonFileName)
 			},
 		)
 	}
