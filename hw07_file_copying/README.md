@@ -39,5 +39,3 @@
 * `os.OpenFile`, `os.Create`, `os.FileMode`
 * `io.CopyN`
 * `os.CreateTemp`
-
-##
