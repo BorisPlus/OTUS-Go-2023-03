@@ -11,7 +11,7 @@ import (
 const (
 	fromInputTxt = "testdata/input.txt"
 	//
-	fromBig = "testdata/alice29.txt"
+	fromBig = "testdata/alice29.text"
 )
 
 func TestCopy(t *testing.T) {
@@ -264,7 +264,7 @@ func TestCopySegmentedBigFile(t *testing.T) {
 		},
 	}
 
-	ethalonFileName := "./testdata/alice29.ethalon.txt"
+	ethalonFileName := "./testdata/alice29.ethalon.text"
 
 	for id, testCase := range testCases {
 		fmt.Printf("Run [ID %d]: %v\n", id+1, testCase.message)
@@ -324,6 +324,8 @@ func TestCopySegmentedBigFile(t *testing.T) {
 					fmt.Printf("ethalonHash %v\n", hashEthalonFile.Sum(nil))
 					t.Errorf("Run [ID %d]: file %s has bad hash-sum\n", id+1, toMyFileName)
 				}
+				fmt.Printf("ethalonHash %v\n", hashEthalonFile.Sum(nil))
+				fmt.Printf("hashMyFile  %v\n", hashMyFile.Sum(nil))
 				fmt.Printf("OK. Результат %s соотвествует эталону: %s\n", toMyFileName, ethalonFileName)
 			},
 		)
