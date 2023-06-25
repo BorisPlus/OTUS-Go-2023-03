@@ -9,9 +9,11 @@ import (
 )
 
 const (
-	fromInputTxt = "testdata/input.txt"
-	//
-	fromBig = "testdata/alice29.text"
+	fromBig                 = "testdata/alice29.text"
+	fromInputTxt            = "testdata/input.txt"
+	toMyFileNameTemplate    = "testdata/out_offset%d_limit%d_test_copy.txt"
+	outputIdentedTemplate   = "testdata/output.%d.txt"
+	ethalonFileNameTemplate = "testdata/out_offset%d_limit%d.txt"
 )
 
 func TestCopy(t *testing.T) {
@@ -27,9 +29,7 @@ func TestCopy(t *testing.T) {
 		{offset: 6000, limit: 1000},
 	}
 	for _, testCase := range testCases {
-		toMyFileNameTemplate := "testdata/out_offset%d_limit%d_test_copy.txt"
 		toMyFileName := fmt.Sprintf(toMyFileNameTemplate, testCase.offset, testCase.limit)
-		ethalonFileNameTemplate := "testdata/out_offset%d_limit%d.txt"
 		ethalonFileName := fmt.Sprintf(ethalonFileNameTemplate, testCase.offset, testCase.limit)
 		defer func(file string) {
 			err := os.Remove(file)
@@ -47,6 +47,66 @@ func TestCopy(t *testing.T) {
 			fmt.Println("Copy Error", err)
 		}
 		myFile, errOpenMy := os.Open(toMyFileName)
+		if errOpenMy != nil {
+			t.Errorf("problem with checked file %q\n", toMyFileName)
+		}
+		defer myFile.Close()
+		ethalonFile, errOpenEthalon := os.Open(ethalonFileName)
+		if errOpenEthalon != nil {
+			t.Errorf("problem with ethalon file %q\n", ethalonFileName)
+		}
+		defer ethalonFile.Close()
+
+		hashMyFile := md5.New()
+		_, err = io.Copy(hashMyFile, myFile)
+		if err != nil {
+			panic(err)
+		}
+		hashEthalonFile := md5.New()
+		_, err = io.Copy(hashEthalonFile, ethalonFile)
+		if err != nil {
+			panic(err)
+		}
+
+		if fmt.Sprintf("%v", hashMyFile.Sum(nil)) != fmt.Sprintf("%v", hashEthalonFile.Sum(nil)) {
+			t.Errorf("files %s and %s are not the same\n", toMyFileName, ethalonFileName)
+		}
+		fmt.Printf("OK. Результат соотвествует эталону: %s\n", toMyFileName)
+	}
+}
+
+func TestCopyFast(t *testing.T) {
+	testCases := []struct {
+		offset int64
+		limit  int64
+	}{
+		{offset: 0, limit: 0},
+		{offset: 0, limit: 10},
+		{offset: 0, limit: 1000},
+		{offset: 0, limit: 10000},
+		{offset: 100, limit: 1000},
+		{offset: 6000, limit: 1000},
+	}
+	for _, testCase := range testCases {
+		toMyFastFileNameTemplate := "testdata/out_offset%d_limit%d_test_copy_fast.txt"
+		toMyFastFileName := fmt.Sprintf(toMyFastFileNameTemplate, testCase.offset, testCase.limit)
+		ethalonFileName := fmt.Sprintf(ethalonFileNameTemplate, testCase.offset, testCase.limit)
+		defer func(file string) {
+			err := os.Remove(file)
+			if err != nil {
+				fmt.Println(err)
+			}
+		}(toMyFastFileName)
+		err := CopyFast(
+			fromInputTxt,
+			toMyFastFileName,
+			testCase.offset,
+			testCase.limit,
+		)
+		if err != nil {
+			fmt.Println("CopyFast Error", err)
+		}
+		myFile, errOpenMy := os.Open(toMyFastFileName)
 		if errOpenMy != nil {
 			panic(errOpenMy)
 		}
@@ -69,9 +129,9 @@ func TestCopy(t *testing.T) {
 		}
 
 		if fmt.Sprintf("%v", hashMyFile.Sum(nil)) != fmt.Sprintf("%v", hashEthalonFile.Sum(nil)) {
-			t.Errorf("files %s and %s are not the same\n", toMyFileName, ethalonFileName)
+			t.Errorf("files %s and %s are not the same\n", toMyFastFileName, ethalonFileName)
 		}
-		fmt.Printf("OK. Результат соотвествует эталону: %s\n", toMyFileName)
+		fmt.Printf("OK. Результат соотвествует эталону: %s\n", toMyFastFileName)
 	}
 }
 
@@ -90,9 +150,7 @@ func TestCopySegmented(t *testing.T) {
 		{offset: 6000, limit: 1000, segmentSize: 3, writersCount: 20},
 	}
 	for _, testCase := range testCases {
-		ethalonFileNameTemplate := "testdata/out_offset%d_limit%d.txt"
 		ethalonFileName := fmt.Sprintf(ethalonFileNameTemplate, testCase.offset, testCase.limit)
-		toMyFileNameTemplate := "testdata/out_offset%d_limit%d_test_copy.txt"
 		toMyFileName := fmt.Sprintf(toMyFileNameTemplate, testCase.offset, testCase.limit)
 		defer func(file string) {
 			err := os.Remove(file)
@@ -158,17 +216,17 @@ func TestCopySegmentedCustomParams(t *testing.T) {
 	}
 	ethalonFileName := "testdata/out_offset0_limit10000.txt"
 	for id, testCase := range testCases {
-		toMyFileNameTemplate := "testdata/out_offset%d_limit%d_test_copy_segmented.%d.txt"
-		toMyFileName := fmt.Sprintf(toMyFileNameTemplate, testCase.offset, testCase.limit, id)
+		toMyFileSegmentedNameTemplate := "testdata/out_offset%d_limit%d_test_copy_segmented.%d.txt"
+		toMyFileSegmentedName := fmt.Sprintf(toMyFileSegmentedNameTemplate, testCase.offset, testCase.limit, id)
 		defer func(file string) {
 			err := os.Remove(file)
 			if err != nil {
 				fmt.Println(err)
 			}
-		}(toMyFileName)
+		}(toMyFileSegmentedName)
 		params := CopySegmentedParams{
 			fromInputTxt,
-			toMyFileName,
+			toMyFileSegmentedName,
 			testCase.offset,
 			testCase.limit,
 			testCase.segmentSize,
@@ -181,7 +239,7 @@ func TestCopySegmentedCustomParams(t *testing.T) {
 			fmt.Println("Copy Error", err)
 		}
 
-		myFile, errOpenMy := os.Open(toMyFileName)
+		myFile, errOpenMy := os.Open(toMyFileSegmentedName)
 		if errOpenMy != nil {
 			panic(errOpenMy)
 		}
@@ -205,9 +263,9 @@ func TestCopySegmentedCustomParams(t *testing.T) {
 		}
 
 		if fmt.Sprintf("%v", hashMyFile.Sum(nil)) != fmt.Sprintf("%v", hashEthalonFile.Sum(nil)) {
-			t.Errorf("files %s and %s are not the same\n", toMyFileName, ethalonFileName)
+			t.Errorf("files %s and %s are not the same\n", toMyFileSegmentedName, ethalonFileName)
 		}
-		fmt.Printf("OK. Результат соотвествует эталону: %s\n", toMyFileName)
+		fmt.Printf("OK. Результат соотвествует эталону: %s\n", toMyFileSegmentedName)
 	}
 }
 
@@ -269,8 +327,8 @@ func TestCopySegmentedBigFile(t *testing.T) {
 	for id, testCase := range testCases {
 		fmt.Printf("Run [ID %d]: %v\n", id+1, testCase.message)
 
-		const toMyFileNameTemplate = "testdata/output.%d.txt"
-		toMyFileName := fmt.Sprintf(toMyFileNameTemplate, id+1)
+		const outputIdentedTemplate = "testdata/output.%d.txt"
+		toMyFileName := fmt.Sprintf(outputIdentedTemplate, id+1)
 		t.Run(
 			testCase.message,
 			func(t *testing.T) {
@@ -355,8 +413,7 @@ func BenchmarkCopy(b *testing.B) {
 	for id, testCase := range testCases {
 		fmt.Printf("Run [ID %d]: %v\n", id+1, testCase.message)
 
-		toMyFileNameTemplate := "testdata/output.%d.txt"
-		toMyFileName := fmt.Sprintf(toMyFileNameTemplate, id+1)
+		toMyFileName := fmt.Sprintf(outputIdentedTemplate, id+1)
 		b.Run(
 			testCase.message,
 			func(b *testing.B) {
@@ -437,8 +494,7 @@ func BenchmarkCopySegmented(b *testing.B) {
 	for id, testCase := range testCases {
 		fmt.Printf("Run [ID %d]: %v\n", id+1, testCase.message)
 
-		toMyFileNameTemplate := "testdata/output.%d.txt"
-		toMyFileName := fmt.Sprintf(toMyFileNameTemplate, id+1)
+		toMyFileName := fmt.Sprintf(outputIdentedTemplate, id+1)
 		b.Run(
 			testCase.message,
 			func(b *testing.B) {
@@ -461,6 +517,51 @@ func BenchmarkCopySegmented(b *testing.B) {
 				err := CopySegmented(params)
 				if err != nil {
 					fmt.Println("СopySegmented Error", err)
+				}
+			},
+		)
+	}
+}
+
+func BenchmarkCopyFast(b *testing.B) {
+	testCases := []struct {
+		message       string
+		offset, limit int64
+	}{
+		{
+			message: "Копирование 50000 байт с отступом 0.",
+			offset:  0, limit: 50000,
+		},
+		{
+			message: "Копирование 50000 байт с отступом 100.",
+			offset:  100, limit: 50000,
+		},
+		{
+			message: "Копирование 50000 байт с отступом 10000.",
+			offset:  10000, limit: 50000,
+		},
+	}
+
+	for id, testCase := range testCases {
+		fmt.Printf("Run [ID %d]: %v\n", id+1, testCase.message)
+		toMyFileName := fmt.Sprintf(outputIdentedTemplate, id+1)
+		b.Run(
+			testCase.message,
+			func(b *testing.B) {
+				defer func(fileName string) {
+					err := os.Remove(fileName)
+					if err != nil {
+						fmt.Println(err)
+					}
+				}(toMyFileName)
+				err := CopyFast(
+					fromBig,
+					toMyFileName,
+					testCase.offset,
+					testCase.limit,
+				)
+				if err != nil {
+					fmt.Println("СopyFast Error", err)
 				}
 			},
 		)

@@ -10,15 +10,10 @@ import (
 	"os"
 )
 
-var (
-	ErrUnsupportedFile       = errors.New("unsupported file")
-	ErrOffsetExceedsFileSize = errors.New("offset exceeds file size")
-)
-
-func Copy(from, to string, offset, limit int64, perc, v bool) error {
-	if !v {
-		log.SetOutput(io.Discard)
-	}
+func CopyFast(from, to string, offset, limit int64) error {
+	// if !v {
+	log.SetOutput(io.Discard)
+	// }
 
 	input, err := os.Open(from)
 	if err != nil {
@@ -43,30 +38,31 @@ func Copy(from, to string, offset, limit int64, perc, v bool) error {
 
 	remainder := fileInfo.Size() - offset
 	repairLimit := remainder
-	if repairLimit > limit {
+	if limit != 0 && repairLimit > limit {
 		repairLimit = limit
 	}
-
 	input.Seek(offset, 0)
 
-	reader := bufio.NewReader(input)
-	buf := make([]byte, 1)
-	var processed int64
+	reader := bufio.NewReaderSize(input, int(repairLimit))
+	buf := make([]byte, repairLimit)
+	log.Println("repairLimit", repairLimit)
+	var processed int
 	for {
 		processed++
-		if limit != 0 && processed > limit {
+		if limit != 0 && processed > int(repairLimit) {
 			break
 		}
 
-		_, err := reader.Read(buf)
+		count, err := reader.Read(buf)
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				break
 			}
+			log.Println("1")
 			log.Println(err)
 			return err
 		}
-
+		processed += count
 		log.Printf("%s", hex.Dump(buf))
 		n2, err := output.Write(buf)
 		if err != nil {
@@ -75,7 +71,7 @@ func Copy(from, to string, offset, limit int64, perc, v bool) error {
 		if !v && perc {
 			log.Printf("wrote %d bytes\n", n2)
 			suffix := "\r"
-			if processed == repairLimit {
+			if processed == int(repairLimit) {
 				suffix = "\n"
 			}
 			fmt.Fprintf(os.Stdout, "\rCopy ...%.2f%%%s", float32(processed)/float32(repairLimit)*100, suffix)

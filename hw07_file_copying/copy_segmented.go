@@ -32,11 +32,52 @@ func percenteger(part, full int64) {
 	// fmt.Println()
 }
 
+func percentbarRunner(waitGroup *sync.WaitGroup, percent100value int64, equitiesChan <-chan int64, percentaging bool) {
+	defer waitGroup.Done()
+	var equitysum int64
+	for equity := range equitiesChan {
+		if percentaging {
+			equitysum += equity
+			percenteger(equitysum, percent100value)
+		}
+	}
+}
+
 type CopySegmentedParams struct {
 	from, to               string
 	offset, limit, segment int64
 	writers                int
 	perc, v                bool
+}
+
+func writer(number int, waitGroup *sync.WaitGroup,
+	// mutex *sync.RWMutex,
+	segmentsForWriteAt <-chan Segment,
+	writedPercentages chan<- int64, target *os.File,
+) {
+	defer func() {
+		waitGroup.Done()
+	}()
+	for segment := range segmentsForWriteAt {
+		log.Printf("WRITER (No. %d): offset = %d\n", number, segment.offset)
+		log.Printf("WRITER (No. %d): data\n%s\n", number, hex.Dump(segment.data))
+		log.Printf("WRITER (No. %d): must be len() = %d\n", number, len(segment.data))
+
+		// TODO: IT IS NO NEED - mutex - OS RULEZ
+		// mutex.Lock()
+		// mutex.Unlock()
+		count, err := target.WriteAt(segment.data, segment.offset)
+		// TODO: IT IS NO NEED
+		// target.Sync()
+		if err != nil {
+			log.Println(err)
+			log.Printf("Error %q\n", err)
+		}
+
+		log.Printf("WRITER (No. %d): wrotet len()=%d\n", number, count)
+
+		writedPercentages <- int64(count)
+	}
 }
 
 func CopySegmented(params CopySegmentedParams) error {
@@ -76,7 +117,7 @@ func CopySegmented(params CopySegmentedParams) error {
 		params.limit = repairLimit
 	}
 
-	if repairLimit > params.limit {
+	if params.limit != 0 && repairLimit > params.limit {
 		repairLimit = params.limit
 	}
 	log.Printf("fileInfo.Size() = %d\n", fileInfo.Size())
@@ -107,53 +148,56 @@ func CopySegmented(params CopySegmentedParams) error {
 	segments := make(chan Segment)
 	percentages := make(chan int64)
 	wgWriters := sync.WaitGroup{}
-	wgMutex := sync.RWMutex{}
+	// wgMutex := sync.RWMutex{}
 
 	for i := 0; i < params.writers; i++ {
 		wgWriters.Add(1)
-		go func(number int, waitGroup *sync.WaitGroup,
-			mutex *sync.RWMutex, segmentsForWriteAt <-chan Segment,
-			writedPercentages chan<- int64, target *os.File,
-		) {
-			defer func() {
-				waitGroup.Done()
-			}()
-			for segment := range segmentsForWriteAt {
-				log.Printf("WRITER (No. %d): offset = %d\n", number, segment.offset)
-				log.Printf("WRITER (No. %d): data\n%s\n", number, hex.Dump(segment.data))
-				log.Printf("WRITER (No. %d): must be len() = %d\n", number, len(segment.data))
+		// go func(number int, waitGroup *sync.WaitGroup,
+		// 	mutex *sync.RWMutex, segmentsForWriteAt <-chan Segment,
+		// 	writedPercentages chan<- int64, target *os.File,
+		// ) {
+		// 	defer func() {
+		// 		waitGroup.Done()
+		// 	}()
+		// 	for segment := range segmentsForWriteAt {
+		// 		log.Printf("WRITER (No. %d): offset = %d\n", number, segment.offset)
+		// 		log.Printf("WRITER (No. %d): data\n%s\n", number, hex.Dump(segment.data))
+		// 		log.Printf("WRITER (No. %d): must be len() = %d\n", number, len(segment.data))
 
-				// TODO: IT IS NO NEED - mutex - OS RULEZ
-				// mutex.Lock()
-				// mutex.Unlock()
-				_ = mutex
-				count, err := target.WriteAt(segment.data, segment.offset)
-				// TODO: IT IS NO NEED
-				// target.Sync()
-				if err != nil {
-					log.Println(err)
-					log.Printf("Error %q\n", err)
-				}
+		// 		// TODO: IT IS NO NEED - mutex - OS RULEZ
+		// 		// mutex.Lock()
+		// 		// mutex.Unlock()
+		// 		_ = mutex
+		// 		count, err := target.WriteAt(segment.data, segment.offset)
+		// 		// TODO: IT IS NO NEED
+		// 		// target.Sync()
+		// 		if err != nil {
+		// 			log.Println(err)
+		// 			log.Printf("Error %q\n", err)
+		// 		}
 
-				log.Printf("WRITER (No. %d): wrotet len()=%d\n", number, count)
+		// 		log.Printf("WRITER (No. %d): wrotet len()=%d\n", number, count)
 
-				writedPercentages <- int64(count)
-			}
-		}(i, &wgWriters, &wgMutex, segments, percentages, output)
+		// 		writedPercentages <- int64(count)
+		// 	}
+		// }(i, &wgWriters, &wgMutex, segments, percentages, output)
+		go writer(i, &wgWriters, segments, percentages, output)
 	}
 
 	wgPercenter := sync.WaitGroup{}
 	wgPercenter.Add(1)
-	go func(waitGroup *sync.WaitGroup, percent100value int64, equitiesChan <-chan int64, percentaging bool) {
-		defer waitGroup.Done()
-		var equitysum int64
-		for equity := range equitiesChan {
-			if percentaging {
-				equitysum += equity
-				percenteger(equitysum, percent100value)
-			}
-		}
-	}(&wgPercenter, repairLimit, percentages, !params.v && params.perc)
+	// go func(waitGroup *sync.WaitGroup, percent100value int64, equitiesChan <-chan int64, percentaging bool) {
+	// 	defer waitGroup.Done()
+	// 	var equitysum int64
+	// 	for equity := range equitiesChan {
+	// 		if percentaging {
+	// 			equitysum += equity
+	// 			percenteger(equitysum, percent100value)
+	// 		}
+	// 	}
+	// }(&wgPercenter, repairLimit, percentages, !params.v && params.perc)
+
+	go percentbarRunner(&wgPercenter, repairLimit, percentages, !params.v && params.perc)
 
 	input.Seek(params.offset, 0)
 

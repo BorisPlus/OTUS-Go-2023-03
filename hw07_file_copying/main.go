@@ -69,17 +69,18 @@ func main() {
 
 	// Copy - UNCOMMENT ME FOR THIS
 	// err := Copy(from, to, offset, limit, perc, v)
-	params := CopySegmentedParams{
-		from,
-		to,
-		offset,
-		limit,
-		segment,
-		writers,
-		perc,
-		v,
-	}
-	err := CopySegmented(params)
+	err := CopyFast(from, to, offset, limit)
+	// params := CopySegmentedParams{
+	// 	from,
+	// 	to,
+	// 	offset,
+	// 	limit,
+	// 	segment,
+	// 	writers,
+	// 	perc,
+	// 	v,
+	// }
+	// err := CopySegmented(params)
 	if err != nil {
 		fmt.Println("Error", err)
 	}
