@@ -5,9 +5,24 @@ run:
     - !bench
 
 linters-settings:
-  funlen:
-    lines: 200
-    statements: 120
+  depguard:
+    rules:
+      main:
+        files:
+          - $all
+          - "!$test"
+        allow:
+          - $gostd
+          # - github.com/google # all google packages
+      test:
+        files:
+          - "$test"
+        allow:
+          - $gostd
+          - github.com/icrowley
+  # funlen:
+  # lines: 200
+  # statements: 120
 
 issues:
   exclude-rules:

@@ -29,6 +29,7 @@ Thumbs.db
 
 ## My own
 **/main
+**/test
 **/vendor
 **/gitignore/**
 *.log
