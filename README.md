@@ -36,14 +36,17 @@
    > [Исполнено](./hw07_file_copying/REPORT.md). В рамках решения проведено исследование с сегментированным копированием файла в исходный (по типу торрент протокола).
 
 8) [«Утилита envdir»](./hw08_envdir_tool)
-9)  [«Валидатор структур»](./hw09_struct_validator)
+9) [«Валидатор структур»](./hw09_struct_validator)
+
+   > [Исполнено](./hw09_struct_validator/REPORT.md). Реализован параметризуемый валидатор структур с выводом стека из всех ошибок валидации.
+
 10) [«Оптимизация программы»](./hw10_program_optimization)
-12) [«Клиент TELNET»](./hw11_telnet_client)
-13) [«Заготовка сервиса Календарь»](./hw12_13_14_15_calendar/docs/12_README.md)
-14) [«API к Календарю»](./hw12_13_14_15_calendar/docs/13_README.md)
-15) [«Кроликизация Календаря»](./hw12_13_14_15_calendar/docs/14_README.md)
-16) [«Докеризация и интеграционное тестирование Календаря»](./hw12_13_14_15_calendar/docs/15_README.md)
-17) [«Проект»](https://github.com/OtusGolang/final_project)
+11) [«Клиент TELNET»](./hw11_telnet_client)
+12) [«Заготовка сервиса Календарь»](./hw12_13_14_15_calendar/docs/12_README.md)
+13) [«API к Календарю»](./hw12_13_14_15_calendar/docs/13_README.md)
+14) [«Кроликизация Календаря»](./hw12_13_14_15_calendar/docs/14_README.md)
+15) [«Докеризация и интеграционное тестирование Календаря»](./hw12_13_14_15_calendar/docs/15_README.md)
+16) [«Проект»](https://github.com/OtusGolang/final_project)
 
 ---
 [Инструкция по сдаче ДЗ](https://github.com/OtusGolang/home_work/wiki#%D0%A1%D1%82%D1%83%D0%B4%D0%B5%D0%BD%D1%82%D0%B0%D0%BC).
