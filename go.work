@@ -4,5 +4,6 @@ use (
 	hw05_parallel_execution
 	hw06_pipeline_execution
 	hw07_file_copying
+	hw09_struct_validator
 	report_templator
 )
