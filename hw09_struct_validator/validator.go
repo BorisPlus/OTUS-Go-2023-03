@@ -148,6 +148,10 @@ func ValidateField(field reflect.StructField, value reflect.Value, validationsRu
 //	type LevelMonitoring struct {
 //	  Samples []int    `validate:"min:20|max:40"`
 //	}
+//
+//	type Block struct {
+//	  Chain string `validate:"regexp:\\d+|len:20"`
+//	}
 func Validate(v interface{}) error {
 	t := reflect.TypeOf(v)
 	if t.Kind() != reflect.Struct {
@@ -176,7 +180,7 @@ func Validate(v interface{}) error {
 			structValidationErrors = append(structValidationErrors, fieldValidationErrors...)
 		}
 	}
-	// return structValidationErrors // TODO : why is it normal return
+	// return structValidationErrors // Wow, it is normal return because structValidationErrors implenemt Error() interface
 	if len(structValidationErrors) == 0 {
 		return nil
 	}

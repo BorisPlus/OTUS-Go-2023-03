@@ -83,15 +83,19 @@ go test -v -run TestValidateUnxpectedNotImplemented ./ > TestValidateUnxpectedNo
 ## Для составления отчета (для себя)
 
 ```shell
+golangci-lint run --out-format=github-actions ./
+
 cd ../hw09_struct_validator
-go doc -all ./ > go_doc_-all.txt &&
-go test -v -run TestValidatePositive ./ > TestValidatePositive.txt &&
-go test -v -run TestValidateNegative ./ > TestValidateNegative.txt &&
-go test -v -run TestValidateNotStructObject ./ > TestValidateNotStructObject.txt &&
-go test -v -run TestValidateNotImplemented ./ > TestValidateNotImplemented.txt &&
-go test -v -run TestValidateExpectedNotImplemented ./ > TestValidateExpectedNotImplemented.txt &&
-go test -v -run TestValidateUnxpectedNotImplemented ./ > TestValidateUnxpectedNotImplemented.txt &&
-cd ../report_templator &&
-go test templator.go hw09_struct_validator_test.go &&
+go doc -all ./ > go_doc_-all.txt
+go test -v -run TestValidatePositive ./ > TestValidatePositive.txt
+go test -v -run TestValidateNegative ./ > TestValidateNegative.txt
+go test -v -run TestValidateNotStructObject ./ > TestValidateNotStructObject.txt
+go test -v -run TestValidateNotImplemented ./ > TestValidateNotImplemented.txt
+go test -v -run TestValidateExpectedNotImplemented ./ > TestValidateExpectedNotImplemented.txt
+go test -v -run TestValidateUnxpectedNotImplemented ./ > TestValidateUnxpectedNotImplemented.txt
+cd ../report_templator
+go test templator.go hw09_struct_validator_test.go
 cd ../hw09_struct_validator
+
+cat ./REPORT.md | grep FAIL
 ```

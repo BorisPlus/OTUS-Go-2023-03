@@ -44,6 +44,10 @@ type (
 		A int    `validate:"len:1"`
 		B string `validate:"length:1"`
 	}
+
+	Block struct {
+		Chain string `validate:"regexp:\\d+|len:20"`
+	}
 )
 
 func TestValidatePositive(t *testing.T) {
@@ -87,6 +91,13 @@ func TestValidatePositive(t *testing.T) {
 			"LevelMonitoring positive validation",
 			LevelMonitoring{
 				Samples: []int{20, 35, 27, 40},
+			},
+			nil,
+		},
+		{
+			"Block positive validation",
+			Block{
+				Chain: "01234567890123456789",
 			},
 			nil,
 		},
