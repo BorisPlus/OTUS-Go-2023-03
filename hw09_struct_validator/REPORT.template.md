@@ -78,9 +78,9 @@ go test -v -run TestValidateUnxpectedNotImplemented ./ > TestValidateUnxpectedNo
 
 ## Вывод
 
-Реализован тег упрощенного параметризуемого валидатора.
+Реализован тег упрощенного параметризуемого валидатора произвольного поля структуры.
 
-## Для составления отчета (для себя)
+## Заметка для себя (составление отчета)
 
 ```shell
 golangci-lint run --out-format=github-actions ./
