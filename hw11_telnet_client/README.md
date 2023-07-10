@@ -35,14 +35,14 @@ go-telnet --timeout=3s 1.1.1.1 123
 |     1    | $ nc -l localhost 4242 |           |                                         |
 |     2    |                        |           | $ go-telnet --timeout=5s localhost 4242 |
 |     3    |                        |     x     | ...Connected to localhost:4242          |
-|     4    | Hello from NC          |    -->    |                                         |
+|     4    | Hello from NC          |    ==>    |                                         |
 |     5    |                        |           | Hello from NC                           |
-|     6    |                        |    <--    | I'm telnet client                       |
+|     6    |                        |    <==    | I'm telnet client                       |
 |     7    | I'm telnet client      |           |                                         |
-|     8    | Bye, client!           |    -->    |                                         |
+|     8    | Bye, client!           |    ==>    |                                         |
 |     9    |                        |           | Bye, client!                            |
 |    10    | ^C (`Ctrl+C`)          |           |                                         |
-|    11    |                        |    <--    | Bye-bye                                 |
+|    11    |                        |    <==    | Bye-bye                                 |
 |    12    |                        |     x     | ...Connection was closed by peer        |
 
 ```bash
@@ -86,7 +86,7 @@ Bye-bye
 |     1    | $ nc -l localhost 4242 |           |                                |
 |     2    |                        |           | $ go-telnet localhost 4242     |
 |     3    |                        |     x     | ...Connected to localhost:4242 |
-|     4    |                        |    <--    | I will be back!                |
+|     4    |                        |    <==    | I will be back!                |
 |     5    | I will be back!        |           | ^D (`Ctrl+D`)                  |
 |     6    |                        |     x     | ...EOF                         |
 
