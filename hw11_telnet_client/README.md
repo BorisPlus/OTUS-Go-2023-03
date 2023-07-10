@@ -30,7 +30,7 @@ go-telnet --timeout=3s 1.1.1.1 123
 
 > Я переработал исходное нижеследующее описание в табличное представление
 
-| Timeflow | SERVER (log)           | Direction | CLIRNT (log)                            |
+| Timeflow | SERVER (terminal log)  | Direction | CLIENT (terminal log)                   |
 |:--------:|------------------------|:---------:|:----------------------------------------|
 |     1    | $ nc -l localhost 4242 |           |                                         |
 |     2    |                        |           | $ go-telnet --timeout=5s localhost 4242 |
@@ -81,7 +81,7 @@ Bye-bye
 
 > Я переработал исходное нижеследующее описание в табличное представление
 
-| Timeflow | SERVER (log)           | Direction | CLIRNT (log)                   |
+| Timeflow | SERVER (terminal log)  | Direction | CLIENT (terminal log)          |
 |:--------:|------------------------|:---------:|:-------------------------------|
 |     1    | $ nc -l localhost 4242 |           |                                |
 |     2    |                        |           | $ go-telnet localhost 4242     |
