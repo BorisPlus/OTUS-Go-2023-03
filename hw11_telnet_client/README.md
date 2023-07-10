@@ -86,10 +86,9 @@ Bye-bye
 |     1    | $ nc -l localhost 4242 |           |                                |
 |     2    |                        |           | $ go-telnet localhost 4242     |
 |     3    |                        |     x     | ...Connected to localhost:4242 |
-|     4    |                        |           |                                |
-|     5    |                        |    <--    | I will be back!                |
-|     6    | I will be back!        |           | ^D (`Ctrl+D`)                  |
-|     7    |                        |     x     | ...EOF                         |
+|     4    |                        |    <--    | I will be back!                |
+|     5    | I will be back!        |           | ^D (`Ctrl+D`)                  |
+|     6    |                        |     x     | ...EOF                         |
 
 ```bash
 $ go-telnet localhost 4242
