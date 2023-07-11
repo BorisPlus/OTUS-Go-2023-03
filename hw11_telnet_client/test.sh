@@ -26,7 +26,7 @@ am
 TELNET client'
 fileEquals ./nc.out "${expected_nc_out}"
 
-expected_telnet_out='....Try connect to localhost:4242
+expected_telnet_out='...Try connect to localhost:4242
 ...Connected to localhost:4242
 Hello
 From
