@@ -33,8 +33,7 @@ From
 NC
 
 EOF
-...Force disconnect from localhost:4242
-...Disconnected from localhost:4242'
+...Force disconnect from localhost:4242'
 fileEquals ./telnet.out "${expected_telnet_out}"
 
 rm -f go-telnet.goc
