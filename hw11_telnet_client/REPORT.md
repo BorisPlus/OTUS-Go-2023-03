@@ -15,7 +15,16 @@ go test -v telnet.go telnet_test.go > telnet_test.go.txt
 ```
 
 ```text
-{{ telnet_test.go.txt }}
+=== RUN   TestTelnetClient
+=== RUN   TestTelnetClient/basic
+...Try connect to 127.0.0.1:45823
+...Connected to 127.0.0.1:45823
+...Disconnected from 127.0.0.1:45823
+--- PASS: TestTelnetClient (0.00s)
+    --- PASS: TestTelnetClient/basic (0.00s)
+PASS
+ok      command-line-arguments    0.006s
+
 ```
 
 ### Shell
@@ -26,7 +35,38 @@ go test -v telnet.go telnet_test.go > telnet_test.go.txt
 <summary>test.native.sh</summary>
 
 ```bash
-{{ test.native.sh }}
+#!/usr/bin/env bash
+set -xeuo pipefail
+
+(echo -e "Hello\nFrom\nNC\n" && cat 2>/dev/null) | nc -ls localhost -p 4242 >/tmp/nc.out &
+NC_PID=$!
+
+sleep 1
+(echo -e "I\nam\nTELNET client\n" && cat 2>/dev/null) | nc localhost 4242 > /tmp/telnet.out &
+TL_PID=$!
+
+sleep 5
+kill ${TL_PID} 2>/dev/null || true
+kill ${NC_PID} 2>/dev/null || true
+
+function fileEquals() {
+  local fileData
+  fileData=$(cat "$1")
+  [ "${fileData}" = "${2}" ] || (echo -e "FAIL: unexpected output, $1:\n${fileData}" && exit 1)
+}
+
+expected_nc_out='I
+am
+TELNET client'
+fileEquals /tmp/nc.out "${expected_nc_out}"
+
+expected_telnet_out='Hello
+From
+NC'
+fileEquals /tmp/telnet.out "${expected_telnet_out}"
+
+echo "PASS"
+
 ```
 
 </details>
@@ -38,7 +78,54 @@ go test -v telnet.go telnet_test.go > telnet_test.go.txt
 >
 
 ```text
-{{ test.native.sh.out }}
++ echo -e 'Hello\nFrom\nNC\n'
++ cat
++ nc -ls localhost -p 4242
++ NC_PID=204346
++ sleep 1
++ echo -e 'I\nam\nTELNET client\n'
++ TL_PID=204369
++ cat
++ sleep 5
++ nc localhost 4242
++ kill 204369
+
++ kill 204346
+
++ expected_nc_out='I
+am
+TELNET client'
++ fileEquals /tmp/nc.out 'I
+am
+TELNET client'
++ local fileData
+++ cat /tmp/nc.out
++ fileData='I
+am
+TELNET client'
++ '[' 'I
+am
+TELNET client' = 'I
+am
+TELNET client' ']'
++ expected_telnet_out='Hello
+From
+NC'
++ fileEquals /tmp/telnet.out 'Hello
+From
+NC'
++ local fileData
+++ cat /tmp/telnet.out
++ fileData='Hello
+From
+NC'
++ '[' 'Hello
+From
+NC' = 'Hello
+From
+NC' ']'
++ echo PASS
+
 ```
 
 С учетом правок:
@@ -54,7 +141,65 @@ go test -v telnet.go telnet_test.go > telnet_test.go.txt
 >
 
 ```text
-{{ test.sh.out }}
++ go build -o go-telnet.goc
++ echo -e 'Hello\nFrom\nNC\n'
++ NC_PID=204500
++ nc -ls localhost -p 4242
++ sleep 1
++ cat
++ echo -e 'I\nam\nTELNET client\n'
++ ./go-telnet.goc localhost 4242
++ TL_PID=204507
++ cat
++ sleep 5
++ kill 204507
++ kill 204500
+
++ expected_nc_out='I
+am
+TELNET client'
++ fileEquals /tmp/nc.out 'I
+am
+TELNET client'
++ local fileData
+++ cat /tmp/nc.out
++ fileData='I
+am
+TELNET client'
++ '[' 'I
+am
+TELNET client' = 'I
+am
+TELNET client' ']'
++ expected_telnet_out='...Try connect to localhost:4242
+...Connected to localhost:4242
+Hello
+From
+NC'
++ fileEquals /tmp/telnet.out '...Try connect to localhost:4242
+...Connected to localhost:4242
+Hello
+From
+NC'
++ local fileData
+++ cat /tmp/telnet.out
++ fileData='...Try connect to localhost:4242
+...Connected to localhost:4242
+Hello
+From
+NC'
++ '[' '...Try connect to localhost:4242
+...Connected to localhost:4242
+Hello
+From
+NC' = '...Try connect to localhost:4242
+...Connected to localhost:4242
+Hello
+From
+NC' ']'
++ rm -f go-telnet.goc
++ echo PASS
+
 ```
 
 ### Тестирование аргументов
@@ -66,7 +211,32 @@ go test -v main_test.go main.go foreign_code_base.go telnet.go > main_test.go.tx
 ```
 
 ```text
-{{ main_test.go.txt }}
+=== RUN   TestArgParsePositive
+It's Ok. for args [--timeout=10s localhost 4242]
+It's Ok. for args [--timeout=5s localhost.com 23]
+It's Ok. for args [--timeout=11s telnet.localhost.com 23]
+It's Ok. for args [127.0.0.1 23]
+It's Ok. for args [--timeout=10s 1.1.1.1 65535]
+--- PASS: TestArgParsePositive (0.00s)
+=== RUN   TestArgParseNegative
+It's Ok. Get expected error HOST (as domain): invalid character '.' at offset 0: label can't begin with a period
+         for args [--timeout=5s .40ca1host.com 23]
+It's Ok. Get expected error HOST (as domain): top level domain '1' at offset 17 begins with a digit
+         for args [--timeout=11s telnet.localhost.1 23]
+It's Ok. Get expected error HOST (as domain): invalid character '=' at offset 9
+         for args [--timeout=11s telnet.net.]
+It's Ok. Get expected error TIMEOUT parsing error
+         for args [127.0.0.1 --timeout=11s 23]
+It's Ok. Get expected error HOST (as domain): top level domain '257' at offset 6 begins with a digit
+         for args [--timeout=10s 1.1.1.257 65535]
+It's Ok. Get expected error HOST (as domain): top level domain '1' at offset 6 begins with a digit
+         for args [--timeout=10s 1.1.1.1 65537]
+It's Ok. Get expected error HOST (ip-address): is gateway
+         for args [--timeout=10s 1.1.1.0 1]
+--- PASS: TestArgParseNegative (0.00s)
+PASS
+ok      command-line-arguments    0.006s
+
 ```
 
 ### Интерактивное тестирование

@@ -30,20 +30,20 @@ go-telnet --timeout=3s 1.1.1.1 123
 
 > Я переработал исходное нижеследующее описание в табличное представление
 
-| Timeflow | SERVER (terminal log)  | Direction | CLIENT (terminal log)                   |
-|:--------:|------------------------|:---------:|:----------------------------------------|
-|     1    | $ nc -l localhost 4242 |           |                                         |
-|     2    |                        |           | $ go-telnet --timeout=5s localhost 4242 |
-|     3    |                        |     x     | ...Connected to localhost:4242          |
-|     4    | Hello from NC          |    ==>    |                                         |
-|     5    |                        |           | Hello from NC                           |
-|     6    |                        |    <==    | I'm telnet client                       |
-|     7    | I'm telnet client      |           |                                         |
-|     8    | Bye, client!           |    ==>    |                                         |
-|     9    |                        |           | Bye, client!                            |
-|    10    | ^C (`Ctrl+C`)          |           |                                         |
-|    11    |                        |    <==    | Bye-bye                                 |
-|    12    |                        |     x     | ...Connection was closed by peer        |
+| Timeflow | SERVER (terminal log)      | Direction | CLIENT (terminal log)                   |
+|:--------:|----------------------------|:---------:|:----------------------------------------|
+|     1    | $ nc -ls localhost -p 4242 |           |                                         |
+|     2    |                            |           | $ go-telnet --timeout=5s localhost 4242 |
+|     3    |                            |     x     | ...Connected to localhost:4242          |
+|     4    | Hello from NC              |    ==>    |                                         |
+|     5    |                            |           | Hello from NC                           |
+|     6    |                            |    <==    | I'm telnet client                       |
+|     7    | I'm telnet client          |           |                                         |
+|     8    | Bye, client!               |    ==>    |                                         |
+|     9    |                            |           | Bye, client!                            |
+|    10    | ^C (`Ctrl+C`)              |           |                                         |
+|    11    |                            |    <==    | Bye-bye                                 |
+|    12    |                            |     x     | ...Connection was closed by peer        |
 
 ```bash
 $ nc -l localhost 4242
@@ -81,14 +81,14 @@ Bye-bye
 
 > Я переработал исходное нижеследующее описание в табличное представление
 
-| Timeflow | SERVER (terminal log)  | Direction | CLIENT (terminal log)          |
-|:--------:|------------------------|:---------:|:-------------------------------|
-|     1    | $ nc -l localhost 4242 |           |                                |
-|     2    |                        |           | $ go-telnet localhost 4242     |
-|     3    |                        |     x     | ...Connected to localhost:4242 |
-|     4    |                        |    <==    | I will be back!                |
-|     5    | I will be back!        |           | ^D (`Ctrl+D`)                  |
-|     6    |                        |     x     | ...EOF                         |
+| Timeflow | SERVER (terminal log)      | Direction | CLIENT (terminal log)          |
+|:--------:|----------------------------|:---------:|:-------------------------------|
+|     1    | $ nc -ls localhost -p 4242 |           |                                |
+|     2    |                            |           | $ go-telnet localhost 4242     |
+|     3    |                            |     x     | ...Connected to localhost:4242 |
+|     4    |                            |    <==    | I will be back!                |
+|     5    | I will be back!            |           | ^D (`Ctrl+D`)                  |
+|     6    |                            |     x     | ...EOF                         |
 
 ```bash
 $ go-telnet localhost 4242
@@ -109,7 +109,7 @@ back!
 
 Здесь сообщения
 
-```
+```text
 I
 will be
 back!
