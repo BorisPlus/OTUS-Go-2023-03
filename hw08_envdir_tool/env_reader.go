@@ -109,17 +109,18 @@ func ReadEnvDir(envDir string) (Environment, error) {
 // ReadEnvFile - функция парсинга первой строки файла для установки значения переменной окружения.
 // При нулевом объеме файла переменная помечается как требуемая к удалению.
 func ReadEnvFile(file string) (EnvValue, error) {
+	envValue := EnvValue{}
 	envFile, err := os.Open(file)
 	if err != nil {
-		return CreateEnvValue("", true), err
+		return envValue, err
 	}
 	defer envFile.Close()
 	fileInfo, err := envFile.Stat()
 	if err != nil {
-		return CreateEnvValue("", true), err
+		return envValue, err
 	}
 	if fileInfo.Size() == 0 {
-		return CreateEnvValue("", true), nil
+		return envValue, nil
 	}
 	scanner := bufio.NewScanner(envFile)
 	value := ""
@@ -128,7 +129,9 @@ func ReadEnvFile(file string) (EnvValue, error) {
 		break
 	}
 	if err := scanner.Err(); err != nil {
-		return CreateEnvValue("", true), err
+		return envValue, err
 	}
-	return CreateEnvValue(value, false), nil
+	envValue.Value = value
+	envValue.NeedRemove = false
+	return envValue, nil
 }
