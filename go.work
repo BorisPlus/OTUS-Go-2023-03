@@ -1,7 +1,6 @@
 go 1.19
 
 use (
-	// github.com/icrowley/fake
 	hw05_parallel_execution
 	hw06_pipeline_execution
 	hw07_file_copying
