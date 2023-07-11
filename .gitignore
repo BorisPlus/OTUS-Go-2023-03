@@ -27,10 +27,13 @@ Thumbs.db
 .vscode/
 *.bak
 
-## My own
-**/main
-**/vendor
+## Additional
+# My own from some repo
 **/gitignore/**
+**/vendor
 *.log
 *.txt
 *.goc
+# test.sh
+**/main
+**/test
