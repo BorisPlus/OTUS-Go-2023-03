@@ -3,7 +3,7 @@ set -xeuo pipefail
 
 go build -o go-telnet.goc
 
-(echo -e "Hello\nFrom\nNC\n" && cat 2>/dev/null) | nc -ls localhost -p 4242 >./nc.out &
+(echo -e "Hello\nFrom\nNC\n" && cat 2>/dev/null) | nc -ls localhost -p 4242 > /tmp/nc.out &
 NC_PID=$!
 
 sleep 1
