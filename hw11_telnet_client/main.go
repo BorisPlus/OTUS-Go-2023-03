@@ -148,6 +148,7 @@ func main() {
 		defer func() {
 			waitGroup.Done()
 			canceler()
+			// channel `close(errReceive)` not help, need below
 			client.Close()
 		}()
 		reader := bufio.NewReader(os.Stdin)
@@ -157,7 +158,7 @@ func main() {
 				fmt.Println(errSend)
 				return
 			}
-			_, errSend = in.WriteString(response)
+			_, errSend = in.WriteString(fmt.Sprintf("\r%s", response))
 			if errSend != nil {
 				fmt.Println(errSend)
 				return

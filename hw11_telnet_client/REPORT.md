@@ -272,6 +272,37 @@ nc -vvl -s localhost -p 4242 -c '
 
 ![./REPORT.files/2.gif]()
 
+### Эффект горутин
+
+Приходящие сообщения сервера "вставляются" в сообщения клиента. Перевод каретки не поможет.
+
+Пример печатающего сервера
+
+```bash
+nc -vvl -s localhost -p 4242 -c '
+    set -x
+    sleep 5
+    echo "This is server message"
+    sleep 5
+    echo "This is server message"
+    sleep 5
+    echo "This is server message"
+    sleep 5
+    echo "This is server message"
+    sleep 5
+    echo "This is server message"
+    sleep 5
+'
+```
+
+Клиент печатает от 0 до 9 бесконечно без нажатия на Enter.
+
+```bash
+./go-telnet localhost 4242
+```
+
+![./REPORT.files/3.gif]()
+
 ## Заметки для себя
 
 ### Поменял `.golangci.yml`
