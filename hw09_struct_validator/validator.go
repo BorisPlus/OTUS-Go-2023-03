@@ -68,7 +68,7 @@ func ValidateFieldByRule(vRule ValidationRule) (validationError ValidationError)
 	if ok {
 		validationError.Err = validatorFunction(vRule)
 	} else {
-		validationError.Err = tryValidateNotImplementedRule(vRule)
+		validationError.Err = tryValidateByNotImplementedRule(vRule)
 	}
 	return validationError
 }
@@ -85,7 +85,10 @@ func ValidateField(field reflect.StructField, value reflect.Value, validationsRu
 		// fmt.Printf(" > validate rule %q\n", validatorFieldRule)
 		validatorFieldRuleFuncParams := strings.SplitN(validatorFieldRule, ":", 2)
 		validatorFieldRuleFunc := validatorFieldRuleFuncParams[0]
-		validatorFieldRuleParams := validatorFieldRuleFuncParams[1]
+		validatorFieldRuleParams := ""
+		if len(validatorFieldRuleFuncParams) == 2 {
+			validatorFieldRuleParams = validatorFieldRuleFuncParams[1]
+		}
 		if field.Type.Kind() == reflect.Slice {
 			// fmt.Printf("field.Type.Kind() = %s\n", field.Type.Kind())
 			// fmt.Printf("r.Slice = %s\n", r.Slice)
@@ -108,12 +111,12 @@ func ValidateField(field reflect.StructField, value reflect.Value, validationsRu
 					fieldValidationErrors = append(fieldValidationErrors, fieldRuleValidationError)
 				}
 			}
-		} else {
-			vRule := ValidationRule{field, value, validatorFieldRuleFunc, validatorFieldRuleParams}
-			fieldRuleValidationError := ValidateFieldByRule(vRule)
-			if fieldRuleValidationError.Err != nil {
-				fieldValidationErrors = append(fieldValidationErrors, fieldRuleValidationError)
-			}
+			continue
+		} 
+		vRule := ValidationRule{field, value, validatorFieldRuleFunc, validatorFieldRuleParams}
+		fieldRuleValidationError := ValidateFieldByRule(vRule)
+		if fieldRuleValidationError.Err != nil {
+			fieldValidationErrors = append(fieldValidationErrors, fieldRuleValidationError)
 		}
 	}
 	return fieldValidationErrors
@@ -206,7 +209,7 @@ type ValidatorRuleFunctionSignature func(vRule ValidationRule) error
 
 //
 
-func tryValidateNotImplementedRule(vRule ValidationRule) error {
+func tryValidateByNotImplementedRule(vRule ValidationRule) error {
 	// WTF - linter!!!
 	// golangci-lint run --out-format=github-actions
 	// ...line is 125 characters (with 111 limit)
@@ -233,7 +236,7 @@ func validateLen(vRule ValidationRule) error {
 		}
 		return checkLen[string](vRule.Value.String(), parsedLen)
 	}
-	return tryValidateNotImplementedRule(vRule)
+	return tryValidateByNotImplementedRule(vRule)
 }
 
 // Lets overhead from - infimum INT
@@ -259,7 +262,7 @@ func validateMin(vRule ValidationRule) error {
 		}
 		return checkMin[int64](vRule.Value.Int(), int64(parsedMin))
 	}
-	return tryValidateNotImplementedRule(vRule)
+	return tryValidateByNotImplementedRule(vRule)
 }
 
 // Lets overhead from - supremum INT
@@ -285,7 +288,7 @@ func validateMax(vRule ValidationRule) error {
 		}
 		return checkMax[int64](vRule.Value.Int(), int64(parsedMin))
 	}
-	return tryValidateNotImplementedRule(vRule)
+	return tryValidateByNotImplementedRule(vRule)
 }
 
 //
@@ -313,7 +316,7 @@ func validateIn(vRule ValidationRule) error {
 		}
 		return checkIn[int64](vRule.Value.Int(), intArray) // TODO:
 	}
-	return tryValidateNotImplementedRule(vRule)
+	return tryValidateByNotImplementedRule(vRule)
 }
 
 //
@@ -333,7 +336,7 @@ func validateRegexp(vRule ValidationRule) error {
 	if vRule.Field.Type.Kind() == reflect.String {
 		return checkRegexp(vRule.Value.String(), vRule.Params)
 	}
-	return tryValidateNotImplementedRule(vRule)
+	return tryValidateByNotImplementedRule(vRule)
 }
 
 //
