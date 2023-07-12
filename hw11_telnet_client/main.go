@@ -158,7 +158,7 @@ func main() {
 				fmt.Println(errSend)
 				return
 			}
-			_, errSend = in.WriteString(fmt.Sprintf("\r%s", response))
+			_, errSend = in.WriteString(response)
 			if errSend != nil {
 				fmt.Println(errSend)
 				return
