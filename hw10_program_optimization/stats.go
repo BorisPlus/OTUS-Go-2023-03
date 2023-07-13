@@ -1,71 +1,66 @@
 package hw10programoptimization
 
 import (
-	// "encoding/json"
-	"bufio"
-	"strings"
+	"encoding/json"
 	"fmt"
 	"io"
 	"regexp"
-	"sync"
+	"strings"
 )
 
-// type User struct {
-// 	ID       int
-// 	Name     string
-// 	Username string
-// 	Email    string
-// 	Phone    string
-// 	Password string
-// 	Address  string
-// }
+type User struct {
+	ID       int
+	Name     string
+	Username string
+	Email    string
+	Phone    string
+	Password string
+	Address  string
+}
 
 type DomainStat map[string]int
 
-
-func worker(waitGroup *sync.WaitGroup, mutex *sync.Mutex, bytesSlices <-chan []byte, re regexp.Regexp, domainStat *DomainStat) {
-	defer waitGroup.Done()
-	for bytesSlice := range bytesSlices {
-		submatches := re.FindAllSubmatch(bytesSlice, -1)
-		for matcheIndex := range submatches {
-			domainAtLowercase := strings.ToLower(string(submatches[matcheIndex][1]))
-			mutex.Lock()
-			(*domainStat)[domainAtLowercase]++
-			mutex.Unlock()
-		}
+func GetDomainStat(r io.Reader, domain string) (DomainStat, error) {
+	u, err := getUsers(r)
+	if err != nil {
+		return nil, fmt.Errorf("get users error: %w", err)
 	}
+	return countDomains(u, domain)
 }
 
-func GetDomainStat(r io.Reader, domain string) (DomainStat, error) {
+type users [100_000]User
 
-	domainAtEmailRegexp := fmt.Sprintf(`@([0-9a-zA-Z]*\.%s)`, domain)
-	fmt.Println(domainAtEmailRegexp)
-	compiledRegexp, err := regexp.Compile(domainAtEmailRegexp)
-
+func getUsers(r io.Reader) (result users, err error) {
+	content, err := io.ReadAll(r)
 	if err != nil {
-		return nil, err
+		return
 	}
 
-	domainStat := make(DomainStat)
-	bytesSlicesChannel := make(chan []byte)
-	wg := sync.WaitGroup{}
-	mtx := sync.Mutex{}
+	lines := strings.Split(string(content), "\n")
+	for i, line := range lines {
+		var user User
+		if err = json.Unmarshal([]byte(line), &user); err != nil {
+			return
+		}
+		result[i] = user
+	}
+	return
+}
 
-	for i := 0; i<100 ; i++ {
-		wg.Add(1)
-		go worker(&wg, &mtx, bytesSlicesChannel, *compiledRegexp, &domainStat)
-	}
-	scanner := bufio.NewScanner(r)
-	for scanner.Scan() {
-		row := scanner.Bytes()
-		// fmt.Println(string(row))
-		bytesSlicesChannel<-row
-	}
-	if err := scanner.Err(); err != nil {
-		return nil, err
-	}
-	close(bytesSlicesChannel)
-	wg.Wait()
+func countDomains(u users, domain string) (DomainStat, error) {
+	result := make(DomainStat)
 
-	return domainStat, nil
+	for _, user := range u {
+		matched, err := regexp.Match("\\."+domain, []byte(user.Email))
+		if err != nil {
+			return nil, err
+		}
+
+		if matched {
+			num := result[strings.ToLower(strings.SplitN(user.Email, "@", 2)[1])]
+			num++
+			result[strings.ToLower(strings.SplitN(user.Email, "@", 2)[1])] = num
+		}
+	}
+	return result, nil
 }
