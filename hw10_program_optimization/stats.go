@@ -11,49 +11,64 @@ import (
 
 type DomainStat map[string]int
 
-func worker(waitGroup *sync.WaitGroup, mutex *sync.Mutex, bytesSlices <-chan []byte, re regexp.Regexp, domainStat *DomainStat) {
-	defer waitGroup.Done()
-	for bytesSlice := range bytesSlices {
-		submatches := re.FindAllSubmatch(bytesSlice, -1)
-		for matcheIndex := range submatches {
-			domainAtLowercase := strings.ToLower(string(submatches[matcheIndex][1]))
-			mutex.Lock()
-			(*domainStat)[domainAtLowercase]++
-			mutex.Unlock()
+func RowParser(
+	row <-chan []byte,
+	compiledRegexp *regexp.Regexp,
+	wg *sync.WaitGroup,
+	mtx *sync.Mutex,
+	syncMap *sync.Map,
+) {
+	defer wg.Done()
+	for rowData := range row {
+		matches := compiledRegexp.FindAllSubmatch(rowData, -1)
+		for matcheIndex := range matches {
+			domainAtLowercase := strings.ToLower(string(matches[matcheIndex][1]))
+			// mtx.Lock()
+			// mtx.Unlock()
+			_ = mtx
+			v, exsist := syncMap.LoadOrStore(domainAtLowercase, 1)
+			if exsist {
+				syncMap.Store(domainAtLowercase, v.(int)+1)
+			}
 		}
 	}
 }
 
 func GetDomainStat(r io.Reader, domain string) (DomainStat, error) {
+	workersCount := 100 // Enviroment - could be better
 
-	domainAtEmailRegexp := fmt.Sprintf(`@(\w*\.%s)`, domain)
-	fmt.Println(domainAtEmailRegexp)
-	compiledRegexp, err := regexp.Compile(domainAtEmailRegexp)
-
-	if err != nil {
-		return nil, err
-	}
-
-	domainStat := make(DomainStat)
-	bytesSlicesChannel := make(chan []byte)
+	domainAtEmailRegexp := fmt.Sprintf(`@(\w+\.%s)`, domain)
+	compiledRegexp := regexp.MustCompile(domainAtEmailRegexp)
+	
 	wg := sync.WaitGroup{}
 	mtx := sync.Mutex{}
+	rowsChannel := make(chan []byte)
 
-	for i := 0; i < 100; i++ {
+	var syncMap sync.Map
+
+	for i := 0; i < workersCount; i++ {
 		wg.Add(1)
-		go worker(&wg, &mtx, bytesSlicesChannel, *compiledRegexp, &domainStat)
+		go RowParser(rowsChannel, compiledRegexp, &wg, &mtx, &syncMap)
 	}
+
 	scanner := bufio.NewScanner(r)
+	const maxCapacity int = 10000000 // It's over 64K !!!
+	buf := make([]byte, maxCapacity)
+	scanner.Buffer(buf, maxCapacity)
+
 	for scanner.Scan() {
-		row := scanner.Bytes()
-		// fmt.Println(string(row))
-		bytesSlicesChannel <- row
+		rowsChannel <- scanner.Bytes()
 	}
-	if err := scanner.Err(); err != nil {
-		return nil, err
-	}
-	close(bytesSlicesChannel)
+
+	close(rowsChannel)
 	wg.Wait()
 
-	return domainStat, nil
+	syncMapDomainStat := make(DomainStat)
+
+	syncMap.Range(func(key, value interface{}) bool {
+		syncMapDomainStat[key.(string)] = value.(int)
+		return true
+	})
+
+	return syncMapDomainStat, nil
 }
