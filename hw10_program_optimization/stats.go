@@ -1,15 +1,14 @@
 package hw10programoptimization
 
-
 import (
+	"bufio"
 	"fmt"
 	"io"
+	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
-
-	// "errors"
-	"bufio"
 )
 
 type DomainStat map[string]int
@@ -34,10 +33,21 @@ func RowParser(
 }
 
 func GetDomainStat(r io.Reader, domain string) (DomainStat, error) {
-	workersCount := 50000 // Enviroment - could be better
+	workersCount := 1 
+	count, exists := os.LookupEnv("WORKERS_COUNT")
+	if exists {
+		intVar, err := strconv.Atoi(count)
+		if err == nil {
+			workersCount = intVar
+		}
+	}
+	fmt.Println("workersCount =", workersCount)
 
 	domainAtEmailRegexp := fmt.Sprintf(`@(\w+\.%s)`, domain)
-	compiledRegexp := regexp.MustCompile(domainAtEmailRegexp)
+	compiledRegexp, err := regexp.Compile(domainAtEmailRegexp)
+	if err != nil {
+		return nil, err
+	}
 
 	wg := sync.WaitGroup{}
 	mtx := sync.Mutex{}
@@ -50,43 +60,25 @@ func GetDomainStat(r io.Reader, domain string) (DomainStat, error) {
 		go RowParser(rowsChannel, compiledRegexp, &wg, &mtx, &domainStat)
 	}
 
-	// b := make([]byte, 1)
-	// chunk := make([]byte, 0)
-	// for {
-	// 	_, err := r.Read(b)
-	// 	if err != nil {
-	// 		if errors.Is(err, io.EOF) {
-	// 			rowsChannel <- chunk
-	// 			break
-	// 		}
-	// 		fmt.Println(err)
-	// 		break
-	// 	}
-	// 	if b[0] == '\n' {
-	// 		rowsChannel <- chunk
-	// 		chunk = make([]byte, 0)
-	// 		continue
-	// 	}
-	// 	chunk = append(chunk, b...)
-	// }
-
 	scanner := bufio.NewScanner(r)
-	const maxCapacity int = 5000000 // It's over 64K !!! Byt why 5Mln
+	maxCapacity := 2_000_000 // It's over 64K !!!
+	c, exists := os.LookupEnv("MAX_CAPACITY")
+	if exists {
+		intVar, err := strconv.Atoi(c)
+		if err == nil {
+			maxCapacity = intVar
+		}
+	}
+	fmt.Println("maxCapacity =", maxCapacity)
 	buf := make([]byte, maxCapacity)
 	scanner.Buffer(buf, maxCapacity)
-	// bb := bytes.NewReader(r)
-	// scanners := bufio.NewReaderSize(bb, 10000000)
+
 	for scanner.Scan() {
 		rowsChannel <- scanner.Bytes()
 	}
 
 	close(rowsChannel)
 	wg.Wait()
-
-	// syncMap.Range(func(key, value interface{}) bool {
-	// 	syncMapDomainStat[key.(string)] = value.(int)
-	// 	return true
-	// })
 
 	return domainStat, nil
 }
