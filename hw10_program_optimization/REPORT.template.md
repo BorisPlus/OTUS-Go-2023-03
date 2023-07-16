@@ -618,7 +618,24 @@ go test -v -bench=.
     BenchmarkStat004Remark-4                1000000000               0.4036 ns/op
     PASS
     ok      github.com/BorisPlus/OTUS-Go-2023-03/hw10_program_optimization  34.815s
+
+go test -v -count=1 -timeout=30s -tags bench .
+
+    === RUN   TestGetDomainStat_Time_And_Memory
+        stats_optimization_test.go:46: time used: 404.882282ms / 300ms
+        stats_optimization_test.go:47: memory used: 23Mb / 30Mb
+        stats_optimization_test.go:49: 
+                    Error Trace:    stats_optimization_test.go:49
+                    Error:          "404882282" is not less than "300000000"
+                    Test:           TestGetDomainStat_Time_And_Memory
+                    Messages:       the program is too slow
+    --- FAIL: TestGetDomainStat_Time_And_Memory (8.54s)
+    FAIL
+    FAIL    github.com/BorisPlus/OTUS-Go-2023-03/hw10_program_optimization  8.547s
+    FAIL
 ```
+
+
 
 Задача решена.
 
