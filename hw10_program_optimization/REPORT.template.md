@@ -576,8 +576,10 @@ go tool pprof -svg ./hw10_program_optimization.test ./cpu.out > ./REPORT.files/c
   >     BenchmarkStat003Experimental-4          1000000000        0.3936     ns/op
   >     PASS
   >     ok      github.com/BorisPlus/OTUS-Go-2023-03/hw10_program_optimization  18.818s
-  >  go test -bench=.
-  >   goos: linux
+  >
+  > go test -bench=.
+  >
+  >     goos: linux
   >     goarch: amd64
   >     pkg: github.com/BorisPlus/OTUS-Go-2023-03/hw10_program_optimization
   >     cpu: Intel(R) Core(TM) i3-2310M CPU @ 2.10GHz
