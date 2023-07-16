@@ -644,7 +644,7 @@ syncMap.Range(func(key, value interface{}) bool {
 })
 ```
 
-### Чтение чанками
+### Чтение порциями без буфера (медленно)
 
 ```go
 b := make([]byte, 1)
