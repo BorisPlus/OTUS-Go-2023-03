@@ -1,6 +1,102 @@
 package hw10programoptimization
 
-var ExpectedBizStat = DomainStat{
+import (
+	"archive/zip"
+	"os"
+	"testing"
+
+	"github.com/stretchr/testify/require"
+)
+
+func BenchmarkStat001Repo(b *testing.B) {
+	r, err := zip.OpenReader("testdata/users.dat.zip")
+	require.NoError(b, err)
+	defer r.Close()
+
+	require.Equal(b, 1, len(r.File))
+
+	data, err := r.File[0].Open()
+	require.NoError(b, err)
+
+	b.ResetTimer()
+	b.StartTimer()
+	stat, err := GetDomainStatInitial(data, "biz")
+	b.StopTimer()
+	require.NoError(b, err)
+
+	require.Equal(b, expectedBizStatCopy, stat)
+}
+
+func BenchmarkStat002My(b *testing.B) {
+	os.Setenv("MAX_CAPACITY", "239")
+	os.Setenv("WORKERS_COUNT", "100")
+
+	r, err := zip.OpenReader("testdata/users.dat.zip")
+	require.NoError(b, err)
+	defer r.Close()
+
+	require.Equal(b, 1, len(r.File))
+
+	data, err := r.File[0].Open()
+	require.NoError(b, err)
+
+	b.ResetTimer()
+
+	b.StartTimer()
+	stat, err := GetDomainStat(data, "biz")
+	b.StopTimer()
+	require.NoError(b, err)
+
+	require.Equal(b, expectedBizStatCopy, stat)
+}
+
+func BenchmarkStat003Experimental(b *testing.B) {
+	os.Setenv("MAX_CAPACITY", "239")
+	os.Setenv("WORKERS_COUNT", "100")
+
+	r, err := zip.OpenReader("testdata/users.dat.zip")
+	require.NoError(b, err)
+	defer r.Close()
+
+	require.Equal(b, 1, len(r.File))
+
+	data, err := r.File[0].Open()
+	require.NoError(b, err)
+
+	b.ResetTimer()
+
+	b.StartTimer()
+	stat, err := GetDomainStatExperimental(data, "biz")
+	b.StopTimer()
+	require.NoError(b, err)
+
+	require.Equal(b, expectedBizStatCopy, stat)
+}
+
+func BenchmarkStat004Remark(b *testing.B) {
+	os.Setenv("MAX_CAPACITY", "239")
+	os.Setenv("WORKERS_COUNT", "100")
+
+	r, err := zip.OpenReader("testdata/users.dat.zip")
+	require.NoError(b, err)
+	defer r.Close()
+
+	require.Equal(b, 1, len(r.File))
+
+	data, err := r.File[0].Open()
+	require.NoError(b, err)
+
+	b.ResetTimer()
+
+	b.StartTimer()
+	stat, err := GetDomainStatRemark(data, "biz")
+	b.StopTimer()
+	require.NoError(b, err)
+
+	require.Equal(b, expectedBizStatCopy, stat)
+}
+
+var expectedBizStatCopy = DomainStat{
 	"abata.biz":         25,
 	"abatz.biz":         25,
 	"agimba.biz":        28,

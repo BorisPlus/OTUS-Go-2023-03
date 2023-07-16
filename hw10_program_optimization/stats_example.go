@@ -11,73 +11,60 @@ import (
 	"sync"
 )
 
+// TODO: with "reflect" - func LoadOrDefault[T any](name string, asDefault T) T {}.
+func loadEnviromentOrDefault(name string, asDefault int) int {
+	value, exists := os.LookupEnv(name)
+	if exists {
+		intValue, err := strconv.Atoi(value)
+		if err == nil {
+			return intValue
+		}
+	}
+	return asDefault
+}
 
-func RowParserExample(
-	row <-chan []byte,
-	compiledRegexp *regexp.Regexp,
+func rowParserExample(
 	wg *sync.WaitGroup,
 	mtx *sync.Mutex,
-	domainStat *DomainStat,
+	rows <-chan []byte,
+	compiledRegexp regexp.Regexp,
+	domainStat DomainStat,
 ) {
 	defer wg.Done()
-	for rowData := range row {
-		matches := compiledRegexp.FindAllSubmatch(rowData, -1)
+	for row := range rows {
+		matches := compiledRegexp.FindAllSubmatch(row, -1)
 		for matcheIndex := range matches {
 			domainAtLowercase := strings.ToLower(string(matches[matcheIndex][1]))
 			mtx.Lock()
-			(*domainStat)[domainAtLowercase]++
+			domainStat[domainAtLowercase]++
 			mtx.Unlock()
 		}
 	}
 }
 
 func GetDomainStatExample(r io.Reader, domain string) (DomainStat, error) {
-	workersCount := 1 
-	count, exists := os.LookupEnv("WORKERS_COUNT")
-	if exists {
-		intVar, err := strconv.Atoi(count)
-		if err == nil {
-			workersCount = intVar
-		}
-	}
-	fmt.Println("workersCount =", workersCount)
-
 	domainAtEmailRegexp := fmt.Sprintf(`@(\w+\.%s)`, domain)
 	compiledRegexp, err := regexp.Compile(domainAtEmailRegexp)
 	if err != nil {
 		return nil, err
 	}
-
 	wg := sync.WaitGroup{}
 	mtx := sync.Mutex{}
-	rowsChannel := make(chan []byte)
-
+	dataChannel := make(chan []byte)
 	domainStat := make(DomainStat)
-
+	workersCount := loadEnviromentOrDefault("WORKERS_COUNT", 1)
 	for i := 0; i < workersCount; i++ {
 		wg.Add(1)
-		go RowParserExample(rowsChannel, compiledRegexp, &wg, &mtx, &domainStat)
+		go rowParserExample(&wg, &mtx, dataChannel, *compiledRegexp, domainStat)
 	}
-
 	scanner := bufio.NewScanner(r)
-	maxCapacity := 2_000_000 // It's over 64K !!!
-	c, exists := os.LookupEnv("MAX_CAPACITY")
-	if exists {
-		intVar, err := strconv.Atoi(c)
-		if err == nil {
-			maxCapacity = intVar
-		}
-	}
-	fmt.Println("maxCapacity =", maxCapacity)
+	maxCapacity := loadEnviromentOrDefault("MAX_CAPACITY", 2_000_000) // Magick big value
 	buf := make([]byte, maxCapacity)
 	scanner.Buffer(buf, maxCapacity)
-
 	for scanner.Scan() {
-		rowsChannel <- scanner.Bytes()
+		dataChannel <- scanner.Bytes()
 	}
-
-	close(rowsChannel)
+	close(dataChannel)
 	wg.Wait()
-
 	return domainStat, nil
 }

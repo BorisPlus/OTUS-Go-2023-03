@@ -18,7 +18,7 @@ type User struct {
 	Address  string
 }
 
-func GetDomainStatSource(r io.Reader, domain string) (DomainStat, error) {
+func GetDomainStatInitial(r io.Reader, domain string) (DomainStat, error) {
 	u, err := getUsers(r)
 	if err != nil {
 		return nil, fmt.Errorf("get users error: %w", err)

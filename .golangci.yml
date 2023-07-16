@@ -20,6 +20,7 @@ linters-settings:
         allow:
           - $gostd
           - github.com/icrowley
+          - github.com/stretchr
   # funlen:
   # lines: 200
   # statements: 120
