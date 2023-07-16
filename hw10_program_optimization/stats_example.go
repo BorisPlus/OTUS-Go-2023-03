@@ -12,24 +12,26 @@ import (
 )
 
 
-type DomainStat map[string]int
-
-func RowParser(
+func RowParserExample(
+	row <-chan []byte,
+	compiledRegexp *regexp.Regexp,
 	wg *sync.WaitGroup,
 	mtx *sync.Mutex,
 	domainStat *DomainStat,
-	domains <-chan string,
-
 ) {
 	defer wg.Done()
-	for domain := range domains {
-		mtx.Lock()
-		(*domainStat)[domain]++
-		mtx.Unlock()
+	for rowData := range row {
+		matches := compiledRegexp.FindAllSubmatch(rowData, -1)
+		for matcheIndex := range matches {
+			domainAtLowercase := strings.ToLower(string(matches[matcheIndex][1]))
+			mtx.Lock()
+			(*domainStat)[domainAtLowercase]++
+			mtx.Unlock()
+		}
 	}
 }
 
-func GetDomainStat(r io.Reader, domain string) (DomainStat, error) {
+func GetDomainStatExample(r io.Reader, domain string) (DomainStat, error) {
 	workersCount := 1 
 	count, exists := os.LookupEnv("WORKERS_COUNT")
 	if exists {
@@ -38,7 +40,7 @@ func GetDomainStat(r io.Reader, domain string) (DomainStat, error) {
 			workersCount = intVar
 		}
 	}
-	// fmt.Println("workersCount =", workersCount)
+	fmt.Println("workersCount =", workersCount)
 
 	domainAtEmailRegexp := fmt.Sprintf(`@(\w+\.%s)`, domain)
 	compiledRegexp, err := regexp.Compile(domainAtEmailRegexp)
@@ -48,13 +50,13 @@ func GetDomainStat(r io.Reader, domain string) (DomainStat, error) {
 
 	wg := sync.WaitGroup{}
 	mtx := sync.Mutex{}
-	domainsChannel := make(chan string)
+	rowsChannel := make(chan []byte)
 
 	domainStat := make(DomainStat)
 
 	for i := 0; i < workersCount; i++ {
 		wg.Add(1)
-		go RowParser(&wg, &mtx, &domainStat, domainsChannel)
+		go RowParserExample(rowsChannel, compiledRegexp, &wg, &mtx, &domainStat)
 	}
 
 	scanner := bufio.NewScanner(r)
@@ -66,19 +68,15 @@ func GetDomainStat(r io.Reader, domain string) (DomainStat, error) {
 			maxCapacity = intVar
 		}
 	}
-	// fmt.Println("maxCapacity =", maxCapacity)
+	fmt.Println("maxCapacity =", maxCapacity)
 	buf := make([]byte, maxCapacity)
 	scanner.Buffer(buf, maxCapacity)
 
 	for scanner.Scan() {
-		matches := compiledRegexp.FindAllSubmatch(scanner.Bytes(), -1)
-		for matcheIndex := range matches {
-			domainAtLowercase := strings.ToLower(string(matches[matcheIndex][1]))
-			domainsChannel <- domainAtLowercase
-		}
+		rowsChannel <- scanner.Bytes()
 	}
 
-	close(domainsChannel)
+	close(rowsChannel)
 	wg.Wait()
 
 	return domainStat, nil

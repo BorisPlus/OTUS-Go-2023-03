@@ -26,6 +26,7 @@ func main() {
 		return
 	}
 
+	// GetDomainStatExample
 	stat, err := hw10.GetDomainStat(data, "biz")
 	if err != nil {
 		fmt.Println(err)
@@ -34,9 +35,6 @@ func main() {
 
 	fmt.Println("I get GetDomainStat")
 	fmt.Println("Let's check it with ethalon")
-
-	// t := testing.T{}
-	// require.Equal(&t, hw10.ExpectedBizStat, stat)
 
 	// LEFT OUTER JOIN
 	for key := range stat {

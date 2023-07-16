@@ -988,11 +988,141 @@ $ MAX_CAPACITY=100000 WORKERS_COUNT=2 go run ./main.go
 
 Крайнее `MAX_CAPACITY=100000 WORKERS_COUNT=2 go run ./main.go ` можно повторять и повторять. Ошибок больше НЕ будет.
 
+## Переформатируем логику играем код. Все заработает.
+
+Вынесем логику работы с регулярным выражением за пределы горутин, подавая на вход домен:
+
+```go
+package hw10programoptimization
+
+import (
+    "bufio"
+    "fmt"
+    "io"
+    "os"
+    "regexp"
+    "strconv"
+    "strings"
+    "sync"
+)
+
+
+func RowParserNew(
+    wg *sync.WaitGroup,
+    mtx *sync.Mutex,
+    domainStat *DomainStat,
+    domains <-chan string,
+
+) {
+    defer wg.Done()
+    for domain := range domains {
+        mtx.Lock()
+        (*domainStat)[domain]++
+        mtx.Unlock()
+    }
+}
+
+func GetDomainStatNew(r io.Reader, domain string) (DomainStat, error) {
+    workersCount := 1 
+    count, exists := os.LookupEnv("WORKERS_COUNT")
+    if exists {
+        intVar, err := strconv.Atoi(count)
+        if err == nil {
+            workersCount = intVar
+        }
+    }
+    domainAtEmailRegexp := fmt.Sprintf(`@(\w+\.%s)`, domain)
+    compiledRegexp, err := regexp.Compile(domainAtEmailRegexp)
+    if err != nil {
+        return nil, err
+    }
+
+    wg := sync.WaitGroup{}
+    mtx := sync.Mutex{}
+    domainsChannel := make(chan string)
+
+    domainStat := make(DomainStat)
+
+    for i := 0; i < workersCount; i++ {
+        wg.Add(1)
+        go RowParserNew(&wg, &mtx, &domainStat, domainsChannel)
+    }
+
+    scanner := bufio.NewScanner(r)
+    maxCapacity := 100_000 // It's over 64K !!!
+    c, exists := os.LookupEnv("MAX_CAPACITY")
+    if exists {
+        intVar, err := strconv.Atoi(c)
+        if err == nil {
+            maxCapacity = intVar
+        }
+    }
+    buf := make([]byte, maxCapacity)
+    scanner.Buffer(buf, maxCapacity)
+
+    for scanner.Scan() {
+        matches := compiledRegexp.FindAllSubmatch(scanner.Bytes(), -1)
+        for matcheIndex := range matches {
+            domainAtLowercase := strings.ToLower(string(matches[matcheIndex][1]))
+            domainsChannel <- domainAtLowercase
+        }
+    }
+
+    close(domainsChannel)
+    wg.Wait()
+
+    return domainStat, nil
+}
+```
+
+И теперь все заработает (даже с меньшим объемом MAX_CAPACITY) объективно яснее и гораздо более стабильно (по "парсингу", на скорость уже все равно):
+
+```bash
+$cd experimantal
+
+./experimantal$ MAX_CAPACITY=100000 WORKERS_COUNT=2 go run ./main.go 
+    WORKERS_COUNT = 2
+    MAX_CAPACITY  = 100000
+    I get GetDomainStat
+    Let's check it with ethalon
+    OK
+
+./experimantal$ MAX_CAPACITY=50000 WORKERS_COUNT=2 go run ./main.go 
+    WORKERS_COUNT = 2
+    MAX_CAPACITY  = 50000
+    I get GetDomainStat
+    Let's check it with ethalon
+    OK
+
+./experimantal$ MAX_CAPACITY=1000 WORKERS_COUNT=100 go run ./main.go 
+    WORKERS_COUNT = 100
+    MAX_CAPACITY  = 1000
+    I get GetDomainStat
+    Let's check it with ethalon
+    OK
+
+cd ../
+
+MAX_CAPACITY=1000 WORKERS_COUNT=100 go test -v -count=1 -timeout=30s -tags bench ./stats.go ./stats_optimization_test.go 
+
+    === RUN   TestGetDomainStat_Time_And_Memory
+        stats_optimization_test.go:46: time used: 397.957449ms / 300ms
+        stats_optimization_test.go:47: memory used: 3Mb / 30Mb
+        stats_optimization_test.go:49: 
+                    Error Trace:    stats_optimization_test.go:49
+                    Error:          "397957449" is not less than "300000000"
+                    Test:           TestGetDomainStat_Time_And_Memory
+                    Messages:       the program is too slow
+    --- FAIL: TestGetDomainStat_Time_And_Memory (8.46s)
+    FAIL
+    FAIL    command-line-arguments  8.464s
+    FAIL
+```
+
 ## Вывод
 
-* Задача решена с магичесиким "допущениями".
-* Природа "допущения" на число горутин мне абсолютно не ясна, так как горутины конкурируют лишь в подсчете статистики, и как могут появляться результаты некорректных строк из канала, на котором горутины не конкурируют.
-
+* Задача решена с "магичесикими" допущениями (по разделению кода на горутины, вроде одна задача, ан нет).
+* Природа "допущения" на необходимость вынесения скомпилированного регулярного выражения во вне горутин мне пока не ясна, так как горутины конкурируют лишь в подсчете статистики. Почему появляются результаты некорректных строк из канала, на котором горутины не конкурируют, не понятно.
 
 ## Приложение
 
