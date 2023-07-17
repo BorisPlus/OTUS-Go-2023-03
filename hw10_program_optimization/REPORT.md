@@ -407,10 +407,7 @@ const (
 Тестируем с этим **ОБЪЕМНЫМ** буфером (`2_000_000`) и **БОЛЬШИМ** числом горутин (`1000`), тогда будет все **ОК**:
 
 ```bash
-MAX_CAPACITY=2000000 WORKERS_COUNT=1000 go test -v -run=TestBigDataGetDomainStat ./
-
-    === RUN   TestBigDataGetDomainStat
-    --- PASS: TestBigDataGetDomainStat (0.43s)
+MAX_CAPACITY=2000000 WORKERS_COUNT=1000 go test -v -count=1 -timeout=30s -tags bench .
     PASS
     ok      github.com/BorisPlus/OTUS-Go-2023-03/hw10_program_optimization  (cached)
 ```
@@ -418,10 +415,8 @@ MAX_CAPACITY=2000000 WORKERS_COUNT=1000 go test -v -run=TestBigDataGetDomainStat
 Тестируем с **ОБЪЯСНИМЫМ ОБЪЕМОМ** буфера (`100_000` - число строк в тестовом файле) и **ОДНОЙ** горутиной, тогда будет все **ОК**:
 
 ```bash
-MAX_CAPACITY=100000 WORKERS_COUNT=1 go test -v -run=TestBigDataGetDomainStat ./
+MAX_CAPACITY=100000 WORKERS_COUNT=1 go test -v -count=1 -timeout=30s -tags bench .
 
-    === RUN   TestBigDataGetDomainStat
-    --- PASS: TestBigDataGetDomainStat (0.55s)
     PASS
     ok      github.com/BorisPlus/OTUS-Go-2023-03/hw10_program_optimization  0.556s
 ```
@@ -429,10 +424,8 @@ MAX_CAPACITY=100000 WORKERS_COUNT=1 go test -v -run=TestBigDataGetDomainStat ./
 а вот, например, **ТОТ ЖЕ** буфер (`100_000`) и уже **ДВЕ** горутины, тогда будет **FAIL**:
 
 ```bash
-MAX_CAPACITY=100000 WORKERS_COUNT=2 go test -v -run=TestBigDataGetDomainStat ./
+MAX_CAPACITY=100000 WORKERS_COUNT=2 go test -v -count=1 -timeout=30s -tags bench .
 ...
-...
---- FAIL: TestBigDataGetDomainStat (0.52s)
 FAIL
 ```
 
