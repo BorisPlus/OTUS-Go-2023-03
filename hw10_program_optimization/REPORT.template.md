@@ -226,7 +226,7 @@ go tool pprof -svg ./hw10_program_optimization.test ./cpu_000_initial_variant.ou
 
 Исходя из [графа вызовов](./REPORT.files/cpu_000_initial_variant.svg):
 
-![cpu_000_initial_variant.svg](https://raw.githubusercontent.com/OTUS-Go-2023-03/hw10_program_optimization/REPORT.files/cpu_000_initial_variant.svg?sanitize=true)
+![cpu_000_initial_variant.svg](./REPORT.files/cpu_000_initial_variant.svg)
 
 рассмотренные выше предположения верны.
 

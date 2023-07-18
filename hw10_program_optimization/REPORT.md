@@ -11,7 +11,71 @@
 <details><summary>file: `stats_initial.go`</summary>
 
 ```go
-{{ stats_initial.go }}
+package hw10programoptimization
+
+import (
+    "encoding/json"
+    "fmt"
+    "io"
+    "regexp"
+    "strings"
+)
+
+type User struct {
+    ID       int
+    Name     string
+    Username string
+    Email    string
+    Phone    string
+    Password string
+    Address  string
+}
+
+func GetDomainStatInitial(r io.Reader, domain string) (DomainStat, error) {
+    u, err := getUsers(r)
+    if err != nil {
+        return nil, fmt.Errorf("get users error: %w", err)
+    }
+    return countDomains(u, domain)
+}
+
+type users [100_000]User
+
+func getUsers(r io.Reader) (result users, err error) {
+    content, err := io.ReadAll(r)
+    if err != nil {
+        return
+    }
+
+    lines := strings.Split(string(content), "\n")
+    for i, line := range lines {
+        var user User
+        if err = json.Unmarshal([]byte(line), &user); err != nil {
+            return
+        }
+        result[i] = user
+    }
+    return
+}
+
+func countDomains(u users, domain string) (DomainStat, error) {
+    result := make(DomainStat)
+
+    for _, user := range u {
+        matched, err := regexp.Match("\\."+domain, []byte(user.Email))
+        if err != nil {
+            return nil, err
+        }
+
+        if matched {
+            num := result[strings.ToLower(strings.SplitN(user.Email, "@", 2)[1])]
+            num++
+            result[strings.ToLower(strings.SplitN(user.Email, "@", 2)[1])] = num
+        }
+    }
+    return result, nil
+}
+
 ```
 
 </details>
@@ -226,7 +290,7 @@ go tool pprof -svg ./hw10_program_optimization.test ./cpu_000_initial_variant.ou
 
 Исходя из [графа вызовов](./REPORT.files/cpu_000_initial_variant.svg):
 
-![cpu_000_initial_variant.svg](https://raw.githubusercontent.com/OTUS-Go-2023-03/hw10_program_optimization/REPORT.files/cpu_000_initial_variant.svg?sanitize=true)
+![cpu_000_initial_variant.svg](./REPORT.files/cpu_000_initial_variant.svg)
 
 рассмотренные выше предположения верны.
 
@@ -248,7 +312,33 @@ go tool pprof -svg ./hw10_program_optimization.test ./cpu_000_initial_variant.ou
 <details><summary>file: `stats_looped.go`</summary>
 
 ```go
-{{ stats_looped.go }}
+package hw10programoptimization
+
+import (
+    "encoding/json"
+    "fmt"
+    "io"
+    "bufio"
+    "strings"
+)
+
+
+func GetDomainStatLooped(r io.Reader, domain string) (DomainStat, error) {
+    result := make(DomainStat)
+    scanner := bufio.NewScanner(r)
+    var user User
+    for scanner.Scan() {
+        err := json.Unmarshal(scanner.Bytes(), &user)
+        if err != nil {
+            continue
+        }
+        if strings.HasSuffix(user.Email, fmt.Sprintf(".%s", domain)) {
+            result[strings.ToLower(strings.SplitN(user.Email, "@", 2)[1])]++
+        }
+    }
+    return result, nil
+}
+
 ```
 
 </details>
@@ -260,7 +350,44 @@ go tool pprof -svg ./hw10_program_optimization.test ./cpu_000_initial_variant.ou
 <details><summary>file: `stats_goroutined.go`</summary>
 
 ```go
-{{ stats_goroutined.go }}
+package hw10programoptimization
+
+import (
+    "bufio"
+    "encoding/json"
+    "fmt"
+    "io"
+    "strings"
+    "sync"
+)
+
+
+func GetDomainStatGoroutined(r io.Reader, domain string) (DomainStat, error) {
+    wg := sync.WaitGroup{}
+    mtx := sync.Mutex{}
+    dataChannel := make(chan string)
+    domainStat := make(DomainStat)
+    workersCount := loadEnviromentOrDefault("WORKERS_COUNT", 100)
+    for i := 0; i < workersCount; i++ {
+        wg.Add(1)
+        go domainStatCalc(&wg, &mtx, dataChannel, domainStat)
+    }
+    scanner := bufio.NewScanner(r)
+    var user User
+    for scanner.Scan() {
+        err := json.Unmarshal(scanner.Bytes(), &user)
+        if err != nil {
+            continue
+        }
+        if strings.HasSuffix(user.Email, fmt.Sprintf(".%s", domain)) {
+            dataChannel <- strings.ToLower(strings.SplitN(user.Email, "@", 2)[1])
+        }
+    }
+    close(dataChannel)
+    wg.Wait()
+    return domainStat, nil
+}
+
 ```
 
 </details>
@@ -273,7 +400,40 @@ go tool pprof -svg ./hw10_program_optimization.test ./cpu_000_initial_variant.ou
 <details><summary>file: `stats_goroutined_fastjson.go`</summary>
 
 ```go
-{{ stats_goroutined_fastjson.go }}
+package hw10programoptimization
+
+import (
+    "bufio"
+    "fmt"
+    "io"
+    "strings"
+    "sync"
+
+    "github.com/valyala/fastjson"
+)
+
+func GetDomainStatGoroutinedFastJson(r io.Reader, domain string) (DomainStat, error) {
+    wg := sync.WaitGroup{}
+    mtx := sync.Mutex{}
+    dataChannel := make(chan string)
+    domainStat := make(DomainStat)
+    workersCount := loadEnviromentOrDefault("WORKERS_COUNT", 100)
+    for i := 0; i < workersCount; i++ {
+        wg.Add(1)
+        go domainStatCalc(&wg, &mtx, dataChannel, domainStat)
+    }
+    scanner := bufio.NewScanner(r)
+    for scanner.Scan() {
+        email := fastjson.GetString(scanner.Bytes(), "Email")
+        if strings.HasSuffix(email, fmt.Sprintf(".%s", domain)) {
+            dataChannel <- strings.ToLower(strings.SplitN(email, "@", 2)[1])
+        }
+    }
+    close(dataChannel)
+    wg.Wait()
+    return domainStat, nil
+}
+
 ```
 
 </details>
@@ -300,7 +460,61 @@ go tool pprof -svg ./hw10_program_optimization.test ./cpu_000_initial_variant.ou
 <details><summary>file: `stats_alternate.go`</summary>
 
 ```go
-{{ stats_alternate.go }}
+package hw10programoptimization
+
+import (
+    "bufio"
+    "fmt"
+    "io"
+    "regexp"
+    "strings"
+    "sync"
+)
+
+
+func domainStatCalcAlternate(
+    wg *sync.WaitGroup,
+    mtx *sync.Mutex,
+    rows <-chan string,
+    compiledRegexp *regexp.Regexp,
+    domainStat DomainStat,
+) {
+    for row := range rows {
+        matches := compiledRegexp.FindAllStringSubmatch(row, -1)
+        for matcheIndex := range matches {
+            domainAtLowercase := strings.ToLower(string(matches[matcheIndex][1]))
+            mtx.Lock()
+            domainStat[domainAtLowercase]++
+            mtx.Unlock()
+        }
+    }
+    wg.Done()
+}
+
+func GetDomainStatAlternate(r io.Reader, domain string) (DomainStat, error) {
+    domainAtEmailRegexp := fmt.Sprintf(`@(\w+\.%s)`, domain)
+    compiledRegexp, err := regexp.Compile(domainAtEmailRegexp)
+    if err != nil {
+        return nil, err
+    }
+    wg := sync.WaitGroup{}
+    mtx := sync.Mutex{}
+    dataChannel := make(chan string)
+    domainStat := make(DomainStat)
+    workersCount := loadEnviromentOrDefault("WORKERS_COUNT", 100)
+    for i := 0; i < workersCount; i++ {
+        wg.Add(1)
+        go domainStatCalcAlternate(&wg, &mtx, dataChannel, compiledRegexp, domainStat)
+    }
+    scanner := bufio.NewScanner(r)
+    for scanner.Scan() {
+        dataChannel <- scanner.Text()
+    }
+    close(dataChannel)
+    wg.Wait()
+    return domainStat, nil
+}
+
 ```
 
 </details>
@@ -314,7 +528,60 @@ go tool pprof -svg ./hw10_program_optimization.test ./cpu_000_initial_variant.ou
 <details><summary>file: `stats_common_test.go`</summary>
 
 ```go
-{{ stats_common_test.go }}
+//go:build !bench
+// +build !bench
+
+package hw10programoptimization
+
+import (
+    "bytes"
+    "io"
+    "testing"
+
+    "github.com/stretchr/testify/require"
+)
+
+type GetDomainFuncSignature func(r io.Reader, domain string) (DomainStat, error)
+
+func TestAllGetDomainStatVariants(t *testing.T) {
+    data := `{"Id":1,"Name":"Howard Mendoza","Username":"0Oliver","Email":"aliquid_qui_ea@Browsedrive.gov","Phone":"6-866-899-36-79","Password":"InAQJvsq","Address":"Blackbird Place 25"}
+{"Id":2,"Name":"Jesse Vasquez","Username":"qRichardson","Email":"mLynch@broWsecat.com","Phone":"9-373-949-64-00","Password":"SiZLeNSGn","Address":"Fulton Hill 80"}
+{"Id":3,"Name":"Clarence Olson","Username":"RachelAdams","Email":"RoseSmith@Browsecat.com","Phone":"988-48-97","Password":"71kuz3gA5w","Address":"Monterey Park 39"}
+{"Id":4,"Name":"Gregory Reid","Username":"tButler","Email":"5Moore@Teklist.net","Phone":"520-04-16","Password":"r639qLNu","Address":"Sunfield Park 20"}
+{"Id":5,"Name":"Janice Rose","Username":"KeithHart","Email":"nulla@Linktype.com","Phone":"146-91-01","Password":"acSBF5","Address":"Russell Trail 61"}`
+
+    testCases := []GetDomainFuncSignature{
+        GetDomainStat,
+        GetDomainStatLooped,
+        GetDomainStatGoroutined,
+        GetDomainStatGoroutinedFastJson,
+        GetDomainStatAlternate,
+    }
+    for _, Func := range testCases {
+        t.Run("find 'com'", func(t *testing.T) {
+            result, err := Func(bytes.NewBufferString(data), "com")
+            require.NoError(t, err)
+            require.Equal(t, DomainStat{
+                "browsecat.com": 2,
+                "linktype.com":  1,
+            }, result)
+        })
+
+        t.Run("find 'gov'", func(t *testing.T) {
+            result, err := GetDomainStat(bytes.NewBufferString(data), "gov")
+            require.NoError(t, err)
+            require.Equal(t, DomainStat{"browsedrive.gov": 1}, result)
+        })
+
+        t.Run("find 'unknown'", func(t *testing.T) {
+            result, err := GetDomainStat(bytes.NewBufferString(data), "unknown")
+            require.NoError(t, err)
+            require.Equal(t, DomainStat{}, result)
+        })
+
+    }
+}
+
 ```
 
 </details>
@@ -342,7 +609,18 @@ go test -bench=. > stats_common_benchmark_test.out
  ```
 
 ```text
-{{ stats_common_benchmark_test.out }}
+goos: linux
+goarch: amd64
+pkg: github.com/BorisPlus/OTUS-Go-2023-03/hw10_program_optimization
+cpu: Intel(R) Core(TM) i3-2310M CPU @ 2.10GHz
+BenchmarkStat000InitialVariant-4                  1    1504527916 ns/op
+BenchmarkStat001LoopedVariant-4                   1    1122965358 ns/op
+BenchmarkStat002GoroutinedVariant-4               1    1487473372 ns/op
+BenchmarkStat003GoroutinedFastJson-4       1000000000             0.5567 ns/op
+BenchmarkStat004Alternate-4                1000000000             0.4069 ns/op
+PASS
+ok      github.com/BorisPlus/OTUS-Go-2023-03/hw10_program_optimization    23.377s
+
 ```
 
 ### 4.3 Сравнение реализаций
@@ -360,7 +638,46 @@ GOGC=off go test -run=TestCommon -v -count=1 -timeout=30s -tags bench .  > stats
 ```
 
 ```text
-{{ stats_common_test.out }}
+=== RUN   TestCommonGetDomainStatInitial_Time_And_Memory
+
+Test with GetDomainStat: Initial
+    stats_common_optimization_test.go:42: time used: 1.74315414s / 300ms
+    stats_common_optimization_test.go:43: memory used: 308Mb / 30Mb
+    stats_common_optimization_test.go:45: 
+            Error Trace:    stats_common_optimization_test.go:45
+                                        stats_common_optimization_test.go:51
+            Error:          "1743154140" is not less than "300000000"
+            Test:           TestCommonGetDomainStatInitial_Time_And_Memory
+            Messages:       the program is too slow
+--- FAIL: TestCommonGetDomainStatInitial_Time_And_Memory (1.75s)
+=== RUN   TestCommonGetDomainStatAlternate_Time_And_Memory
+
+Test with GetDomainStat: Alternate
+    stats_common_optimization_test.go:42: time used: 362.076142ms / 300ms
+    stats_common_optimization_test.go:43: memory used: 20Mb / 30Mb
+    stats_common_optimization_test.go:45: 
+            Error Trace:    stats_common_optimization_test.go:45
+                                        stats_common_optimization_test.go:56
+            Error:          "362076142" is not less than "300000000"
+            Test:           TestCommonGetDomainStatAlternate_Time_And_Memory
+            Messages:       the program is too slow
+--- FAIL: TestCommonGetDomainStatAlternate_Time_And_Memory (8.62s)
+=== RUN   TestCommonGetDomainStatGoroutinedFastJson_Time_And_Memory
+
+Test with GetDomainStat: Goroutined + FastJson
+    stats_common_optimization_test.go:42: time used: 644.143505ms / 300ms
+    stats_common_optimization_test.go:43: memory used: 5Mb / 30Mb
+    stats_common_optimization_test.go:45: 
+            Error Trace:    stats_common_optimization_test.go:45
+                                        stats_common_optimization_test.go:61
+            Error:          "644143505" is not less than "300000000"
+            Test:           TestCommonGetDomainStatGoroutinedFastJson_Time_And_Memory
+            Messages:       the program is too slow
+--- FAIL: TestCommonGetDomainStatGoroutinedFastJson_Time_And_Memory (9.72s)
+FAIL
+FAIL    github.com/BorisPlus/OTUS-Go-2023-03/hw10_program_optimization    20.092s
+FAIL
+
 ```
 
 Видно, что нагрузка на память значительно снизилась, а скорость возросла. Варианты "FastJson" и "Alternate" между собой конкурируют. В репозитории итоговым вариантом оставлен "FastJson".
