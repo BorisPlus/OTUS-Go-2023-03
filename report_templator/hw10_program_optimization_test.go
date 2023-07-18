@@ -11,11 +11,17 @@ func TestHw10(t *testing.T) {
 	_ = t
 	directory := "../hw10_program_optimization/"
 	files := []string{
-		"stats_example.go",
-		"stat.go",
-		"experimantal/main.go",
-		"stats_remark.go",
+		"stats_initial.go",
+		"stats_looped.go",
+		"stats_goroutined.go",
+		"stats_goroutined_fastjson.go",
+		"stats_alternate.go",
 		"stats_benchmark_test.go",
+		"stats_common_benchmark_test.go",
+		"stats_common_optimization_test.go",
+		"stats_common_test.go",
+		"stats_common_test.out",
+		"stats_common_benchmark_test.out",
 	}
 
 	substitutions := make(map[string]string)

@@ -9,26 +9,27 @@ import (
 	"sync"
 )
 
-func rowParserRemark(
+
+func domainStatCalcAlternate(
 	wg *sync.WaitGroup,
 	mtx *sync.Mutex,
 	rows <-chan string,
-	compiledRegexp regexp.Regexp,
+	compiledRegexp *regexp.Regexp,
 	domainStat DomainStat,
 ) {
-	defer wg.Done()
 	for row := range rows {
 		matches := compiledRegexp.FindAllStringSubmatch(row, -1)
 		for matcheIndex := range matches {
-			domainAtLowercase := strings.ToLower(matches[matcheIndex][1])
+			domainAtLowercase := strings.ToLower(string(matches[matcheIndex][1]))
 			mtx.Lock()
 			domainStat[domainAtLowercase]++
 			mtx.Unlock()
 		}
 	}
+	wg.Done()
 }
 
-func GetDomainStatRemark(r io.Reader, domain string) (DomainStat, error) {
+func GetDomainStatAlternate(r io.Reader, domain string) (DomainStat, error) {
 	domainAtEmailRegexp := fmt.Sprintf(`@(\w+\.%s)`, domain)
 	compiledRegexp, err := regexp.Compile(domainAtEmailRegexp)
 	if err != nil {
@@ -41,12 +42,9 @@ func GetDomainStatRemark(r io.Reader, domain string) (DomainStat, error) {
 	workersCount := loadEnviromentOrDefault("WORKERS_COUNT", 100)
 	for i := 0; i < workersCount; i++ {
 		wg.Add(1)
-		go rowParserRemark(&wg, &mtx, dataChannel, *compiledRegexp, domainStat)
+		go domainStatCalcAlternate(&wg, &mtx, dataChannel, compiledRegexp, domainStat)
 	}
 	scanner := bufio.NewScanner(r)
-	maxCapacity := loadEnviromentOrDefault("MAX_CAPACITY", 239)
-	buf := make([]byte, maxCapacity)
-	scanner.Buffer(buf, maxCapacity)
 	for scanner.Scan() {
 		dataChannel <- scanner.Text()
 	}

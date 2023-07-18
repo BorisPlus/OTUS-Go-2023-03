@@ -1,60 +1,51 @@
-package main
+package hw10programoptimization
 
 import (
 	"archive/zip"
-	"fmt"
-	"os"
+	"io"
+	"testing"
 
-	hw10 "github.com/BorisPlus/OTUS-Go-2023-03/hw10_program_optimization"
+	"github.com/stretchr/testify/require"
 )
 
-func main() {
+type FuncSignature func(r io.Reader, domain string) (DomainStat, error)
 
-	fmt.Println("WORKERS_COUNT", "=", os.Getenv("WORKERS_COUNT"))
-	fmt.Println("MAX_CAPACITY ", "=", os.Getenv("MAX_CAPACITY"))
-
-	r, err := zip.OpenReader("../testdata/users.dat.zip")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+func CommonBenchmarkTemplate(b *testing.B, function FuncSignature) {
+	r, err := zip.OpenReader("testdata/users.dat.zip")
+	require.NoError(b, err)
 	defer r.Close()
-
+	require.Equal(b, 1, len(r.File))
 	data, err := r.File[0].Open()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	// TODO: replace to `GetDomainStat``
-	stat, err := hw10.GetDomainStatExample(data, "biz")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	fmt.Println("I get GetDomainStatExample")
-	fmt.Println("Let's check it with ethalon")
-
-	// LEFT OUTER JOIN
-	for key := range stat {
-		if stat[key] != hw10.ExpectedBizStat[key] {
-			fmt.Println(key) // ВАЖНАЯ СТРОКА
-			fmt.Println("FAIL")
-			return
-		}
-	}
-	// RIGHT OUTER JOIN
-	for key := range hw10.ExpectedBizStat {
-		if stat[key] != hw10.ExpectedBizStat[key] {
-			fmt.Println("FAIL")
-			return
-		}
-	}
-	fmt.Println("OK")
+	require.NoError(b, err)
+	b.ResetTimer()
+	b.StartTimer()
+	stat, err := function(data, "biz")
+	b.StopTimer()
+	require.NoError(b, err)
+	require.Equal(b, expectedBizStatCopy, stat)
 }
 
-var expectedBizStat = map[string]int{
+func BenchmarkStat000InitialVariant(b *testing.B) {
+	CommonBenchmarkTemplate(b, GetDomainStatInitial)
+}
+
+func BenchmarkStat001LoopedVariant(b *testing.B) {
+	CommonBenchmarkTemplate(b, GetDomainStatLooped)
+}
+
+func BenchmarkStat002GoroutinedVariant(b *testing.B) {
+	CommonBenchmarkTemplate(b, GetDomainStatGoroutined)
+}
+
+func BenchmarkStat003GoroutinedFastJson(b *testing.B) {
+	CommonBenchmarkTemplate(b, GetDomainStatGoroutinedFastJson)
+}
+
+func BenchmarkStat004Alternate(b *testing.B) {
+	CommonBenchmarkTemplate(b, GetDomainStatAlternate)
+}
+
+var expectedBizStatCopy = DomainStat{
 	"abata.biz":         25,
 	"abatz.biz":         25,
 	"agimba.biz":        28,
