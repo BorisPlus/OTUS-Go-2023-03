@@ -315,13 +315,12 @@ go tool pprof -svg ./hw10_program_optimization.test ./cpu_000_initial_variant.ou
 package hw10programoptimization
 
 import (
+    "bufio"
     "encoding/json"
     "fmt"
     "io"
-    "bufio"
     "strings"
 )
-
 
 func GetDomainStatLooped(r io.Reader, domain string) (DomainStat, error) {
     result := make(DomainStat)
@@ -360,7 +359,6 @@ import (
     "strings"
     "sync"
 )
-
 
 func GetDomainStatGoroutined(r io.Reader, domain string) (DomainStat, error) {
     wg := sync.WaitGroup{}
@@ -412,7 +410,7 @@ import (
     "github.com/valyala/fastjson"
 )
 
-func GetDomainStatGoroutinedFastJson(r io.Reader, domain string) (DomainStat, error) {
+func GetDomainStatGoroutinedFastjson(r io.Reader, domain string) (DomainStat, error) {
     wg := sync.WaitGroup{}
     mtx := sync.Mutex{}
     dataChannel := make(chan string)
@@ -471,7 +469,6 @@ import (
     "sync"
 )
 
-
 func domainStatCalcAlternate(
     wg *sync.WaitGroup,
     mtx *sync.Mutex,
@@ -482,7 +479,7 @@ func domainStatCalcAlternate(
     for row := range rows {
         matches := compiledRegexp.FindAllStringSubmatch(row, -1)
         for matcheIndex := range matches {
-            domainAtLowercase := strings.ToLower(string(matches[matcheIndex][1]))
+            domainAtLowercase := strings.ToLower(matches[matcheIndex][1])
             mtx.Lock()
             domainStat[domainAtLowercase]++
             mtx.Unlock()
@@ -554,7 +551,7 @@ func TestAllGetDomainStatVariants(t *testing.T) {
         GetDomainStat,
         GetDomainStatLooped,
         GetDomainStatGoroutined,
-        GetDomainStatGoroutinedFastJson,
+        GetDomainStatGoroutinedFastjson,
         GetDomainStatAlternate,
     }
     for _, Func := range testCases {
@@ -613,14 +610,13 @@ goos: linux
 goarch: amd64
 pkg: github.com/BorisPlus/OTUS-Go-2023-03/hw10_program_optimization
 cpu: Intel(R) Core(TM) i3-2310M CPU @ 2.10GHz
-BenchmarkStat000InitialVariant-4                  1    1504527916 ns/op
-BenchmarkStat001LoopedVariant-4                   1    1122965358 ns/op
-BenchmarkStat002GoroutinedVariant-4               1    1487473372 ns/op
-BenchmarkStat003GoroutinedFastJson-4       1000000000             0.5567 ns/op
-BenchmarkStat004Alternate-4                1000000000             0.4069 ns/op
+BenchmarkStat000InitialVariant-4               1        1562108352 ns/op
+BenchmarkStat001LoopedVariant-4                1        1308427629 ns/op
+BenchmarkStat002GoroutinedVariant-4            1        1230038051 ns/op
+BenchmarkStat003GoroutinedFastJson-4    1000000000               0.4001 ns/op
+BenchmarkStat004Alternate-4             1000000000               0.3768 ns/op
 PASS
-ok      github.com/BorisPlus/OTUS-Go-2023-03/hw10_program_optimization    23.377s
-
+ok      github.com/BorisPlus/OTUS-Go-2023-03/hw10_program_optimization  25.848s
 ```
 
 ### 4.3 Сравнение реализаций

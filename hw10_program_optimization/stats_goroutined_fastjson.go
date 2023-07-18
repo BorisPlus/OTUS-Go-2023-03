@@ -10,7 +10,7 @@ import (
 	"github.com/valyala/fastjson"
 )
 
-func GetDomainStatGoroutinedFastJson(r io.Reader, domain string) (DomainStat, error) {
+func GetDomainStatGoroutinedFastjson(r io.Reader, domain string) (DomainStat, error) {
 	wg := sync.WaitGroup{}
 	mtx := sync.Mutex{}
 	dataChannel := make(chan string)

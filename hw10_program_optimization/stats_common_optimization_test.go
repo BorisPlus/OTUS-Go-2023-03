@@ -5,8 +5,8 @@ package hw10programoptimization
 
 import (
 	"archive/zip"
-	"io"
 	"fmt"
+	"io"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -14,8 +14,8 @@ import (
 
 type GetDomainFuncSignature func(r io.Reader, domain string) (DomainStat, error)
 
-// go test -v -count=1 -timeout=30s -tags bench .
-func TemplateCommonGetDomainStat_Time_And_Memory(t *testing.T, Func GetDomainFuncSignature) {
+func TemplateCommonGetDomainStatTimeAndMemory(t *testing.T, function GetDomainFuncSignature) {
+	t.Helper()
 	bench := func(b *testing.B) {
 		b.Helper()
 		b.StopTimer()
@@ -26,11 +26,11 @@ func TemplateCommonGetDomainStat_Time_And_Memory(t *testing.T, Func GetDomainFun
 
 		require.Equal(t, 1, len(r.File))
 
-		iodata, err := r.File[0].Open()
+		data, err := r.File[0].Open()
 		require.NoError(t, err)
 
 		b.StartTimer()
-		stat, err := Func(iodata, "biz")
+		stat, err := function(data, "biz")
 		b.StopTimer()
 		require.NoError(t, err)
 
@@ -48,16 +48,15 @@ func TemplateCommonGetDomainStat_Time_And_Memory(t *testing.T, Func GetDomainFun
 
 func TestCommonGetDomainStatInitial_Time_And_Memory(t *testing.T) {
 	fmt.Printf("\nTest with GetDomainStat: Initial\n")
-	TemplateCommonGetDomainStat_Time_And_Memory(t, GetDomainStatInitial)
+	TemplateCommonGetDomainStatTimeAndMemory(t, GetDomainStatInitial)
 }
 
 func TestCommonGetDomainStatAlternate_Time_And_Memory(t *testing.T) {
 	fmt.Printf("\nTest with GetDomainStat: Alternate\n")
-	TemplateCommonGetDomainStat_Time_And_Memory(t, GetDomainStatAlternate)
+	TemplateCommonGetDomainStatTimeAndMemory(t, GetDomainStatAlternate)
 }
 
 func TestCommonGetDomainStatGoroutinedFastJson_Time_And_Memory(t *testing.T) {
 	fmt.Printf("\nTest with GetDomainStat: Goroutined + FastJson\n")
-	TemplateCommonGetDomainStat_Time_And_Memory(t, GetDomainStatGoroutinedFastJson)
+	TemplateCommonGetDomainStatTimeAndMemory(t, GetDomainStatGoroutinedFastjson)
 }
-

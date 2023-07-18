@@ -1,13 +1,12 @@
 package hw10programoptimization
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"io"
-	"bufio"
 	"strings"
 )
-
 
 func GetDomainStatLooped(r io.Reader, domain string) (DomainStat, error) {
 	result := make(DomainStat)

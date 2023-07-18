@@ -9,7 +9,6 @@ import (
 	"sync"
 )
 
-
 func domainStatCalcAlternate(
 	wg *sync.WaitGroup,
 	mtx *sync.Mutex,
@@ -20,7 +19,7 @@ func domainStatCalcAlternate(
 	for row := range rows {
 		matches := compiledRegexp.FindAllStringSubmatch(row, -1)
 		for matcheIndex := range matches {
-			domainAtLowercase := strings.ToLower(string(matches[matcheIndex][1]))
+			domainAtLowercase := strings.ToLower(matches[matcheIndex][1])
 			mtx.Lock()
 			domainStat[domainAtLowercase]++
 			mtx.Unlock()

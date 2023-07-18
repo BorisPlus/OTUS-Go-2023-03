@@ -11,6 +11,7 @@ import (
 type FuncSignature func(r io.Reader, domain string) (DomainStat, error)
 
 func CommonBenchmarkTemplate(b *testing.B, function FuncSignature) {
+	b.Helper()
 	r, err := zip.OpenReader("testdata/users.dat.zip")
 	require.NoError(b, err)
 	defer r.Close()
@@ -38,7 +39,7 @@ func BenchmarkStat002GoroutinedVariant(b *testing.B) {
 }
 
 func BenchmarkStat003GoroutinedFastJson(b *testing.B) {
-	CommonBenchmarkTemplate(b, GetDomainStatGoroutinedFastJson)
+	CommonBenchmarkTemplate(b, GetDomainStatGoroutinedFastjson)
 }
 
 func BenchmarkStat004Alternate(b *testing.B) {

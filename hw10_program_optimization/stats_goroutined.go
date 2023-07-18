@@ -9,7 +9,6 @@ import (
 	"sync"
 )
 
-
 func GetDomainStatGoroutined(r io.Reader, domain string) (DomainStat, error) {
 	wg := sync.WaitGroup{}
 	mtx := sync.Mutex{}

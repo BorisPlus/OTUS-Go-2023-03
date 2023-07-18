@@ -24,7 +24,7 @@ func TestAllGetDomainStatVariants(t *testing.T) {
 		GetDomainStat,
 		GetDomainStatLooped,
 		GetDomainStatGoroutined,
-		GetDomainStatGoroutinedFastJson,
+		GetDomainStatGoroutinedFastjson,
 		GetDomainStatAlternate,
 	}
 	for _, Func := range testCases {

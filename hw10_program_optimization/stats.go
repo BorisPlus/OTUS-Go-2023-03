@@ -15,7 +15,7 @@ import (
 type DomainStat map[string]int
 
 // TODO: with "reflect" - func LoadOrDefault[T any](name string, asDefault T) T {}.
-func loadEnviromentOrDefault(name string, asDefault int) int {
+func loadEnviromentOrDefault(name string, asDefault int) int { //nolint:unparam
 	value, exists := os.LookupEnv(name)
 	if exists {
 		intValue, err := strconv.Atoi(value)
