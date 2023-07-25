@@ -26,9 +26,9 @@ func CommonBenchmarkTemplate(b *testing.B, function FuncSignature) {
 	require.Equal(b, expectedBizStatCopy, stat)
 }
 
-func BenchmarkStat000InitialVariant(b *testing.B) {
-	CommonBenchmarkTemplate(b, GetDomainStatInitial)
-}
+// func BenchmarkStat000InitialVariant(b *testing.B) {
+// 	CommonBenchmarkTemplate(b, GetDomainStatInitial)
+// }
 
 func BenchmarkStat001LoopedVariant(b *testing.B) {
 	CommonBenchmarkTemplate(b, GetDomainStatLooped)
