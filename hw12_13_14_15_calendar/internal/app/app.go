@@ -2,25 +2,25 @@ package app
 
 import (
 	"context"
+
+	interfaces "hw12_13_14_15_calendar/internal/interfaces"
+	models "hw12_13_14_15_calendar/internal/models"
 )
 
-type App struct { // TODO
+type App struct {
+	logger  interfaces.Logger
+	storage interfaces.Storager
 }
 
-type Logger interface { // TODO
+func NewApp(logger interfaces.Logger, storage interfaces.Storager) *App {
+	return &App{logger, storage}
 }
 
-type Storage interface { // TODO
+func (a *App) CreateEvent(ctx context.Context, title string) error {
+	_ = ctx
+	event := models.Event{}
+	event.Title = title
+	return a.storage.CreateEvent(&event)
 }
 
-func New(logger Logger, storage Storage) *App {
-	return &App{}
-}
-
-func (a *App) CreateEvent(ctx context.Context, id, title string) error {
-	// TODO
-	return nil
-	// return a.storage.CreateEvent(storage.Event{ID: id, Title: title})
-}
-
-// TODO
+// TODO: see realizations in storage_test.go

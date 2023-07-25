@@ -2,60 +2,82 @@ package main
 
 import (
 	"context"
-	"flag"
+	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/app"
-	"github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/logger"
-	internalhttp "github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/server/http"
-	memorystorage "github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/storage/memory"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
+
+	"hw12_13_14_15_calendar/internal/app"
+	"hw12_13_14_15_calendar/internal/config"
+	"hw12_13_14_15_calendar/internal/interfaces"
+	"hw12_13_14_15_calendar/internal/logger"
+	internalhttp "hw12_13_14_15_calendar/internal/server/http"
+	gomemory "hw12_13_14_15_calendar/internal/storage/gomemory"
+	pgsqldtb "hw12_13_14_15_calendar/internal/storage/pgsqldtb"
 )
 
 var configFile string
 
 func init() {
-	flag.StringVar(&configFile, "config", "/etc/calendar/config.toml", "Path to configuration file")
+	pflag.StringVar(&configFile, "config", "", "Path to configuration file")
 }
 
 func main() {
-	flag.Parse()
-
-	if flag.Arg(0) == "version" {
+	pflag.Parse()
+	if pflag.Arg(0) == "version" {
 		printVersion()
 		return
 	}
-
-	config := NewConfig()
-	logg := logger.New(config.Logger.Level)
-
-	storage := memorystorage.New()
-	calendar := app.New(logg, storage)
-
-	server := internalhttp.NewServer(logg, calendar)
-
-	ctx, cancel := signal.NotifyContext(context.Background(),
-		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
-	defer cancel()
-
+	if configFile == "" {
+		fmt.Println("Please set: '--config=<Path to configuration file>'")
+		return
+	}
+	viper.SetConfigType("yaml")
+	file, err := os.Open(configFile)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	viper.ReadConfig(file)
+	mainConfig := config.NewConfig()
+	err = viper.Unmarshal(mainConfig)
+	if err != nil {
+		log.Fatalf("unable to decode into struct, %v", err)
+	}
+	mainLogger := logger.NewLogger(mainConfig.Log.Level, os.Stdout)
+	var storage interfaces.Storager
+	switch mainConfig.Storage.Type {
+	case "gomemory":
+		storage = gomemory.NewStorage("")
+	case "pgsqldtb":
+		storage = pgsqldtb.NewStorage(mainConfig.Storage.DSN)
+	default:
+		storage = gomemory.NewStorage("")
+	}
+	calendar := app.NewApp(mainLogger, storage)
+	httpServer := internalhttp.NewServer(mainConfig.HTTP.Host, mainConfig.HTTP.Port, mainLogger, calendar)
+	ctx, stop := signal.NotifyContext(context.Background(),
+		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGTSTP)
+	defer stop()
 	go func() {
-		<-ctx.Done()
-
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
-		defer cancel()
-
-		if err := server.Stop(ctx); err != nil {
-			logg.Error("failed to stop http server: " + err.Error())
+		if err := httpServer.Start(ctx); err != nil {
+			mainLogger.Error("failed to start http server: " + err.Error())
+			stop()
+			os.Exit(1) //nolint:gocritic
 		}
 	}()
-
-	logg.Info("calendar is running...")
-
-	if err := server.Start(ctx); err != nil {
-		logg.Error("failed to start http server: " + err.Error())
-		cancel()
-		os.Exit(1) //nolint:gocritic
+	mainLogger.Info("calendar is running...")
+	<-ctx.Done()
+	stop()
+	mainLogger.Info("Shutting down gracefully by signal.")
+	timeoutCtx, cancelByTimeout := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancelByTimeout()
+	if err := httpServer.Stop(timeoutCtx); err != nil {
+		fmt.Println(err)
 	}
 }

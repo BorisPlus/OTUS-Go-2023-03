@@ -1,8 +1,0 @@
-http: 
-  host: localhost
-  port: 8080
-db:
-  connectionString: postgres://
-logger:
-  level: INFO
- 

@@ -6,5 +6,7 @@ use (
 	hw07_file_copying
 	hw08_envdir_tool
 	hw09_struct_validator
+	hw12_13_14_15_calendar
+	hw12_13_14_15_calendar/cmd/calendar
 	report_templator
 )

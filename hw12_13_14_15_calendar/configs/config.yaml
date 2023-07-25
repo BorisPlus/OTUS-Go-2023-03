@@ -1,0 +1,9 @@
+http: 
+  host: localhost
+  port: 8080
+storage:
+  type: gomemory # pgsqldtb
+  dsn: "" # "user=hw12user password=hw12user host='127.0.0.1' database=hw12calendar search_path=hw12calendar"
+log:
+  level: INFO
+ 

@@ -1,4 +1,4 @@
-BIN := "./bin/calendar"
+BIN := "./bin/calendar.goc"
 DOCKER_IMG="calendar:develop"
 
 GIT_HASH := $(shell git log --format="%h" -n 1)
@@ -8,7 +8,7 @@ build:
 	go build -v -o $(BIN) -ldflags "$(LDFLAGS)" ./cmd/calendar
 
 run: build
-	$(BIN) -config ./configs/config.toml
+	$(BIN) --config ./configs/config.yaml
 
 build-img:
 	docker build \
@@ -22,13 +22,16 @@ run-img: build-img
 version: build
 	$(BIN) version
 
+migrate: 
+	goose -dir ./migrations/migrations/ postgres "$(PG_DSN)" up
+
 test:
-	go test -race ./internal/... ./pkg/...
+	go test -race ./internal/...
 
 install-lint-deps:
 	(which golangci-lint > /dev/null) || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v1.50.1
 
 lint: install-lint-deps
-	golangci-lint run ./...
+	golangci-lint run --out-format=github-actions ./...
 
 .PHONY: build run build-img run-img version test lint
