@@ -12,12 +12,14 @@ import (
 
 var postgresDsn = "user=hw12user password=hw12user host='127.0.0.1' database=hw12calendar search_path=hw12calendar"
 
+var _ = pgsqldtb.NewStorage(postgresDsn) // TODO: need mock
+
 var testCases = []struct {
 	storager interfaces.Storager
 }{
-	{
-		pgsqldtb.NewStorage(postgresDsn),
-	},
+	// {
+	// 	pgsqldtb.NewStorage(postgresDsn),
+	// },
 	{
 		gomemory.NewStorage(""),
 	},
