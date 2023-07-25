@@ -7,21 +7,25 @@
 $ cd ./hw12_13_14_15_calendar/cmd/calendar/
 
 /hw12_13_14_15_calendar/cmd/calendar$ go run ./
-Please set: '--config=<Path to configuration file>'
+
+    Please set: '--config=<Path to configuration file>'
 
 /hw12_13_14_15_calendar/cmd/calendar$ go run ./ --config="../../configs/config.yaml"
-INFO [2023-07-24 23:52:46] calendar is running...
-INFO [2023-07-24 23:52:46] Server.Start()
-^CINFO [2023-07-24 23:52:47] Shutting down gracefully by signal.
-INFO [2023-07-24 23:52:47] Server.Stop()
+    
+    INFO [2023-07-24 23:52:46] calendar is running...
+    INFO [2023-07-24 23:52:46] Server.Start()
+    ^C
+    INFO [2023-07-24 23:52:47] Shutting down gracefully by signal.
+    INFO [2023-07-24 23:52:47] Server.Stop()
 
 /hw12_13_14_15_calendar/cmd/calendar$ go run ./ --config="../../configs/config.yaml"
-INFO [2023-07-24 23:52:55] calendar is running...
-INFO [2023-07-24 23:52:55] Server.Start()
-^Z
-INFO [2023-07-24 23:52:57] Shutting down gracefully by signal.
-INFO [2023-07-24 23:52:57] Server.Stop()
-[1]+  Остановлен    go run ./ --config="../../configs/config.yaml"
+    
+    INFO [2023-07-24 23:52:55] calendar is running...
+    INFO [2023-07-24 23:52:55] Server.Start()
+    ^Z
+    INFO [2023-07-24 23:52:57] Shutting down gracefully by signal.
+    INFO [2023-07-24 23:52:57] Server.Stop()
+    [1]+  Остановлен    go run ./ --config="../../configs/config.yaml"
 ```
 
 ## 1) Конфигурирование сервиса
@@ -33,23 +37,23 @@ INFO [2023-07-24 23:52:57] Server.Stop()
 
 Реализация:
 
-* [onfig.go](hw12_13_14_15_calendar/internal/config/config.go)
-* [main.go](hw12_13_14_15_calendar/cmd/calendar/main.go)
+* [config.go](internal/config/config.go)
+* [main.go](cmd/calendar/main.go)
 
 ## 2) Логирование в сервисе
 
 Свой логгер:
 
-* [logger.go](hw12_13_14_15_calendar/internal/logger/logger.go)
-* [logger_test.go](hw12_13_14_15_calendar/internal/logger/logger_test.go)
+* [logger.go](internal/logger/logger.go)
+* [logger_test.go](internal/logger/logger_test.go)
 
 ## 3) Работа с хранилищем
 
 Реализации
 
-* [In memory database by Golang](hw12_13_14_15_calendar/internal/storage/gomemory/storage.go)
-* [Postgres](hw12_13_14_15_calendar/internal/storage/pgsqldtb/storage.go)
-* [и их обобщенный тест](hw12_13_14_15_calendar/internal/storage/storage_test.go)
+* [In memory database by Golang](internal/storage/gomemory/storage.go)
+* [Postgres](internal/storage/pgsqldtb/storage.go)
+* [и их обобщенный тест](internal/storage/storage_test.go)
 
 ### Предварительно для Postgres
 
@@ -78,9 +82,9 @@ goose -dir ./migrations/migrations/ postgres "user=hw12user password=hw12user ho
 
 ## 4) Запуск простого HTTP-сервера
 
-* [Сервер](hw12_13_14_15_calendar/internal/server/http/server.go)
-* [Его мидлваре для "latency"](hw12_13_14_15_calendar/internal/server/http/middleware.go)
-* [Тест](hw12_13_14_15_calendar/internal/server/http/server_test.go)
+* [Сервер](internal/server/http/server.go)
+* [Его мидлваре для "latency"](internal/server/http/middleware.go)
+* [Тест](internal/server/http/server_test.go)
 
 ## 5) Юнит-тесты
 
@@ -88,7 +92,7 @@ goose -dir ./migrations/migrations/ postgres "user=hw12user password=hw12user ho
 
 ## 6) Makefile
 
-* [Makefile](hw12_13_14_15_calendar/Makefile)
+* [Makefile](Makefile)
 
 ```bash
 make build
