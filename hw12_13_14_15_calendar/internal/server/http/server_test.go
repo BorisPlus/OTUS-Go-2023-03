@@ -33,8 +33,7 @@ func SendWithContext(ctx context.Context, body io.Reader) error {
 	return nil
 }
 
-func NotForGitHubTestServerCode(t *testing.T) {
-	t.Helper()
+func TestServerCode(t *testing.T) {
 	host := "localhost"
 	var port uint16 = 8081
 	outputInto := &bytes.Buffer{}
