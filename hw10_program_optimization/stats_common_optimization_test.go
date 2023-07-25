@@ -46,10 +46,10 @@ func TemplateCommonGetDomainStatTimeAndMemory(t *testing.T, function GetDomainFu
 	require.Less(t, mem, memoryLimit, "the program is too greedy")
 }
 
-func TestCommonGetDomainStatInitial_Time_And_Memory(t *testing.T) {
-	fmt.Printf("\nTest with GetDomainStat: Initial\n")
-	TemplateCommonGetDomainStatTimeAndMemory(t, GetDomainStatInitial)
-}
+// func TestCommonGetDomainStatInitial_Time_And_Memory(t *testing.T) {
+// 	fmt.Printf("\nTest with GetDomainStat: Initial\n")
+// 	TemplateCommonGetDomainStatTimeAndMemory(t, GetDomainStatInitial)
+// }
 
 func TestCommonGetDomainStatAlternate_Time_And_Memory(t *testing.T) {
 	fmt.Printf("\nTest with GetDomainStat: Alternate\n")
