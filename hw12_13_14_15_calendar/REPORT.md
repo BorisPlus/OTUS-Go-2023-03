@@ -51,6 +51,8 @@ INFO [2023-07-24 23:52:57] Server.Stop()
 * [Postgres](hw12_13_14_15_calendar/internal/storage/pgsqldtb/storage.go)
 * [и их обобщенный тест](hw12_13_14_15_calendar/internal/storage/storage_test.go)
 
+### Предварительно для Postgres
+
 ```sql
 CREATE USER hw12user WITH PASSWORD 'hw12user';
 CREATE DATABASE hw12calendar OWNER hw12user;
@@ -58,11 +60,20 @@ CREATE DATABASE hw12calendar OWNER hw12user;
 
 ```text
 # pg_hba.conf
-host    all             hw12user        127.0.0.1/32            trust
+host    all    hw12user    127.0.0.1/32    trust
 ```
+
+Проверка корректности настройки:
 
 ```bash
 psql -h localhost -p 5432 -d hw12calendar -U hw12user -W
+
+goose -dir ./migrations/migrations/ postgres "user=hw12user password=hw12user host='127.0.0.1' database=hw12calendar" status
+
+    2023/07/25 03:18:59     Applied At                  Migration
+    2023/07/25 03:18:59     =======================================
+    2023/07/25 03:18:59     Sun Jul 23 00:02:33 2023 -- 00000000000001_create_schema.sql
+    2023/07/25 03:18:59     Pending                  -- 20230722000001_create_events.sql
 ```
 
 ## 4) Запуск простого HTTP-сервера
