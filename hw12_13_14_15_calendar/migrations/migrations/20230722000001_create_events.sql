@@ -20,12 +20,12 @@
 -- +goose Up
 CREATE TABLE IF NOT EXISTS hw12calendar.events ( 
  pk BIGSERIAL PRIMARY KEY,
- title VARCHAR(50) NOT NULL CHECK (title <> ''),
+ title VARCHAR NOT NULL CHECK (title <> ''),
  startAt TIMESTAMP WITH TIME ZONE NOT NULL,
  durationSeconds BIGINT NOT NULL DEFAULT 0,
  description TEXT NOT NULL DEFAULT '',
  notifyEarlySeconds BIGINT,
- "owner" VARCHAR(50) NOT NULL CHECK (title <> '')
+ "owner" VARCHAR NOT NULL CHECK (title <> '')
 );
 -- +goose Down
 DROP TABLE IF EXISTS hw12calendar.events;

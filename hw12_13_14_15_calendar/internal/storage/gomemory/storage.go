@@ -15,7 +15,7 @@ type Storage struct {
 	mu   *sync.RWMutex
 }
 
-func NewStorage(_ string) interfaces.Storager {
+func NewStorage() interfaces.Storager {
 	return &Storage{nil, &sync.RWMutex{}}
 }
 

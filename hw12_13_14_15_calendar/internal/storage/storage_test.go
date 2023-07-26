@@ -17,11 +17,11 @@ var _ = pgsqldtb.NewStorage(postgresDsn) // TODO: need mock
 var testCases = []struct {
 	storager interfaces.Storager
 }{
-	// {
-	// 	pgsqldtb.NewStorage(postgresDsn),
-	// },
 	{
-		gomemory.NewStorage(""),
+		pgsqldtb.NewStorage(postgresDsn),
+	},
+	{
+		gomemory.NewStorage(),
 	},
 }
 

@@ -14,11 +14,9 @@ import (
 
 	"hw12_13_14_15_calendar/internal/app"
 	"hw12_13_14_15_calendar/internal/config"
-	"hw12_13_14_15_calendar/internal/interfaces"
 	"hw12_13_14_15_calendar/internal/logger"
 	internalhttp "hw12_13_14_15_calendar/internal/server/http"
-	gomemory "hw12_13_14_15_calendar/internal/storage/gomemory"
-	pgsqldtb "hw12_13_14_15_calendar/internal/storage/pgsqldtb"
+	"hw12_13_14_15_calendar/internal/storage"
 )
 
 var configFile string
@@ -49,16 +47,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("unable to decode into struct, %v", err)
 	}
+
 	mainLogger := logger.NewLogger(mainConfig.Log.Level, os.Stdout)
-	var storage interfaces.Storager
-	switch mainConfig.Storage.Type {
-	case "gomemory":
-		storage = gomemory.NewStorage("")
-	case "pgsqldtb":
-		storage = pgsqldtb.NewStorage(mainConfig.Storage.DSN)
-	default:
-		storage = gomemory.NewStorage("")
-	}
+	storage := storage.NewStorageByType(mainConfig.Storage.Type, mainConfig.Storage.DSN)
 	calendar := app.NewApp(mainLogger, storage)
 	httpServer := internalhttp.NewServer(mainConfig.HTTP.Host, mainConfig.HTTP.Port, mainLogger, calendar)
 	ctx, stop := signal.NotifyContext(context.Background(),
@@ -68,7 +59,6 @@ func main() {
 		if err := httpServer.Start(ctx); err != nil {
 			mainLogger.Error("failed to start http server: " + err.Error())
 			stop()
-			os.Exit(1) //nolint:gocritic
 		}
 	}()
 	mainLogger.Info("calendar is running...")
