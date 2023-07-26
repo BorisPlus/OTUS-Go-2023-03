@@ -46,6 +46,9 @@
 10) [«Оптимизация программы»](./hw10_program_optimization)
 11) [«Клиент TELNET»](./hw11_telnet_client)
 12) [«Заготовка сервиса Календарь»](./hw12_13_14_15_calendar/docs/12_README.md)
+
+   > [Исполнено](./hw12_13_14_15_calendar/REPORT.md) в полном объеме.
+
 13) [«API к Календарю»](./hw12_13_14_15_calendar/docs/13_README.md)
 14) [«Кроликизация Календаря»](./hw12_13_14_15_calendar/docs/14_README.md)
 15) [«Докеризация и интеграционное тестирование Календаря»](./hw12_13_14_15_calendar/docs/15_README.md)
