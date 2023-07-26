@@ -35,3 +35,6 @@ Thumbs.db
 *.log
 *.txt
 *.goc
+# test.sh
+**/main
+**/test

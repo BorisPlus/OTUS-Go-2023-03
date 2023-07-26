@@ -9,5 +9,6 @@ use (
 	hw12_13_14_15_calendar
 	hw12_13_14_15_calendar/cmd/calendar
 	hw10_program_optimization
+	hw11_telnet_client
 	report_templator
 )
