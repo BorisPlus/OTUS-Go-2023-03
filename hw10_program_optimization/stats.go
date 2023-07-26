@@ -1,66 +1,63 @@
 package hw10programoptimization
 
 import (
-	"encoding/json"
+	"bufio"
 	"fmt"
 	"io"
-	"regexp"
+	"os"
+	"strconv"
 	"strings"
-)
+	"sync"
 
-type User struct {
-	ID       int
-	Name     string
-	Username string
-	Email    string
-	Phone    string
-	Password string
-	Address  string
-}
+	"github.com/valyala/fastjson"
+)
 
 type DomainStat map[string]int
 
+// TODO: with "reflect" - func LoadOrDefault[T any](name string, asDefault T) T {}.
+func loadEnviromentOrDefault(name string, asDefault int) int { //nolint:unparam
+	value, exists := os.LookupEnv(name)
+	if exists {
+		intValue, err := strconv.Atoi(value)
+		if err == nil {
+			return intValue
+		}
+	}
+	return asDefault
+}
+
+func domainStatCalc(
+	wg *sync.WaitGroup,
+	mtx *sync.Mutex,
+	domains <-chan string,
+	domainStat DomainStat,
+) {
+	defer wg.Done()
+	for domain := range domains {
+		mtx.Lock()
+		domainStat[domain]++
+		mtx.Unlock()
+	}
+}
+
 func GetDomainStat(r io.Reader, domain string) (DomainStat, error) {
-	u, err := getUsers(r)
-	if err != nil {
-		return nil, fmt.Errorf("get users error: %w", err)
+	wg := sync.WaitGroup{}
+	mtx := sync.Mutex{}
+	dataChannel := make(chan string)
+	domainStat := make(DomainStat)
+	workersCount := loadEnviromentOrDefault("WORKERS_COUNT", 1000)
+	for i := 0; i < workersCount; i++ {
+		wg.Add(1)
+		go domainStatCalc(&wg, &mtx, dataChannel, domainStat)
 	}
-	return countDomains(u, domain)
-}
-
-type users [100_000]User
-
-func getUsers(r io.Reader) (result users, err error) {
-	content, err := io.ReadAll(r)
-	if err != nil {
-		return
-	}
-
-	lines := strings.Split(string(content), "\n")
-	for i, line := range lines {
-		var user User
-		if err = json.Unmarshal([]byte(line), &user); err != nil {
-			return
-		}
-		result[i] = user
-	}
-	return
-}
-
-func countDomains(u users, domain string) (DomainStat, error) {
-	result := make(DomainStat)
-
-	for _, user := range u {
-		matched, err := regexp.Match("\\."+domain, []byte(user.Email))
-		if err != nil {
-			return nil, err
-		}
-
-		if matched {
-			num := result[strings.ToLower(strings.SplitN(user.Email, "@", 2)[1])]
-			num++
-			result[strings.ToLower(strings.SplitN(user.Email, "@", 2)[1])] = num
+	scanner := bufio.NewScanner(r)
+	for scanner.Scan() {
+		email := fastjson.GetString(scanner.Bytes(), "Email")
+		if strings.HasSuffix(email, fmt.Sprintf(".%s", domain)) {
+			dataChannel <- strings.ToLower(strings.SplitN(email, "@", 2)[1])
 		}
 	}
-	return result, nil
+	close(dataChannel)
+	wg.Wait()
+	return domainStat, nil
 }

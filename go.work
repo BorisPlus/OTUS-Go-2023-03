@@ -8,5 +8,6 @@ use (
 	hw09_struct_validator
 	hw12_13_14_15_calendar
 	hw12_13_14_15_calendar/cmd/calendar
+	hw10_program_optimization
 	report_templator
 )

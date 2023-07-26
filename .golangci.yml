@@ -22,6 +22,8 @@ linters-settings:
           - 'hw12_13_14_15_calendar/internal/storage/pgsqldtb'
           - 'hw12_13_14_15_calendar/internal/storage/gomemory'
           - 'github.com/lib/pq'
+          - github.com/valyala/fastjson
+          # - github.com/google # all google packages
       test:
         files:
           - "$test"
@@ -34,6 +36,8 @@ linters-settings:
           - 'hw12_13_14_15_calendar/internal/storage/pgsqldtb'
           - 'hw12_13_14_15_calendar/internal/storage/gomemory'
           - 'github.com/lib/pq'
+          - github.com/stretchr
+          - github.com/valyala/fastjson
   # funlen:
   # lines: 200
   # statements: 120
