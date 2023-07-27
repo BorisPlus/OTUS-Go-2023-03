@@ -6,6 +6,8 @@ import (
 	"net/http"
 
 	interfaces "hw12_13_14_15_calendar/internal/interfaces"
+	api "hw12_13_14_15_calendar/internal/server/http/api"
+	middleware "hw12_13_14_15_calendar/internal/server/http/middleware"
 )
 
 type Server struct {
@@ -27,7 +29,12 @@ func NewServer(host string, port uint16, logger interfaces.Logger, app interface
 func (s *Server) Start(ctx context.Context) error {
 	_ = ctx // TODO: for what?
 	s.logger.Info("Server.Start()")
-	http.Handle("/", middleware(http.HandlerFunc(handleTeapot), s.logger))
+	http.Handle("/", middleware.Middleware(http.HandlerFunc(handleTeapot), s.logger))
+	// http.Handle("/api/", middleware.Middleware(http.HandleFunc("/api/", api.Routers.Go), s.logger))
+	// as HandleFunc
+	// http.HandleFunc("/api/", api.Routers(s.logger, s.app).ServeHTTP)
+	// as Handle
+	http.Handle("/api/", api.Handlers(s.logger, s.app))
 	err := http.ListenAndServe(s.Address(), nil)
 	if err != nil {
 		return err

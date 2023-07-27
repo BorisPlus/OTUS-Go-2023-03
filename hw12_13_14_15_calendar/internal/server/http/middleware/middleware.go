@@ -1,4 +1,4 @@
-package internalhttp
+package middleware
 
 import (
 	"net/http"
@@ -7,7 +7,7 @@ import (
 	interfaces "hw12_13_14_15_calendar/internal/interfaces"
 )
 
-func middleware(wrappedHandler http.Handler, logger interfaces.Logger) http.Handler {
+func Middleware(wrappedHandler http.Handler, logger interfaces.Logger) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		StartAt := time.Now()
 		lrw := NewLoggingResponseWriter(w)
@@ -18,6 +18,7 @@ func middleware(wrappedHandler http.Handler, logger interfaces.Logger) http.Hand
 			ClientIPAddress string
 			HTTPMethod      string
 			HTTPVersion     string
+			URLPath         string
 			StartAt         time.Time
 			Latency         time.Duration
 		}{
@@ -26,6 +27,7 @@ func middleware(wrappedHandler http.Handler, logger interfaces.Logger) http.Hand
 			ClientIPAddress: r.RemoteAddr,
 			HTTPMethod:      r.Method,
 			HTTPVersion:     r.Proto,
+			URLPath:         r.URL.Path,
 			StartAt:         StartAt,
 			Latency:         time.Since(StartAt),
 		}
