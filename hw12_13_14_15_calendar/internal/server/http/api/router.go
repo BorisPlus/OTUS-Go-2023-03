@@ -10,7 +10,13 @@ import (
 	regexped "hw12_13_14_15_calendar/internal/server/http/regexphandlers"
 )
 
-var defaultHandler = func(w http.ResponseWriter, r *http.Request) {
+var defaultHandlerOld = func(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "/api/version", http.StatusTemporaryRedirect)
+}
+
+type DefaultHandler struct{}
+
+func (h DefaultHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/api/version", http.StatusTemporaryRedirect)
 }
 
@@ -19,11 +25,11 @@ var __ = []string{}
 var id = []string{"id"}
 
 func Handlers(logger interfaces.Logger, app interfaces.Applicationer) regexped.RegexpHandlers {
-	return regexped.NewRoutes(
-		defaultHandler,
+	return regexped.NewRegexpHandlers(
+		middleware.Instance().Listen(DefaultHandler{}),
 		logger,
 		app,
-		regexped.NewRegexpHandler(`/api/version`, __, middleware.Middleware(apiHandlers.ApiVersionHandler{}, logger)),
+		regexped.NewRegexpHandler(`/api/version`, __, middleware.Instance().Listen(apiHandlers.ApiVersionHandler{})),
 		regexped.NewRegexpHandler(`/api/events/`, __, apiEventsHandlers.ApiEventsListHandler{Logger: logger, App: app}),
 		regexped.NewRegexpHandler(`/api/events/create/`, __, apiEventsHandlers.ApiEventsListHandler{}),
 		regexped.NewRegexpHandler(`/api/events/{numeric}`, id, apiEventsHandlers.ApiEventsGetHandler{}),

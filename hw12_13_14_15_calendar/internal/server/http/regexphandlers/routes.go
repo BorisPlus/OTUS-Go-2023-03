@@ -22,27 +22,27 @@ func NewRegexpHandler(Pattern string, ParamsNaming []string, Handler http.Handle
 }
 
 type RegexpHandlers struct {
-	Default   func(w http.ResponseWriter, r *http.Request)
-	logger    interfaces.Logger
-	app       interfaces.Applicationer
-	Сrossroad []RegexpHandler
+	defaultHandler http.Handler
+	logger         interfaces.Logger
+	app            interfaces.Applicationer
+	Сrossroad      []RegexpHandler
 }
 
-func (routes RegexpHandlers) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	routeWasNotFind := true
-	for _, route := range routes.Сrossroad {
-		if route.QueryPathPattern.Match(r.URL.Path) {
-			routeWasNotFind = false
-			r.Form = route.QueryPathPattern.Fetch(r.URL.Path)
-			route.Handler.ServeHTTP(w, r)
+func (handlers RegexpHandlers) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	handlerWasNotFound := true
+	for _, handler := range handlers.Сrossroad {
+		if handler.QueryPathPattern.Match(r.URL.Path) {
+			handlerWasNotFound = false
+			r.Form = handler.QueryPathPattern.Fetch(r.URL.Path)
+			handler.Handler.ServeHTTP(w, r)
 			break
 		}
 	}
-	if routeWasNotFind && routes.Default != nil {
-		routes.Default(w, r)
+	if handlerWasNotFound && handlers.defaultHandler != nil {
+		handlers.defaultHandler.ServeHTTP(w, r)
 	}
 }
 
-func NewRoutes(DefaultRoute func(w http.ResponseWriter, r *http.Request), logger interfaces.Logger, app interfaces.Applicationer, routes ...RegexpHandler) RegexpHandlers {
-	return RegexpHandlers{DefaultRoute, logger, app, routes}
+func NewRegexpHandlers(defaultHandler http.Handler, logger interfaces.Logger, app interfaces.Applicationer, handlers ...RegexpHandler) RegexpHandlers {
+	return RegexpHandlers{defaultHandler, logger, app, handlers}
 }

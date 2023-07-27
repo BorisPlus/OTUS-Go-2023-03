@@ -18,7 +18,9 @@ func NewQueryPathPattern(Pattern string, ParamsNaming []string) QueryPathPattern
 }
 
 func (qpp *QueryPathPattern) normalize() string {
-	qpp.Pattern += `$`
+	if !strings.HasSuffix(qpp.Pattern, "$") {
+		qpp.Pattern += `$`
+	}
 	qpp.Pattern = strings.ReplaceAll(qpp.Pattern, `{numeric}`, `(\d*)`)
 	qpp.Pattern = strings.ReplaceAll(qpp.Pattern, `{string}`, `([\p{L}|\p{N}|\.|_|\-| ]*)`)
 	qpp.Pattern = strings.ReplaceAll(qpp.Pattern, `{filename}`, `([\p{L}|\p{N}|\.|_|\-| ]*)`)

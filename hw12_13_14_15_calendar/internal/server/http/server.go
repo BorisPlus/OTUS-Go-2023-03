@@ -29,7 +29,8 @@ func NewServer(host string, port uint16, logger interfaces.Logger, app interface
 func (s *Server) Start(ctx context.Context) error {
 	_ = ctx // TODO: for what?
 	s.logger.Info("Server.Start()")
-	http.Handle("/", middleware.Middleware(http.HandlerFunc(handleTeapot), s.logger))
+	instance := middleware.Init(s.logger)
+	http.Handle("/", instance.Listen(http.HandlerFunc(handleTeapot)))
 	// http.Handle("/api/", middleware.Middleware(http.HandleFunc("/api/", api.Routers.Go), s.logger))
 	// as HandleFunc
 	// http.HandleFunc("/api/", api.Routers(s.logger, s.app).ServeHTTP)
