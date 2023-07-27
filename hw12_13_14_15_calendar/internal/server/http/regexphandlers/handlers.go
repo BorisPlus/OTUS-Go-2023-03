@@ -8,16 +8,16 @@ import (
 
 type RegexpHandler struct {
 	QueryPathPattern QueryPathPattern
-	Handler          http.Handler
+	handler          http.Handler
 }
 
-func NewRegexpHandler(Pattern string, ParamsNaming []string, Handler http.Handler) RegexpHandler {
+func NewRegexpHandler(pattern string, ParamsNaming []string, handler http.Handler) RegexpHandler {
 	return RegexpHandler{
 		QueryPathPattern: QueryPathPattern{
-			Pattern:      Pattern,
+			pattern:      pattern,
 			ParamsNaming: ParamsNaming,
 		},
-		Handler: Handler,
+		handler: handler,
 	}
 }
 
@@ -31,10 +31,10 @@ type RegexpHandlers struct {
 func (handlers RegexpHandlers) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	handlerWasNotFound := true
 	for _, handler := range handlers.Сrossroad {
-		if handler.QueryPathPattern.Match(r.URL.Path) {
+		if handler.QueryPathPattern.match(r.URL.Path) {
 			handlerWasNotFound = false
-			r.Form = handler.QueryPathPattern.Fetch(r.URL.Path)
-			handler.Handler.ServeHTTP(w, r)
+			r.Form = handler.QueryPathPattern.fetch(r.URL.Path)
+			handler.handler.ServeHTTP(w, r)
 			break
 		}
 	}
