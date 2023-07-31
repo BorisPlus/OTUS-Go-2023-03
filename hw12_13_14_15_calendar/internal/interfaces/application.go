@@ -1,3 +1,13 @@
 package interfaces
 
-type Applicationer interface{}
+import (
+	models "hw12_13_14_15_calendar/internal/models"
+)
+
+type Applicationer interface {
+	CreateEvent(event models.Event) error
+	ReadEvent(pk int) (*models.Event, error)
+	UpdateEvent(event *models.Event) error
+	DeleteEvent(event *models.Event) error
+	ListEvents() ([]models.Event, error)
+}

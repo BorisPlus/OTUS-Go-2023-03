@@ -2,47 +2,55 @@ package regexhandlers
 
 import (
 	"net/http"
+	// "net/url"
 
 	interfaces "hw12_13_14_15_calendar/internal/interfaces"
 )
 
+
+// type ParamsNamedHandler interface {
+// 	http.Handler
+// 	GetParamsNames() []string
+// }
+
 type RegexpHandler struct {
-	QueryPathPattern QueryPathPattern
-	handler          http.Handler
+	qpp     QueryPathPattern
+	handler http.Handler
 }
 
-func NewRegexpHandler(pattern string, ParamsNaming []string, handler http.Handler) RegexpHandler {
-	return RegexpHandler{
-		QueryPathPattern: QueryPathPattern{
-			pattern:      pattern,
-			ParamsNaming: ParamsNaming,
-		},
-		handler: handler,
-	}
+func NewRegexpHandler(pattern string, params Params, handler http.Handler) *RegexpHandler {
+	rh := new(RegexpHandler)
+	rh.qpp = *NewQueryPathPattern(pattern, params)
+	rh.handler = handler
+	return rh
 }
+
+// func (rh RegexpHandler) GetValues(url string) url.Values { // TODO: url.URL
+// 	return rh.qpp.GetValues(url, rh.handler.GetParamsNames())
+// }
 
 type RegexpHandlers struct {
 	defaultHandler http.Handler
 	logger         interfaces.Logger
 	app            interfaces.Applicationer
-	Сrossroad      []RegexpHandler
+	crossroad      []RegexpHandler
 }
 
-func (handlers RegexpHandlers) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	handlerWasNotFound := true
-	for _, handler := range handlers.Сrossroad {
-		if handler.QueryPathPattern.match(r.URL.Path) {
+func NewRegexpHandlers(defaultHandler http.Handler, logger interfaces.Logger, app interfaces.Applicationer, rh ...RegexpHandler) RegexpHandlers {
+	return RegexpHandlers{defaultHandler, logger, app, rh}
+}
+
+func (rhs RegexpHandlers) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	handlerWasNotFound := true // TODO: do.Once?
+	for _, rh := range rhs.crossroad {
+		if rh.qpp.match(r.URL.Path) {
 			handlerWasNotFound = false
-			r.Form = handler.QueryPathPattern.fetch(r.URL.Path)
-			handler.handler.ServeHTTP(w, r)
+			r.Form = rh.qpp.GetValues(r.URL.Path)
+			rh.handler.ServeHTTP(w, r)
 			break
 		}
 	}
-	if handlerWasNotFound && handlers.defaultHandler != nil {
-		handlers.defaultHandler.ServeHTTP(w, r)
+	if handlerWasNotFound && rhs.defaultHandler != nil {
+		rhs.defaultHandler.ServeHTTP(w, r)
 	}
-}
-
-func NewRegexpHandlers(defaultHandler http.Handler, logger interfaces.Logger, app interfaces.Applicationer, handlers ...RegexpHandler) RegexpHandlers {
-	return RegexpHandlers{defaultHandler, logger, app, handlers}
 }

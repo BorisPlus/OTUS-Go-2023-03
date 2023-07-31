@@ -29,12 +29,12 @@ func Init(logger interfaces.Logger) *mitm {
 	return middleware;
 }
 
-func (m mitm) Listen(wrappedHandler http.Handler) http.Handler {
+func (m mitm) Listen(handler http.Handler) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		StartAt := time.Now()
 		lrw := NewLoggingResponseWriter(w)
-		wrappedHandler.ServeHTTP(lrw, r)
+		handler.ServeHTTP(lrw, r)
 		a := struct {
 			StatusCode      int
 			UserAgent       string

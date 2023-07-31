@@ -1,8 +1,6 @@
 package app
 
 import (
-	"context"
-
 	interfaces "hw12_13_14_15_calendar/internal/interfaces"
 	models "hw12_13_14_15_calendar/internal/models"
 )
@@ -16,11 +14,24 @@ func NewApp(logger interfaces.Logger, storage interfaces.Storager) *App {
 	return &App{logger, storage}
 }
 
-func (a *App) CreateEvent(ctx context.Context, title string) error {
-	_ = ctx
-	event := models.Event{}
-	event.Title = title
+func (a *App) CreateEvent(event models.Event) error {
+	// TODO: in args `ctx context.Context`
+	// Connect \ Close - крайний переработать
 	return a.storage.CreateEvent(&event)
 }
 
-// TODO: see realizations in storage_test.go
+func (a *App) ReadEvent(pk int) (*models.Event, error) {
+	return a.storage.ReadEvent(pk)
+}
+
+func (a *App) UpdateEvent(e *models.Event) error {
+	return a.storage.UpdateEvent(e)
+}
+
+func (a *App) DeleteEvent(e *models.Event) error {
+	return a.storage.UpdateEvent(e)
+}
+
+func (a *App) ListEvents() ([]models.Event, error) {
+	return a.storage.ListEvents()
+}

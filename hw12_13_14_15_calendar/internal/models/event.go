@@ -6,10 +6,10 @@ import (
 
 type Event struct {
 	PK          int
-	Title       string
-	StartAt     time.Time
-	Duration    int // TODO: time.Duration
-	Description string
-	Owner       string
-	NotifyEarly int // TODO: time.Duration
+	Title       string    `json:"title"`
+	StartAt     time.Time `json:"startat"`
+	Duration    int       `json:"duration"` // TODO: time.Duration
+	Description string    `json:"description"`
+	Owner       string    `json:"owner"`
+	NotifyEarly int       `json:"notifyearly"` // TODO: time.Duration
 }

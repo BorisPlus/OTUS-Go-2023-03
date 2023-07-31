@@ -6,17 +6,19 @@ import (
 	"strings"
 )
 
+type Params []string
+
 type QueryPathPattern struct {
-	pattern      string
-	ParamsNaming []string
-	compiled     *regexp.Regexp
+	pattern  string
+	compiled *regexp.Regexp
+	params   Params
 }
 
-func NewQueryPathPattern(pattern string, ParamsNaming []string) *QueryPathPattern {
+func NewQueryPathPattern(pattern string, params Params) *QueryPathPattern {
 	qpp := new(QueryPathPattern)
 	qpp.pattern = pattern
 	qpp.mustCompile()
-	qpp.ParamsNaming = ParamsNaming
+	qpp.params = params
 	return qpp
 }
 
@@ -39,15 +41,15 @@ func (qpp *QueryPathPattern) match(url string) bool {
 	return qpp.compiled.MatchString(url)
 }
 
-func (qpp *QueryPathPattern) fetch(url string) url.Values {
-	parsedParamsInUrl := qpp.compiled.FindAllStringSubmatch(url, -1)
-	paramsValues := make(map[string][]string)
+func (qpp *QueryPathPattern) GetValues(urlPath string) url.Values {
+	parsedParamsInUrl := qpp.compiled.FindAllStringSubmatch(urlPath, -1)
+	paramsValues := make(url.Values)
 	for _, submatch := range parsedParamsInUrl {
 		for orderIndex, value := range submatch {
 			if orderIndex == 0 {
 				continue
 			}
-			paramsValues[qpp.ParamsNaming[orderIndex-1]] = append(paramsValues[qpp.ParamsNaming[orderIndex-1]], value)
+			paramsValues[qpp.params[orderIndex-1]] = append(paramsValues[qpp.params[orderIndex-1]], value)
 		}
 	}
 	return paramsValues
