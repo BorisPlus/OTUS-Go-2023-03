@@ -2,16 +2,15 @@ package regexhandlers
 
 import (
 	"net/http"
-	// "net/url"
 
 	interfaces "hw12_13_14_15_calendar/internal/interfaces"
 )
 
+// as HandleFunc
+// http.Handle("/api/", middleware.Middleware(http.HandleFunc("/api/", api.Routers.Go), s.logger))
 
-// type ParamsNamedHandler interface {
-// 	http.Handler
-// 	GetParamsNames() []string
-// }
+// as Handle
+// http.HandleFunc("/api/", api.Routers(s.logger, s.app).ServeHTTP)
 
 type RegexpHandler struct {
 	qpp     QueryPathPattern
@@ -24,10 +23,6 @@ func NewRegexpHandler(pattern string, params Params, handler http.Handler) *Rege
 	rh.handler = handler
 	return rh
 }
-
-// func (rh RegexpHandler) GetValues(url string) url.Values { // TODO: url.URL
-// 	return rh.qpp.GetValues(url, rh.handler.GetParamsNames())
-// }
 
 type RegexpHandlers struct {
 	defaultHandler http.Handler

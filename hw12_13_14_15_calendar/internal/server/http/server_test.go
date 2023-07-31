@@ -38,15 +38,24 @@ func TestServerCode(t *testing.T) {
 	var port uint16 = 8081
 	outputInto := &bytes.Buffer{}
 	mainLogger := logger.NewLogger(logger.INFO, outputInto)
-	httpServer := NewServer(host, port, mainLogger, nil)
+	httpServer := NewServer(
+		host,
+		port,
+		10*time.Second,
+		10*time.Second,
+		10*time.Second,
+		1<<20,
+		mainLogger,
+		nil)
 	ctx := context.Background()
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		if err := httpServer.Start(ctx); err != nil {
-			mainLogger.Error("failed to start http server: " + err.Error())
-		}
+		httpServer.Start(ctx)
+		// if err := httpServer.Start(ctx); err != nil {
+		// 	mainLogger.Error("http server goroutine: " + err.Error())
+		// }
 	}()
 
 	url := fmt.Sprintf("http://%s:%d", host, port)
@@ -58,10 +67,10 @@ func TestServerCode(t *testing.T) {
 	}
 	defer resp.Body.Close()
 
-	timeoutCtx, cancelByTimeout := context.WithTimeout(context.Background(), 5*time.Second)
+	timeoutCtx, cancelByTimeout := context.WithTimeout(context.Background(), 10 * time.Second)
 	defer cancelByTimeout()
 	if err := httpServer.Stop(timeoutCtx); err != nil {
-		fmt.Println(err)
+		fmt.Println("httpServer.Stop", err)
 	}
 
 	outputted := outputInto.String()
@@ -70,4 +79,5 @@ func TestServerCode(t *testing.T) {
 	} else {
 		fmt.Printf("OK. Middleware catch status code '418':\n%s\n", outputted)
 	}
+	wg.Wait()
 }

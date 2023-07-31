@@ -51,7 +51,17 @@ func main() {
 	mainLogger := logger.NewLogger(mainConfig.Log.Level, os.Stdout)
 	storage := storage.NewStorageByType(mainConfig.Storage.Type, mainConfig.Storage.DSN)
 	calendar := app.NewApp(mainLogger, storage)
-	httpServer := internalhttp.NewServer(mainConfig.HTTP.Host, mainConfig.HTTP.Port, mainLogger, calendar)
+	httpServer := internalhttp.NewServer(
+		mainConfig.HTTP.Host, 
+		mainConfig.HTTP.Port, 
+		10 * time.Second,
+		10 * time.Second,
+		10 * time.Second,
+		1 << 20,
+		mainLogger, 
+		calendar,
+	)
+
 	ctx, stop := signal.NotifyContext(context.Background(),
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGTSTP)
 	defer stop()
