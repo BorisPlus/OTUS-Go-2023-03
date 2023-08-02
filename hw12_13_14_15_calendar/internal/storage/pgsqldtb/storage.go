@@ -5,9 +5,10 @@ import (
 	"errors"
 	"fmt"
 
-	_ "github.com/lib/pq" // a blank import should be justifying.
 	interfaces "hw12_13_14_15_calendar/internal/interfaces"
 	models "hw12_13_14_15_calendar/internal/models"
+
+	_ "github.com/lib/pq" // a blank import should be justifying.
 )
 
 type Storage struct { // TODO
@@ -39,7 +40,7 @@ func (s *Storage) Close() error {
 	return nil
 }
 
-func (s *Storage) CreateEvent(e *models.Event) error {
+func (s *Storage) CreateEvent(e *models.Event) (*models.Event, error) {
 	sqlStatement := `
 	INSERT INTO hw12calendar.events(
 		"title", "description", "startat", "durationseconds", "owner", "notifyearlyseconds"
@@ -49,9 +50,9 @@ func (s *Storage) CreateEvent(e *models.Event) error {
 		e.Title, e.Description, e.StartAt, e.Duration, e.Owner, e.NotifyEarly,
 	).Scan(&(e.PK))
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return e, nil
 }
 
 func (s *Storage) ReadEvent(pk int) (*models.Event, error) {
@@ -70,9 +71,9 @@ func (s *Storage) ReadEvent(pk int) (*models.Event, error) {
 	return &e, nil
 }
 
-func (s *Storage) UpdateEvent(e *models.Event) error {
+func (s *Storage) UpdateEvent(e *models.Event) (*models.Event, error) {
 	if e.PK == 0 {
-		return fmt.Errorf("it is not idented")
+		return nil, fmt.Errorf("it is not idented")
 	}
 	sqlStatement := `
 	UPDATE hw12calendar.events 
@@ -80,22 +81,22 @@ func (s *Storage) UpdateEvent(e *models.Event) error {
 	WHERE pk=$7;`
 	_, err := s.connection.Exec(sqlStatement, e.Title, e.Description, e.StartAt, e.Duration, e.Owner, e.NotifyEarly, e.PK)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return e, nil
 }
 
-func (s *Storage) DeleteEvent(e *models.Event) error {
+func (s *Storage) DeleteEvent(e *models.Event) (*models.Event, error) {
 	if e.PK == 0 {
-		return fmt.Errorf("it is not idented")
+		return nil, fmt.Errorf("it is not idented")
 	}
 	sqlStatement := `DELETE FROM hw12calendar.events WHERE pk=$1;`
 	_, err := s.connection.Exec(sqlStatement, e.PK)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	e.PK = 0
-	return nil
+	return e, nil
 }
 
 func (s *Storage) ListEvents() ([]models.Event, error) {

@@ -70,7 +70,7 @@ func TestStorage(t *testing.T) {
 		}
 		// UPDATE
 		event.Description = "new description"
-		err = testCase.storager.UpdateEvent(&event)
+		_, err = testCase.storager.UpdateEvent(&event)
 		if err != nil {
 			t.Error(err)
 		}

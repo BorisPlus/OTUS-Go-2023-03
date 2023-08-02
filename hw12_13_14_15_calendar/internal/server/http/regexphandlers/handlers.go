@@ -32,7 +32,14 @@ type RegexpHandlers struct {
 }
 
 func NewRegexpHandlers(defaultHandler http.Handler, logger interfaces.Logger, app interfaces.Applicationer, rh ...RegexpHandler) RegexpHandlers {
-	return RegexpHandlers{defaultHandler, logger, app, rh}
+	//
+	// RegexpHandlers{defaultHandler, logger, app, rh}
+	regexpHandlers := new(RegexpHandlers)
+	regexpHandlers.defaultHandler = defaultHandler
+	regexpHandlers.logger = logger
+	regexpHandlers.app = app
+	regexpHandlers.crossroad = rh
+	return *regexpHandlers
 }
 
 func (rhs RegexpHandlers) ServeHTTP(w http.ResponseWriter, r *http.Request) {

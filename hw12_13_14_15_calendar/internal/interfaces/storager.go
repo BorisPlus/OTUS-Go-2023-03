@@ -7,9 +7,9 @@ import (
 type Storager interface {
 	Connect() error
 	Close() error
-	CreateEvent(*models.Event) error
+	CreateEvent(*models.Event) (*models.Event, error)
 	ReadEvent(int) (*models.Event, error)
-	UpdateEvent(*models.Event) error
-	DeleteEvent(*models.Event) error
+	UpdateEvent(*models.Event) (*models.Event, error)
+	DeleteEvent(*models.Event) (*models.Event, error)
 	ListEvents() ([]models.Event, error)
 }

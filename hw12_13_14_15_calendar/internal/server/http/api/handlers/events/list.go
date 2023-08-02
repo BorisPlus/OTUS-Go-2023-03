@@ -2,9 +2,9 @@ package api
 
 import (
 	"net/http"
-	"encoding/json"
 
 	interfaces "hw12_13_14_15_calendar/internal/interfaces"
+	responses "hw12_13_14_15_calendar/internal/server/http/api/api_response"
 	commonHandlers "hw12_13_14_15_calendar/internal/server/http/api/handlers/common"
 )
 
@@ -13,23 +13,26 @@ type ApiEventsListHandler struct {
 	App    interfaces.Applicationer
 }
 
-func (h ApiEventsListHandler) ServeHTTP(response http.ResponseWriter, request *http.Request) {
+func (h ApiEventsListHandler) ServeHTTP(rw http.ResponseWriter, rr *http.Request) {
+	ApiMethod := "api.events.list"
 	_ = h.Logger
-	if request.Method != "GET" {
-		commonHandlers.InvalidHTTPMethodForUrlPathHandler{}.ServeHTTP(response, request)
+	if rr.Method != "GET" {
+		commonHandlers.InvalidHTTPMethod{ApiMethod: ApiMethod}.ServeHTTP(rw, rr)
 		return
 	}
 	events, err := h.App.ListEvents()
 	if err != nil {
-		commonHandlers.CustomErrorHandler{Error: err}.ServeHTTP(response, request)
+		commonHandlers.CustomErrorHandler{ApiMethod: ApiMethod, Error: err}.ServeHTTP(rw, rr)
 		return
 	}
-	eventsJSON, err := json.Marshal(events)
+	apiResponse := responses.NewAPIResponse(ApiMethod)
+	apiResponse.Data = responses.DataItems{Items: events}
+	apiResponseJSON, err := apiResponse.MarshalJSON()
 	if err != nil {
-		commonHandlers.CustomErrorHandler{Error: err}.ServeHTTP(response, request)
+		commonHandlers.CustomErrorHandler{ApiMethod: ApiMethod, Error: err}.ServeHTTP(rw, rr)
 		return
 	}
-	response.Header().Set("Content-Type", "application/json")
-	response.WriteHeader(http.StatusOK)
-	response.Write(eventsJSON)
+	rw.Header().Set("Content-Type", "application/json")
+	rw.WriteHeader(http.StatusOK)
+	rw.Write(apiResponseJSON)
 }

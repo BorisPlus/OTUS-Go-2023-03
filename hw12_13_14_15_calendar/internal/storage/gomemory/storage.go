@@ -8,36 +8,39 @@ import (
 	models "hw12_13_14_15_calendar/internal/models"
 )
 
-type inMemoryDatabase map[int]models.Event
+type inMemoryDatabase map[int]*models.Event
 
 type Storage struct {
 	data inMemoryDatabase
 	mu   *sync.RWMutex
+	sequence int
 }
 
 func NewStorage() interfaces.Storager {
-	return &Storage{nil, &sync.RWMutex{}}
+	return &Storage{nil, &sync.RWMutex{}, 0}
 }
 
 func (s *Storage) Connect() error {
-	s.data = make(inMemoryDatabase)
+	if s.data == nil {
+		s.data = make(inMemoryDatabase)
+	}
 	return nil
 }
 
 func (s *Storage) Close() error {
-	s.data = nil
 	return nil
 }
 
-func (s *Storage) CreateEvent(e *models.Event) error {
+func (s *Storage) CreateEvent(e *models.Event) (*models.Event, error) {
 	if s.data == nil {
-		return fmt.Errorf("may by is need to reconnect")
+		return nil, fmt.Errorf("may by is need to reconnect")
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	e.PK = len(s.data) + 1
-	s.data[e.PK] = *e
-	return nil // TODO: not forever nil for may be UNIQUE precheck
+	s.sequence++
+	e.PK = s.sequence
+	s.data[e.PK] = e
+	return e, nil // TODO: not forever nil for may be UNIQUE precheck
 }
 
 func (s *Storage) ReadEvent(pk int) (*models.Event, error) {
@@ -48,36 +51,36 @@ func (s *Storage) ReadEvent(pk int) (*models.Event, error) {
 	defer s.mu.RUnlock()
 	event, exists := s.data[pk]
 	if exists {
-		return &event, nil
+		return event, nil
 	}
-	// return nil, fmt.Errorf("it does not exists")
 	return nil, nil
 }
 
-func (s *Storage) UpdateEvent(e *models.Event) error {
+func (s *Storage) UpdateEvent(e *models.Event) (*models.Event, error) {
 	if s.data == nil {
-		return fmt.Errorf("may by is need to reconnect")
+		return nil, fmt.Errorf("may by is need to reconnect")
 	}
 	if e.PK == 0 {
-		return fmt.Errorf("it is not idented")
+		return nil, fmt.Errorf("it is not idented")
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.data[e.PK] = *e
-	return nil
+	s.data[e.PK] = e
+	return e, nil
 }
 
-func (s *Storage) DeleteEvent(e *models.Event) error {
+func (s *Storage) DeleteEvent(e *models.Event) (*models.Event, error) {
 	if s.data == nil {
-		return fmt.Errorf("may by is need to reconnect")
+		return nil, fmt.Errorf("may by is need to reconnect")
 	}
 	if e.PK == 0 {
-		return fmt.Errorf("it is not idented")
+		return nil, fmt.Errorf("it is not idented")
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	e = s.data[e.PK]
 	delete(s.data, e.PK)
-	return nil
+	return e, nil
 }
 
 func (s *Storage) ListEvents() ([]models.Event, error) {
@@ -88,7 +91,7 @@ func (s *Storage) ListEvents() ([]models.Event, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	for _, event := range s.data {
-		events = append(events, event)
+		events = append(events, *event)
 	}
-	return events, nil // TODO: no events without connect
+	return events, nil
 }

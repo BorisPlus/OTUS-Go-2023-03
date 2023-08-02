@@ -12,6 +12,7 @@ import (
 	"time"
 
 	logger "hw12_13_14_15_calendar/internal/logger"
+	"hw12_13_14_15_calendar/internal/server/http/middleware"
 )
 
 // After fix code https://github.com/sonatard/noctx
@@ -38,12 +39,13 @@ func TestServerCode(t *testing.T) {
 	var port uint16 = 8081
 	outputInto := &bytes.Buffer{}
 	mainLogger := logger.NewLogger(logger.INFO, outputInto)
-	httpServer := NewServer(
+	middleware.Init(mainLogger)
+	httpServer := NewHTTPServer(
 		host,
 		port,
-		10*time.Second,
-		10*time.Second,
-		10*time.Second,
+		10,
+		10,
+		10,
 		1<<20,
 		mainLogger,
 		nil)
@@ -57,7 +59,6 @@ func TestServerCode(t *testing.T) {
 		// 	mainLogger.Error("http server goroutine: " + err.Error())
 		// }
 	}()
-
 	url := fmt.Sprintf("http://%s:%d", host, port)
 	client := &http.Client{}
 	request, _ := http.NewRequestWithContext(ctx, http.MethodPost, url, nil)
@@ -67,7 +68,7 @@ func TestServerCode(t *testing.T) {
 	}
 	defer resp.Body.Close()
 
-	timeoutCtx, cancelByTimeout := context.WithTimeout(context.Background(), 10 * time.Second)
+	timeoutCtx, cancelByTimeout := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancelByTimeout()
 	if err := httpServer.Stop(timeoutCtx); err != nil {
 		fmt.Println("httpServer.Stop", err)

@@ -16,6 +16,7 @@ import (
 	"hw12_13_14_15_calendar/internal/config"
 	"hw12_13_14_15_calendar/internal/logger"
 	internalhttp "hw12_13_14_15_calendar/internal/server/http"
+	middleware "hw12_13_14_15_calendar/internal/server/http/middleware"
 	"hw12_13_14_15_calendar/internal/storage"
 )
 
@@ -48,17 +49,20 @@ func main() {
 		log.Fatalf("unable to decode into struct, %v", err)
 	}
 
+	log.Printf("%+v\n", mainConfig.HTTP)
+	log.Println(mainConfig.Log.Level)
 	mainLogger := logger.NewLogger(mainConfig.Log.Level, os.Stdout)
+	middleware.Init(mainLogger)
 	storage := storage.NewStorageByType(mainConfig.Storage.Type, mainConfig.Storage.DSN)
 	calendar := app.NewApp(mainLogger, storage)
-	httpServer := internalhttp.NewServer(
-		mainConfig.HTTP.Host, 
-		mainConfig.HTTP.Port, 
-		10 * time.Second,
-		10 * time.Second,
-		10 * time.Second,
-		1 << 20,
-		mainLogger, 
+	httpServer := internalhttp.NewHTTPServer(
+		mainConfig.HTTP.Host,
+		mainConfig.HTTP.Port,
+		mainConfig.HTTP.ReadTimeout,
+		mainConfig.HTTP.ReadHeaderTimeout,
+		mainConfig.HTTP.WriteTimeout,
+		mainConfig.HTTP.MaxHeaderBytes,
+		mainLogger,
 		calendar,
 	)
 
@@ -71,9 +75,11 @@ func main() {
 			stop()
 		}
 	}()
+	log.Println("Println Calendar is running...")
 	mainLogger.Info("calendar is running...")
 	<-ctx.Done()
 	stop()
+	log.Println("Println Shutting down gracefully by signal....")
 	mainLogger.Info("Shutting down gracefully by signal.")
 	timeoutCtx, cancelByTimeout := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancelByTimeout()

@@ -2,13 +2,12 @@ package api
 
 import (
 	"encoding/json"
-	"io"
-	"log"
 	"net/http"
 
 	interfaces "hw12_13_14_15_calendar/internal/interfaces"
 	models "hw12_13_14_15_calendar/internal/models"
-	common "hw12_13_14_15_calendar/internal/server/http/api/handlers/common"
+	responses "hw12_13_14_15_calendar/internal/server/http/api/api_response"
+	commonHandlers "hw12_13_14_15_calendar/internal/server/http/api/handlers/common"
 )
 
 // curl -X POST -H 'Content-Type: application/json' -d "{\"test\": \"that\"}"
@@ -18,25 +17,31 @@ type ApiEventsCreateHandler struct {
 	App    interfaces.Applicationer
 }
 
-func (h ApiEventsCreateHandler) ServeHTTP(response http.ResponseWriter, request *http.Request) {
-	if request.Method != "POST" {
-		common.InvalidHTTPMethodForUrlPathHandler{}.ServeHTTP(response, request)
+func (h ApiEventsCreateHandler) ServeHTTP(rw http.ResponseWriter, rr *http.Request) {
+	ApiMethod := "api.events.create"
+	if rr.Method != "POST" {
+		commonHandlers.InvalidHTTPMethod{ApiMethod: ApiMethod}.ServeHTTP(rw, rr)
 		return
 	}
-	response.Header().Set("Content-Type", "application/json")
-	body, err := io.ReadAll(request.Body)
-	if err != nil {
-		panic(err)
-	}
-	log.Println(string(body))
 	var event models.Event
-	err = json.Unmarshal(body, &event)
+	err := json.NewDecoder(rr.Body).Decode(&event)
 	if err != nil {
-		panic(err)
+		commonHandlers.CustomErrorHandler{ApiMethod: ApiMethod, Error: err}.ServeHTTP(rw, rr)
+		return
 	}
-	log.Println(event)
-	_ = h.Logger
-	_ = h.App
-	h.Logger.Info("%+v", request.Form)
-	response.Write([]byte("ApiEventsCreateHandler"))
+	createdEvent, err := h.App.CreateEvent(&event)
+	if err != nil {
+		commonHandlers.CustomErrorHandler{ApiMethod: ApiMethod, Error: err}.ServeHTTP(rw, rr)
+		return
+	}
+	apiResponse := responses.NewAPIResponse(ApiMethod)
+	apiResponse.Data = responses.DataItem{Item: createdEvent}
+	apiResponseJSON, err := apiResponse.MarshalJSON()
+	if err != nil {
+		commonHandlers.CustomErrorHandler{ApiMethod: ApiMethod, Error: err}.ServeHTTP(rw, rr)
+		return
+	}
+	rw.Header().Set("Content-Type", "application/json")
+	rw.WriteHeader(http.StatusOK)
+	rw.Write(apiResponseJSON)
 }
