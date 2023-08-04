@@ -5,10 +5,9 @@ import (
 	"errors"
 	"fmt"
 
+	_ "github.com/lib/pq" // a blank import should be justifying.
 	interfaces "hw12_13_14_15_calendar/internal/interfaces"
 	models "hw12_13_14_15_calendar/internal/models"
-
-	_ "github.com/lib/pq" // a blank import should be justifying.
 )
 
 type Storage struct { // TODO

@@ -19,28 +19,45 @@ linters-settings:
           - "!$test"
         allow:
           - $gostd
+          - 'github.com/icrowley'
+          - 'github.com/lib/pq'
+          - 'github.com/stretchr'
+          - 'github.com/valyala/fastjson'
+          - 'github.com/google'
+          - 'hw12_13_14_15_calendar/internal/app'
           - 'hw12_13_14_15_calendar/internal/interfaces'
           - 'hw12_13_14_15_calendar/internal/logger'
           - 'hw12_13_14_15_calendar/internal/models'
-          - 'hw12_13_14_15_calendar/internal/storage/pgsqldtb'
+          - 'hw12_13_14_15_calendar/internal/server/http/api'
+          - 'hw12_13_14_15_calendar/internal/server/http/api/api_response'
+          - 'hw12_13_14_15_calendar/internal/server/http/api/handlers/common'
+          - 'hw12_13_14_15_calendar/internal/server/http/api/handlers/events'
+          - 'hw12_13_14_15_calendar/internal/server/http/middleware'
+          - 'hw12_13_14_15_calendar/internal/server/http/regexphandlers'
           - 'hw12_13_14_15_calendar/internal/storage/gomemory'
-          - 'github.com/lib/pq'
-          - github.com/valyala/fastjson
-          - github.com/google # all google packages
+          - 'hw12_13_14_15_calendar/internal/storage/pgsqldtb'
       test:
         files:
           - "$test"
         allow:
           - $gostd
-          - github.com/icrowley
+          - 'github.com/icrowley'
+          - 'github.com/lib/pq'
+          - 'github.com/stretchr'
+          - 'github.com/valyala/fastjson'
+          - 'github.com/google'
+          - 'hw12_13_14_15_calendar/internal/app'
           - 'hw12_13_14_15_calendar/internal/interfaces'
           - 'hw12_13_14_15_calendar/internal/logger'
           - 'hw12_13_14_15_calendar/internal/models'
-          - 'hw12_13_14_15_calendar/internal/storage/pgsqldtb'
+          - 'hw12_13_14_15_calendar/internal/server/http/api'
+          - 'hw12_13_14_15_calendar/internal/server/http/api/api_response'
+          - 'hw12_13_14_15_calendar/internal/server/http/api/handlers/common'
+          - 'hw12_13_14_15_calendar/internal/server/http/api/handlers/events'
+          - 'hw12_13_14_15_calendar/internal/server/http/middleware'
+          - 'hw12_13_14_15_calendar/internal/server/http/regexphandlers'
           - 'hw12_13_14_15_calendar/internal/storage/gomemory'
-          - 'github.com/lib/pq'
-          - github.com/stretchr
-          - github.com/valyala/fastjson
+          - 'hw12_13_14_15_calendar/internal/storage/pgsqldtb'
 
 issues:
   exclude-rules:

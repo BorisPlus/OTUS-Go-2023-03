@@ -12,33 +12,33 @@ import (
 
 // curl -X POST -H 'Content-Type: application/json' -d "{\"test\": \"that\"}"
 
-type ApiEventsCreateHandler struct {
+type EventsCreateHandler struct {
 	Logger interfaces.Logger
 	App    interfaces.Applicationer
 }
 
-func (h ApiEventsCreateHandler) ServeHTTP(rw http.ResponseWriter, rr *http.Request) {
-	ApiMethod := "api.events.create"
+func (h EventsCreateHandler) ServeHTTP(rw http.ResponseWriter, rr *http.Request) {
+	apiMethod := "api.events.create"
 	if rr.Method != "POST" {
-		commonHandlers.InvalidHTTPMethod{ApiMethod: ApiMethod}.ServeHTTP(rw, rr)
+		commonHandlers.InvalidHTTPMethod{APIMethod: apiMethod}.ServeHTTP(rw, rr)
 		return
 	}
 	var event models.Event
 	err := json.NewDecoder(rr.Body).Decode(&event)
 	if err != nil {
-		commonHandlers.CustomErrorHandler{ApiMethod: ApiMethod, Error: err}.ServeHTTP(rw, rr)
+		commonHandlers.CustomErrorHandler{APIMethod: apiMethod, Error: err}.ServeHTTP(rw, rr)
 		return
 	}
 	createdEvent, err := h.App.CreateEvent(&event)
 	if err != nil {
-		commonHandlers.CustomErrorHandler{ApiMethod: ApiMethod, Error: err}.ServeHTTP(rw, rr)
+		commonHandlers.CustomErrorHandler{APIMethod: apiMethod, Error: err}.ServeHTTP(rw, rr)
 		return
 	}
-	apiResponse := responses.NewAPIResponse(ApiMethod)
+	apiResponse := responses.NewAPIResponse(apiMethod)
 	apiResponse.Data = responses.DataItem{Item: createdEvent}
-	apiResponseJSON, err := apiResponse.MarshalJSON()
+	apiResponseJSON, err := json.Marshal(apiResponse)
 	if err != nil {
-		commonHandlers.CustomErrorHandler{ApiMethod: ApiMethod, Error: err}.ServeHTTP(rw, rr)
+		commonHandlers.CustomErrorHandler{APIMethod: apiMethod, Error: err}.ServeHTTP(rw, rr)
 		return
 	}
 	rw.Header().Set("Content-Type", "application/json")

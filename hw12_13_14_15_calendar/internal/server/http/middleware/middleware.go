@@ -2,35 +2,37 @@ package middleware
 
 import (
 	"net/http"
-	"time"
 	"sync"
+	"time"
 
 	interfaces "hw12_13_14_15_calendar/internal/interfaces"
 )
 
-type mitm struct {
+type Middle struct {
 	logger interfaces.Logger
 }
-var middleware *mitm = nil
-var once sync.Once
 
-func Instance() *mitm {
+var (
+	middleware *Middle
+	once       sync.Once
+)
+
+func Instance() *Middle {
 	if middleware == nil {
 		panic("Middleware was not init by `Init(logger interfaces.Logger)`.")
 	}
-	return middleware;
+	return middleware
 }
 
-func Init(logger interfaces.Logger) *mitm {
+func Init(logger interfaces.Logger) *Middle {
 	once.Do(func() {
-		middleware = &mitm{}
+		middleware = &Middle{}
 		middleware.logger = logger
 	})
-	return middleware;
+	return middleware
 }
 
-func (m mitm) Listen(handler http.Handler) http.Handler {
-
+func (m Middle) Listen(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		StartAt := time.Now()
 		lrw := NewLoggingResponseWriter(w)
@@ -57,35 +59,6 @@ func (m mitm) Listen(handler http.Handler) http.Handler {
 		m.logger.Info("%+v", a)
 	})
 }
-
-
-// func Middleware(wrappedHandler http.Handler, logger interfaces.Logger) http.Handler {
-// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-// 		StartAt := time.Now()
-// 		lrw := NewLoggingResponseWriter(w)
-// 		wrappedHandler.ServeHTTP(lrw, r)
-// 		a := struct {
-// 			StatusCode      int
-// 			UserAgent       string
-// 			ClientIPAddress string
-// 			HTTPMethod      string
-// 			HTTPVersion     string
-// 			URLPath         string
-// 			StartAt         time.Time
-// 			Latency         time.Duration
-// 		}{
-// 			StatusCode:      lrw.StatusCode,
-// 			UserAgent:       r.UserAgent(),
-// 			ClientIPAddress: r.RemoteAddr,
-// 			HTTPMethod:      r.Method,
-// 			HTTPVersion:     r.Proto,
-// 			URLPath:         r.URL.Path,
-// 			StartAt:         StartAt,
-// 			Latency:         time.Since(StartAt),
-// 		}
-// 		logger.Info("%+v", a)
-// 	})
-// }
 
 type LoggingResponseWriter struct {
 	http.ResponseWriter

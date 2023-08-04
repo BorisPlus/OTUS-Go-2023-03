@@ -11,41 +11,41 @@ import (
 	commonHandlers "hw12_13_14_15_calendar/internal/server/http/api/handlers/common"
 )
 
-type ApiEventsUpdateHandler struct {
+type EventsUpdateHandler struct {
 	Logger interfaces.Logger
 	App    interfaces.Applicationer
 }
 
-func (h ApiEventsUpdateHandler) ServeHTTP(rw http.ResponseWriter, rr *http.Request) {
-	ApiMethod := "api.events.update"
+func (h EventsUpdateHandler) ServeHTTP(rw http.ResponseWriter, rr *http.Request) {
+	apiMethod := "api.events.update"
 	h.Logger.Info("%+v", rr.Form)
-	if rr.Method != "PUTCH" {
-		commonHandlers.InvalidHTTPMethod{ApiMethod: ApiMethod}.ServeHTTP(rw, rr)
+	if rr.Method != "PATCH" {
+		commonHandlers.InvalidHTTPMethod{APIMethod: apiMethod}.ServeHTTP(rw, rr)
 		return
 	}
 	var event models.Event
 	err := json.NewDecoder(rr.Body).Decode(&event)
 	if err != nil {
-		commonHandlers.CustomErrorHandler{ApiMethod: ApiMethod, Error: err}.ServeHTTP(rw, rr)
+		commonHandlers.CustomErrorHandler{APIMethod: apiMethod, Error: err}.ServeHTTP(rw, rr)
 		return
 	}
 	pkString := rr.Form.Get("id")
 	pk, err := strconv.Atoi(pkString)
 	if err != nil {
-		commonHandlers.CustomErrorHandler{ApiMethod: ApiMethod, Error: err}.ServeHTTP(rw, rr)
+		commonHandlers.CustomErrorHandler{APIMethod: apiMethod, Error: err}.ServeHTTP(rw, rr)
 		return
 	}
 	event.PK = pk
 	_, err = h.App.UpdateEvent(&event)
 	if err != nil {
-		commonHandlers.CustomErrorHandler{ApiMethod: ApiMethod, Error: err}.ServeHTTP(rw, rr)
+		commonHandlers.CustomErrorHandler{APIMethod: apiMethod, Error: err}.ServeHTTP(rw, rr)
 		return
 	}
-	apiResponse := responses.NewAPIResponse(ApiMethod)
+	apiResponse := responses.NewAPIResponse(apiMethod)
 	apiResponse.Data = responses.DataItem{Item: event}
-	apiResponseJSON, err := apiResponse.MarshalJSON()
+	apiResponseJSON, err := json.Marshal(apiResponse)
 	if err != nil {
-		commonHandlers.CustomErrorHandler{ApiMethod: ApiMethod, Error: err}.ServeHTTP(rw, rr)
+		commonHandlers.CustomErrorHandler{APIMethod: apiMethod, Error: err}.ServeHTTP(rw, rr)
 		return
 	}
 	rw.Header().Set("Content-Type", "application/json")

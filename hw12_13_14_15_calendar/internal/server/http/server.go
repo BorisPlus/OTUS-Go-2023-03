@@ -29,7 +29,6 @@ func NewHTTPServer(
 	logger interfaces.Logger,
 	app interfaces.Applicationer,
 ) *HTTPServer {
-
 	mux := http.NewServeMux()
 	mux.Handle("/api/", api.Handlers(logger, app))
 	mux.Handle("/", middleware.Instance().Listen(http.HandlerFunc(handleTeapot)))
@@ -37,42 +36,25 @@ func NewHTTPServer(
 	server := http.Server{
 		Addr:              net.JoinHostPort(host, fmt.Sprint(port)),
 		Handler:           mux,
-		ReadTimeout:       time.Duration(readTimeout) * time.Second,
-		ReadHeaderTimeout: time.Duration(readHeaderTimeout) * time.Second,
-		WriteTimeout:      time.Duration(writeTimeout) * time.Second,
+		ReadTimeout:       readTimeout,
+		ReadHeaderTimeout: readHeaderTimeout,
+		WriteTimeout:      writeTimeout,
 		MaxHeaderBytes:    maxHeaderBytes,
 	}
 	return &HTTPServer{&server, logger, app, nil}
 }
 
 func (s *HTTPServer) Start(ctx context.Context) error {
-	// _ = ctx // TODO: for what?
 	s.logger.Info("Server.Start()")
-
-	// // http.Handle("/", instance.Listen(http.HandlerFunc(handleTeapot)))
-	// // http.Handle("/api/", api.Handlers(s.logger, s.app))
-	// err := http.ListenAndServe(s.Address(), nil)
-	// if err != nil {
-	// 	return err
-	// }
-	// return nil
-
-	contextHTTP, cancelHTTP := context.WithCancel(ctx)
+	_, cancelHTTP := context.WithCancel(ctx)
 	s.cancel = cancelHTTP
-	s.server.BaseContext = func(l net.Listener) context.Context { return contextHTTP }
-
 	err := s.server.ListenAndServe()
 	if err != nil {
 		return err
 	}
 	return nil
-
 }
 
-func goHandler(w http.ResponseWriter, _ *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("go-go code!"))
-}
 func handleTeapot(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusTeapot)
 	w.Write([]byte("I receive teapot-status code!"))

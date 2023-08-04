@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"net/http"
 	"strconv"
 
@@ -10,36 +11,35 @@ import (
 	commonHandlers "hw12_13_14_15_calendar/internal/server/http/api/handlers/common"
 )
 
-type ApiEventsDeleteHandler struct {
+type EventsDeleteHandler struct {
 	Logger interfaces.Logger
 	App    interfaces.Applicationer
 }
 
-func (h ApiEventsDeleteHandler) ServeHTTP(response http.ResponseWriter, request *http.Request) {
-	ApiMethod := "api.events.delete"
-	h.Logger.Info("%+v", request.Form)
-	if request.Method != "PUT" {
-		commonHandlers.InvalidHTTPMethod{ApiMethod: ApiMethod}.ServeHTTP(response, request)
+func (h EventsDeleteHandler) ServeHTTP(response http.ResponseWriter, request *http.Request) {
+	apiMethod := "api.events.delete"
+	if request.Method != "DELETE" {
+		commonHandlers.InvalidHTTPMethod{APIMethod: apiMethod}.ServeHTTP(response, request)
 		return
 	}
 	pkString := request.Form.Get("id")
 	pk, err := strconv.Atoi(pkString)
 	if err != nil {
-		commonHandlers.CustomErrorHandler{ApiMethod: ApiMethod, Error: err}.ServeHTTP(response, request)
+		commonHandlers.CustomErrorHandler{APIMethod: apiMethod, Error: err}.ServeHTTP(response, request)
 		return
 	}
 	event := models.Event{}
 	event.PK = pk
 	deletedEvent, err := h.App.DeleteEvent(&event)
 	if err != nil {
-		commonHandlers.CustomErrorHandler{ApiMethod: ApiMethod, Error: err}.ServeHTTP(response, request)
+		commonHandlers.CustomErrorHandler{APIMethod: apiMethod, Error: err}.ServeHTTP(response, request)
 		return
 	}
-	apiResponse := responses.NewAPIResponse(ApiMethod)
+	apiResponse := responses.NewAPIResponse(apiMethod)
 	apiResponse.Data = responses.DataItem{Item: deletedEvent}
-	apiResponseJSON, err := apiResponse.MarshalJSON()
+	apiResponseJSON, err := json.Marshal(apiResponse)
 	if err != nil {
-		commonHandlers.CustomErrorHandler{ApiMethod: ApiMethod, Error: err}.ServeHTTP(response, request)
+		commonHandlers.CustomErrorHandler{APIMethod: apiMethod, Error: err}.ServeHTTP(response, request)
 		return
 	}
 	response.Header().Set("Content-Type", "application/json")

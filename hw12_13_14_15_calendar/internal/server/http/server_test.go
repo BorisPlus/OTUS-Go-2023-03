@@ -12,7 +12,7 @@ import (
 	"time"
 
 	logger "hw12_13_14_15_calendar/internal/logger"
-	"hw12_13_14_15_calendar/internal/server/http/middleware"
+	middleware "hw12_13_14_15_calendar/internal/server/http/middleware"
 )
 
 // After fix code https://github.com/sonatard/noctx

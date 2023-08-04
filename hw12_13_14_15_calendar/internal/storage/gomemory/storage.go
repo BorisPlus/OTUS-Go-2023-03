@@ -11,8 +11,8 @@ import (
 type inMemoryDatabase map[int]*models.Event
 
 type Storage struct {
-	data inMemoryDatabase
-	mu   *sync.RWMutex
+	data     inMemoryDatabase
+	mu       *sync.RWMutex
 	sequence int
 }
 

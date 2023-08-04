@@ -42,9 +42,9 @@ func (qpp *QueryPathPattern) match(url string) bool {
 }
 
 func (qpp *QueryPathPattern) GetValues(urlPath string) url.Values {
-	parsedParamsInUrl := qpp.compiled.FindAllStringSubmatch(urlPath, -1)
+	parsedParamsInURL := qpp.compiled.FindAllStringSubmatch(urlPath, -1)
 	paramsValues := make(url.Values)
-	for _, submatch := range parsedParamsInUrl {
+	for _, submatch := range parsedParamsInURL {
 		for orderIndex, value := range submatch {
 			if orderIndex == 0 {
 				continue

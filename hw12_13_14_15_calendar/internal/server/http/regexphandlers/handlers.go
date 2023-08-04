@@ -3,13 +3,12 @@ package regexhandlers
 import (
 	"net/http"
 
-	interfaces "hw12_13_14_15_calendar/internal/interfaces"
+	i "hw12_13_14_15_calendar/internal/interfaces"
 )
 
-// as HandleFunc
+// as HandleFunc:
 // http.Handle("/api/", middleware.Middleware(http.HandleFunc("/api/", api.Routers.Go), s.logger))
-
-// as Handle
+// as Handle:
 // http.HandleFunc("/api/", api.Routers(s.logger, s.app).ServeHTTP)
 
 type RegexpHandler struct {
@@ -26,17 +25,15 @@ func NewRegexpHandler(pattern string, params Params, handler http.Handler) *Rege
 
 type RegexpHandlers struct {
 	defaultHandler http.Handler
-	logger         interfaces.Logger
-	app            interfaces.Applicationer
+	logger         i.Logger
+	app            i.Applicationer
 	crossroad      []RegexpHandler
 }
 
-func NewRegexpHandlers(defaultHandler http.Handler, logger interfaces.Logger, app interfaces.Applicationer, rh ...RegexpHandler) RegexpHandlers {
-	//
-	// RegexpHandlers{defaultHandler, logger, app, rh}
+func NewRegexpHandlers(h http.Handler, log i.Logger, app i.Applicationer, rh ...RegexpHandler) RegexpHandlers {
 	regexpHandlers := new(RegexpHandlers)
-	regexpHandlers.defaultHandler = defaultHandler
-	regexpHandlers.logger = logger
+	regexpHandlers.defaultHandler = h
+	regexpHandlers.logger = log
 	regexpHandlers.app = app
 	regexpHandlers.crossroad = rh
 	return *regexpHandlers

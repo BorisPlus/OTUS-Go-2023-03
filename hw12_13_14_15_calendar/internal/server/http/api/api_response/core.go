@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 )
 
@@ -13,69 +12,68 @@ type DataItems struct {
 	Items any `json:"items"`
 }
 
-type APIResponse struct {
-	ApiMethod string `json:"method"`
+type Response struct {
+	APIMethod string `json:"method"`
 	Error     error  `json:"error"`
 	Data      any    `json:"data"`
 }
 
 // https://github.com/golang/go/issues/5161
 
-func (r APIResponse) MarshalJSON() ([]byte, error) {
+func (r Response) MarshalJSON() ([]byte, error) {
 	var errorMsg string
 	if r.Error != nil {
 		errorMsg = r.Error.Error()
 	}
 	anon := struct {
-		ApiMethod string `json:"method"`
+		APIMethod string `json:"method"`
 		Error     string `json:"error"`
 		Data      any    `json:"data"`
 	}{
-		ApiMethod: r.ApiMethod,
+		APIMethod: r.APIMethod,
 		Error:     errorMsg,
 		Data:      r.Data,
 	}
 	return json.Marshal(anon)
 }
 
-func NewAPIResponse(ApiMethod string) *APIResponse {
-	r := new(APIResponse)
-	r.ApiMethod = ApiMethod
+func NewAPIResponse(apiMethod string) *Response {
+	r := new(Response)
+	r.APIMethod = apiMethod
 	return r
 }
 
-func NewErrorAPIResponse(ApiMethod string, Error error) *APIResponse {
-	r := new(APIResponse)
-	r.ApiMethod = ApiMethod
-	r.Error = Error
+func NewErrorAPIResponse(apiMethod string, err error) *Response {
+	r := new(Response)
+	r.APIMethod = apiMethod
+	r.Error = err
 	return r
 }
 
-func NewErrorAPIResponseByString(ApiMethod string, format string, a ...any) *APIResponse {
-	r := new(APIResponse)
-	r.ApiMethod = ApiMethod
+func NewErrorAPIResponseByString(apiMethod string, format string, a ...any) *Response {
+	r := new(Response)
+	r.APIMethod = apiMethod
 	r.Error = fmt.Errorf(format, a...)
 	return r
 }
 
-func InternalServerError(ApiMethod string) *APIResponse {
-	r := new(APIResponse)
-	r.ApiMethod = ApiMethod
+func InternalServerError(apiMethod string) *Response {
+	r := new(Response)
+	r.APIMethod = apiMethod
 	r.Error = fmt.Errorf("internal server error")
 	return r
 }
 
-func InvalidHTTPMethod(ApiMethod string) *APIResponse {
-	r := new(APIResponse)
-	r.ApiMethod = ApiMethod
-	// r.Error = fmt.Errorf("invalid HTTP method")
-	r.Error = errors.New("invalid HTTP method")
+func InvalidHTTPMethod(apiMethod string) *Response {
+	r := new(Response)
+	r.APIMethod = apiMethod
+	r.Error = fmt.Errorf("invalid HTTP method")
 	return r
 }
 
-func InvalidRequestBody(ApiMethod string) *APIResponse {
-	r := new(APIResponse)
-	r.ApiMethod = ApiMethod
+func InvalidRequestBody(apiMethod string) *Response {
+	r := new(Response)
+	r.APIMethod = apiMethod
 	r.Error = fmt.Errorf("invalid HTTP request body")
 	return r
 }
