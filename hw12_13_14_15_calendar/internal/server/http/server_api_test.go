@@ -33,44 +33,36 @@ var (
 )
 
 func TestServerAPICreatePKSequence(t *testing.T) {
+	var port uint16 = 8084
 	var response *http.Response
 	var err error
+	ctx := context.Background()
 	mainLogger := logger.NewLogger(logger.INFO, os.Stdout)
-	inmemoryDatabase := storage.NewStorage()
-	calendarApp := app.NewApp(mainLogger, inmemoryDatabase)
+	calendarApp := app.NewApp(mainLogger, storage.NewStorage())
 	middleware.Init(mainLogger)
-	var port uint16 = 8083
 	httpServer := NewHTTPServer(
 		host,
 		port,
-		10,
-		10,
-		10,
+		10*time.Second,
+		10*time.Second,
+		10*time.Second,
 		1<<20,
 		mainLogger,
 		calendarApp,
 	)
-	timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer timeoutCancel()
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		httpServer.Start(timeoutCtx)
+		httpServer.Start(ctx)
 	}()
 	client := &http.Client{}
-	payloadOfCreateRaw := `{
-						"title": "title",
-						"startat": "2023-08-05T21:54:42+02:00",
-						"duration": 0,
-						"description": "description",
-						"owner": "owner",
-						"notifyearly": 0
-						}`
+	// CREATE
 	requestOfCreate := fmt.Sprintf("http://%s:%d/api/events/create", host, port)
+	payloadOfCreateRaw := `{"title": "title", "startat": "2023-08-05T21:54:42+02:00"}`
 	// CREATE 1
 	payloadOfCreate := strings.NewReader(payloadOfCreateRaw)
-	request, err := http.NewRequestWithContext(timeoutCtx, "POST", requestOfCreate, payloadOfCreate)
+	request, err := http.NewRequestWithContext(ctx, "POST", requestOfCreate, payloadOfCreate)
 	if err != nil {
 		t.Errorf("FAIL: error prepare http request: %s\n", requestOfCreate)
 		return
@@ -81,7 +73,6 @@ func TestServerAPICreatePKSequence(t *testing.T) {
 		t.Errorf("FAIL: error decode event http request: %s\n", err)
 		return
 	}
-	response.Body.Close()
 	err = json.NewDecoder(response.Body).Decode(&apiResponse)
 	if err != nil {
 		t.Errorf("FAIL: error decode event http request: %s\n", err)
@@ -92,9 +83,10 @@ func TestServerAPICreatePKSequence(t *testing.T) {
 	} else {
 		fmt.Printf("OK: get event PK %d\n", apiResponse.Data.Item.PK)
 	}
+	response.Body.Close()
 	// CREATE 2
 	payloadOfCreate = strings.NewReader(payloadOfCreateRaw)
-	request, err = http.NewRequestWithContext(timeoutCtx, "POST", requestOfCreate, payloadOfCreate)
+	request, err = http.NewRequestWithContext(ctx, "POST", requestOfCreate, payloadOfCreate)
 	if err != nil {
 		t.Errorf("FAIL: error prepare http request: %s\n", requestOfCreate)
 		return
@@ -105,7 +97,6 @@ func TestServerAPICreatePKSequence(t *testing.T) {
 		t.Errorf("FAIL: error decode event http request: %s\n", err)
 		return
 	}
-	response.Body.Close()
 	err = json.NewDecoder(response.Body).Decode(&apiResponse)
 	if err != nil {
 		t.Errorf("FAIL: error decode event http request: %s\n", err)
@@ -116,10 +107,11 @@ func TestServerAPICreatePKSequence(t *testing.T) {
 	} else {
 		fmt.Printf("OK: get event PK %d\n", apiResponse.Data.Item.PK)
 	}
+	response.Body.Close()
 	// DELETE 3
 	requestOfDelete := fmt.Sprintf("http://%s:%d/api/events/1/delete", host, port)
-	payloadOfDelete := strings.NewReader(``)
-	request, err = http.NewRequestWithContext(timeoutCtx, "DELETE", requestOfDelete, payloadOfDelete)
+	payloadOfDelete := strings.NewReader("")
+	request, err = http.NewRequestWithContext(ctx, "DELETE", requestOfDelete, payloadOfDelete)
 	if err != nil {
 		t.Errorf("FAIL: error prepare http request: %s\n", requestOfDelete)
 		return
@@ -133,7 +125,7 @@ func TestServerAPICreatePKSequence(t *testing.T) {
 	response.Body.Close()
 	// CREATE 3
 	payloadOfCreate = strings.NewReader(payloadOfCreateRaw)
-	request, err = http.NewRequestWithContext(timeoutCtx, "POST", requestOfCreate, payloadOfCreate)
+	request, err = http.NewRequestWithContext(ctx, "POST", requestOfCreate, payloadOfCreate)
 	if err != nil {
 		t.Errorf("FAIL: error prepare http request: %s\n", requestOfCreate)
 		return
@@ -144,54 +136,51 @@ func TestServerAPICreatePKSequence(t *testing.T) {
 		t.Errorf("FAIL: error decode event http request: %s\n", err)
 		return
 	}
-	response.Body.Close()
 	err = json.NewDecoder(response.Body).Decode(&apiResponse)
 	if err != nil {
 		t.Errorf("FAIL: error decode event http request: %s\n", err)
 		return
 	}
+	response.Body.Close()
 	if apiResponse.Data.Item.PK != 3 {
 		t.Errorf("FAIL: get event PK %d, expected 3\n", apiResponse.Data.Item.PK)
 	} else {
 		fmt.Printf("OK: get event PK %d\n", apiResponse.Data.Item.PK)
 	}
 	//
-	<-timeoutCtx.Done()
-	httpServer.Stop(timeoutCtx)
+	httpServer.Stop()
 	wg.Wait()
 }
 
 func TestServerAPIVersion(t *testing.T) {
-	mainLogger := logger.NewLogger(logger.INFO, os.Stdout)
-	inmemoryDatabase := storage.NewStorage()
-	calendarApp := app.NewApp(mainLogger, inmemoryDatabase)
-	middleware.Init(mainLogger)
-	client := &http.Client{}
 	var port uint16 = 8082
+	// server
+	log := logger.NewLogger(logger.INFO, os.Stdout)
+	calendarApp := app.NewApp(log, storage.NewStorage())
+	middleware.Init(log)
 	httpServer := NewHTTPServer(
 		host,
 		port,
-		10,
-		10,
-		10,
+		10*time.Second,
+		10*time.Second,
+		10*time.Second,
 		1<<20,
-		mainLogger,
+		log,
 		calendarApp,
 	)
-
-	timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer timeoutCancel()
-
+	ctx := context.Background()
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		httpServer.Start(timeoutCtx)
+		if err := httpServer.Start(ctx); err != nil {
+			log.Error("http server goroutine: " + err.Error())
+		}
 	}()
-
+	// client
+	client := &http.Client{}
 	requestOfVersion := fmt.Sprintf("http://%s:%d/api/version", host, port)
-	payload := strings.NewReader(``)
-	request, err := http.NewRequestWithContext(timeoutCtx, "GET", requestOfVersion, payload)
+	request, err := http.NewRequestWithContext(context.Background(), "GET", requestOfVersion, strings.NewReader(``))
 	if err != nil {
 		t.Errorf("FAIL: error prepare http request: %s\n", requestOfVersion)
 		return
@@ -202,7 +191,7 @@ func TestServerAPIVersion(t *testing.T) {
 		t.Errorf("FAIL: error decode event http request: %s\n", err)
 		return
 	}
-	response.Body.Close()
+	defer response.Body.Close()
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
 		t.Errorf("FAIL: error making http request: %s\n", err)
@@ -215,8 +204,7 @@ func TestServerAPIVersion(t *testing.T) {
 	} else {
 		fmt.Printf("OK: %s\n", body)
 	}
-
-	<-timeoutCtx.Done()
-	httpServer.Stop(timeoutCtx)
+	// 
+	httpServer.Stop()
 	wg.Wait()
 }
