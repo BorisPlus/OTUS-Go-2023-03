@@ -43,3 +43,7 @@ Read
 ```bash
 curl -v -H "Content-Type: application/json" "http://localhost:8080/api/events/2"
 ```
+
+## GRPC
+
+[GRPC](https://grpc.io/docs/languages/go/quickstart/)
