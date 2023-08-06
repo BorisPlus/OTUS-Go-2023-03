@@ -33,13 +33,14 @@ var (
 )
 
 func TestServerAPICreatePKSequence(t *testing.T) {
-	var port uint16 = 8084
+	var port uint16 = 9002
 	var response *http.Response
 	var err error
 	ctx := context.Background()
+	devNull := logger.NewLogger(logger.INFO, io.Discard)
+	middleware.Init(devNull)
 	mainLogger := logger.NewLogger(logger.INFO, os.Stdout)
 	calendarApp := app.NewApp(mainLogger, storage.NewStorage())
-	middleware.Init(mainLogger)
 	httpServer := NewHTTPServer(
 		host,
 		port,
@@ -153,11 +154,12 @@ func TestServerAPICreatePKSequence(t *testing.T) {
 }
 
 func TestServerAPIVersion(t *testing.T) {
-	var port uint16 = 8082
+	var port uint16 = 9002
 	// server
+	devNull := logger.NewLogger(logger.INFO, io.Discard)
+	middleware.Init(devNull)
 	log := logger.NewLogger(logger.INFO, os.Stdout)
 	calendarApp := app.NewApp(log, storage.NewStorage())
-	middleware.Init(log)
 	httpServer := NewHTTPServer(
 		host,
 		port,

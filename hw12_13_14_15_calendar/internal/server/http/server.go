@@ -2,6 +2,7 @@ package internalhttp
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -13,12 +14,10 @@ import (
 )
 
 type HTTPServer struct {
-	server      *http.Server
-	logger      interfaces.Logger
-	app         interfaces.Applicationer
-	cancel      context.CancelFunc
-	// baseContext context.Context
-	context     context.Context
+	server  *http.Server
+	logger  interfaces.Logger
+	app     interfaces.Applicationer
+	context context.Context
 }
 
 func NewHTTPServer(
@@ -34,8 +33,6 @@ func NewHTTPServer(
 	mux := http.NewServeMux()
 	mux.Handle("/api/", api.Handlers(logger, app))
 	mux.Handle("/", middleware.Instance().Listen(http.HandlerFunc(handleTeapot)))
-
-	logger.Info(net.JoinHostPort(host, fmt.Sprint(port)))
 	server := http.Server{
 		Addr:              net.JoinHostPort(host, fmt.Sprint(port)),
 		Handler:           mux,
@@ -44,44 +41,34 @@ func NewHTTPServer(
 		WriteTimeout:      writeTimeout,
 		MaxHeaderBytes:    maxHeaderBytes,
 	}
-	return &HTTPServer{&server, logger, app, nil, nil}
+	this := &HTTPServer{}
+	this.server = &server
+	this.logger = logger
+	this.app = app
+	return this
 }
 
 func (s *HTTPServer) Start(ctx context.Context) error {
-	errChannel := make(chan error)
 	s.logger.Info("Server.Start()")
-	s.context, s.cancel = context.WithCancel(ctx)
-	select {
-	case <-(ctx).Done(): // Почему не работает при cancel в родителе
-		fmt.Println("<-(*ctx).Done()")
-		err := s.Stop()
-		if err != nil {
-			return err
+	s.context = ctx
+	go func() {
+		<-ctx.Done()
+		s.logger.Info("Graceful Shutdown")
+		if err := s.Stop(); err != nil {
+			s.logger.Info("Stop error: %v\n", err)
 		}
-		return nil
-	case <-s.context.Done():
-		fmt.Println("<-s.context.Done()")
-		err := s.Stop()
-		if err != nil {
-			return err
-		}
-		return nil
-	case errChannel <- s.server.ListenAndServe():
-		fmt.Println("s.server.ListenAndServe()")
-		err := <-errChannel
-		s.logger.Error(err.Error())
+	}()
+	if err := s.server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+		s.logger.Info("Start error: %v\n", err)
 		return err
 	}
+	return nil
 }
 
 func (s *HTTPServer) Stop() error {
 	s.logger.Info("Server.Stop()")
-	if s.context != nil {
-		s.cancel()
-		err := s.server.Shutdown(s.context)
-		if err != nil {
-			return err
-		}
+	if err := s.server.Shutdown(s.context); err != nil {
+		return err
 	}
 	return nil
 }

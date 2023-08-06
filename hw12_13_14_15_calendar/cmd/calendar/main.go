@@ -70,7 +70,7 @@ func main() {
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGTSTP)
 	defer stop()
 	go func() {
-		if err := httpServer.Start(&ctx); err != nil {
+		if err := httpServer.Start(ctx); err != nil {
 			mainLogger.Error("failed to start http server: " + err.Error())
 			stop()
 		}
@@ -81,8 +81,6 @@ func main() {
 	stop()
 	log.Println("Println Shutting down gracefully by signal....")
 	mainLogger.Info("Shutting down gracefully by signal.")
-	// timeoutCtx, cancelByTimeout := context.WithTimeout(context.Background(), 3*time.Second)
-	// defer cancelByTimeout()
 	if err := httpServer.Stop(); err != nil {
 		fmt.Println(err)
 	}

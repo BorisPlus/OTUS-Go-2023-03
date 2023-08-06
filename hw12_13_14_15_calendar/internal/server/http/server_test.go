@@ -17,109 +17,170 @@ import (
 	middleware "hw12_13_14_15_calendar/internal/server/http/middleware"
 )
 
-func TestServerStopNotRun(t *testing.T) {
+func TestServerStopNotStarted(t *testing.T) {
 	log := logger.NewLogger(logger.INFO, os.Stdout)
 	middleware.Init(log)
 	httpServer := NewHTTPServer(
 		"localhost",
-		8080,
+		8000,
 		10*time.Second,
 		10*time.Second,
 		10*time.Second,
 		1<<20,
 		log,
-		nil)
+		nil,
+	)
 	err := httpServer.Stop()
 	if err != nil {
 		t.Errorf(err.Error())
 	}
 }
 
-func TestServerStartStopNormally(t *testing.T) {
+func TestServerStopNormally(t *testing.T) {
 	ctx := context.Background()
 	log := logger.NewLogger(logger.INFO, os.Stdout)
 	middleware.Init(log)
 	httpServer := NewHTTPServer(
 		"localhost",
-		8080,
+		8000,
 		10*time.Second,
 		10*time.Second,
 		10*time.Second,
 		1<<20,
 		log,
-		nil)
+		nil,
+	)
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		if err := httpServer.Start(ctx); err != nil {
-			log.Error("http server goroutine: " + err.Error())
+		if err := httpServer.Start(ctx); err != nil { // START
+			fmt.Println("http server goroutine: " + err.Error())
 		}
 	}()
-	time.Sleep(1 * time.Second)
-	err := httpServer.Stop()
+	time.Sleep(3 * time.Second)
+	err := httpServer.Stop() // STOP
 	if err != nil {
 		t.Errorf(err.Error())
 	}
 	wg.Wait()
 }
 
-func WhyTestServerStartStopByContextIsNotWork(t *testing.T) {
-	ctx, ctxCancel := context.WithCancel(context.Background())
-	log := logger.NewLogger(logger.INFO, os.Stdout)
-	middleware.Init(log)
-	httpServer := NewHTTPServer(
-		"localhost",
-		8080,
-		10*time.Second,
-		10*time.Second,
-		10*time.Second,
-		1<<20,
-		log,
-		nil)
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		if err := httpServer.Start(ctx); err != nil {
-			log.Error("http server goroutine: " + err.Error())
-		}
-	}()
-	ctxCancel() // Graceful Shutdown не срабатывает внутри httpServer.Start(&ctx)?
-	wg.Wait()
-}
-
-func TestServerStartStopByContext(t *testing.T) {
-	ctx, ctxCancel := signal.NotifyContext(context.Background(), syscall.SIGHUP)
+func TestServerStopBySignalNoWait(t *testing.T) {
+	ctx, ctxCancel := signal.NotifyContext(context.Background(), syscall.SIGHUP, syscall.SIGINT)
 	defer ctxCancel()
 	log := logger.NewLogger(logger.INFO, os.Stdout)
 	middleware.Init(log)
 	httpServer := NewHTTPServer(
 		"localhost",
-		8080,
+		8000,
 		10*time.Second,
 		10*time.Second,
 		10*time.Second,
 		1<<20,
 		log,
-		nil)
+		nil,
+	)
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		if err := httpServer.Start(ctx); err != nil {
-			log.Error("http server goroutine: " + err.Error())
+		if err := httpServer.Start(ctx); err != nil { // START
+			fmt.Println("http server goroutine: " + err.Error())
 		}
 	}()
 	pid, _, _ := syscall.Syscall(syscall.SYS_GETPID, 0, 0, 0)
 	process, _ := os.FindProcess(int(pid))
-	process.Signal(syscall.SIGHUP)
+	process.Signal(syscall.SIGHUP) // STOP
+	wg.Wait()
+}
+
+func TestServerStopBySignalWithWait(t *testing.T) {
+	ctx, ctxCancel := signal.NotifyContext(context.Background(), syscall.SIGHUP, syscall.SIGINT)
+	defer ctxCancel()
+	log := logger.NewLogger(logger.INFO, os.Stdout)
+	middleware.Init(log)
+	httpServer := NewHTTPServer(
+		"localhost",
+		8000,
+		10*time.Second,
+		10*time.Second,
+		10*time.Second,
+		1<<20,
+		log,
+		nil,
+	)
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if err := httpServer.Start(ctx); err != nil { // START
+			fmt.Println("http server goroutine: " + err.Error())
+		}
+	}()
+	time.Sleep(3 * time.Second)
+	pid, _, _ := syscall.Syscall(syscall.SYS_GETPID, 0, 0, 0)
+	process, _ := os.FindProcess(int(pid))
+	process.Signal(syscall.SIGINT) // STOP
+	wg.Wait()
+}
+
+func TestServerStopByCancelNoWait(t *testing.T) {
+	ctx, ctxCancel := context.WithCancel(context.Background())
+	log := logger.NewLogger(logger.INFO, os.Stdout)
+	middleware.Init(log)
+	httpServer := NewHTTPServer(
+		"localhost",
+		8000,
+		10*time.Second,
+		10*time.Second,
+		10*time.Second,
+		1<<20,
+		log,
+		nil,
+	)
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if err := httpServer.Start(ctx); err != nil { // START
+			fmt.Println("http server goroutine: " + err.Error())
+		}
+	}()
+	ctxCancel() // STOP
+	wg.Wait()
+}
+
+func TestServerStopByCancelWithWait(t *testing.T) {
+	ctx, ctxCancel := context.WithCancel(context.Background())
+	log := logger.NewLogger(logger.INFO, os.Stdout)
+	middleware.Init(log)
+	httpServer := NewHTTPServer(
+		"localhost",
+		8000,
+		10*time.Second,
+		10*time.Second,
+		10*time.Second,
+		1<<20,
+		log,
+		nil,
+	)
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if err := httpServer.Start(ctx); err != nil { // START
+			fmt.Println("http server goroutine: " + err.Error())
+		}
+	}()
+	time.Sleep(3 * time.Second)
+	ctxCancel() // STOP
 	wg.Wait()
 }
 
 func TestServerCode(t *testing.T) {
 	host := "localhost"
-	var port uint16 = 8080
+	var port uint16 = 8000
 	// Server
 	httpOutput := &bytes.Buffer{}
 	log := logger.NewLogger(logger.INFO, httpOutput)
@@ -132,34 +193,36 @@ func TestServerCode(t *testing.T) {
 		10*time.Second,
 		1<<20,
 		log,
-		nil)
-	ctx, ctxCancel := context.WithCancel(context.Background())
-	defer ctxCancel()
+		nil,
+	)
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		if err := httpServer.Start(ctx); err != nil {
-			log.Error("http server goroutine: " + err.Error())
+		if err := httpServer.Start(context.Background()); err != nil {
+			fmt.Println("http server goroutine: " + err.Error())
 		}
 	}()
+	// Wait
+	time.Sleep(3 * time.Second)
 	// Client
 	url := fmt.Sprintf("http://%s:%d", host, port)
-	request, _ := http.NewRequestWithContext(ctx, http.MethodPost, url, nil)
+	request, err := http.NewRequest(http.MethodGet, url, strings.NewReader(``))
+	if err != nil {
+		t.Error(err.Error())
+	}
 	client := &http.Client{}
 	resp, err := client.Do(request)
 	if err != nil {
-		fmt.Println(err)
+		t.Error(err.Error())
 	}
 	defer resp.Body.Close()
-	httpResponse := httpOutput.String()
-	if !strings.Contains(httpResponse, "StatusCode:418") {
-		t.Errorf("Server must contain 'StatusCode:418', but get %s\n", httpResponse)
+	if resp.StatusCode != 418 {
+		t.Errorf("StatusCode must be '418', but get '%d'\n", resp.StatusCode)
 	} else {
-		fmt.Printf("OK. Middleware catch status code '418':\n%s\n", httpResponse)
+		fmt.Printf("OK. StatusCode '418'\n")
 	}
-	//
-	ctxCancel()
 	httpServer.Stop()
+	//
 	wg.Wait()
 }
