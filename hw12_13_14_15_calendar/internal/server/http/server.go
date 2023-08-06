@@ -67,10 +67,7 @@ func (s *HTTPServer) Start(ctx context.Context) error {
 
 func (s *HTTPServer) Stop() error {
 	s.logger.Info("Server.Stop()")
-	if err := s.server.Shutdown(s.context); err != nil {
-		return err
-	}
-	return nil
+	return s.server.Shutdown(s.context)
 }
 
 func handleTeapot(w http.ResponseWriter, _ *http.Request) {

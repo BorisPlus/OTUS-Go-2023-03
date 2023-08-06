@@ -66,7 +66,7 @@ func TestServerStopNormally(t *testing.T) {
 	wg.Wait()
 }
 
-func TestServerStopBySignalNoWait(t *testing.T) {
+func TestServerStopBySignalNoWait(_ *testing.T) {
 	ctx, ctxCancel := signal.NotifyContext(context.Background(), syscall.SIGHUP, syscall.SIGINT)
 	defer ctxCancel()
 	log := logger.NewLogger(logger.INFO, os.Stdout)
@@ -95,7 +95,7 @@ func TestServerStopBySignalNoWait(t *testing.T) {
 	wg.Wait()
 }
 
-func TestServerStopBySignalWithWait(t *testing.T) {
+func TestServerStopBySignalWithWait(_ *testing.T) {
 	ctx, ctxCancel := signal.NotifyContext(context.Background(), syscall.SIGHUP, syscall.SIGINT)
 	defer ctxCancel()
 	log := logger.NewLogger(logger.INFO, os.Stdout)
@@ -125,7 +125,7 @@ func TestServerStopBySignalWithWait(t *testing.T) {
 	wg.Wait()
 }
 
-func TestServerStopByCancelNoWait(t *testing.T) {
+func TestServerStopByCancelNoWait(_ *testing.T) {
 	ctx, ctxCancel := context.WithCancel(context.Background())
 	log := logger.NewLogger(logger.INFO, os.Stdout)
 	middleware.Init(log)
@@ -151,7 +151,7 @@ func TestServerStopByCancelNoWait(t *testing.T) {
 	wg.Wait()
 }
 
-func TestServerStopByCancelWithWait(t *testing.T) {
+func TestServerStopByCancelWithWait(_ *testing.T) {
 	ctx, ctxCancel := context.WithCancel(context.Background())
 	log := logger.NewLogger(logger.INFO, os.Stdout)
 	middleware.Init(log)
@@ -207,7 +207,7 @@ func TestServerCode(t *testing.T) {
 	time.Sleep(3 * time.Second)
 	// Client
 	url := fmt.Sprintf("http://%s:%d", host, port)
-	request, err := http.NewRequest(http.MethodGet, url, strings.NewReader(``))
+	request, err := http.NewRequestWithContext(context.Background(), http.MethodGet, url, strings.NewReader(``))
 	if err != nil {
 		t.Error(err.Error())
 	}

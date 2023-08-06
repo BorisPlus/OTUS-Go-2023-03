@@ -206,7 +206,7 @@ func TestServerAPIVersion(t *testing.T) {
 	} else {
 		fmt.Printf("OK: %s\n", body)
 	}
-	// 
+	//
 	httpServer.Stop()
 	wg.Wait()
 }
