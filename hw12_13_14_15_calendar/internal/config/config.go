@@ -6,6 +6,11 @@ import (
 	logger "hw12_13_14_15_calendar/internal/logger"
 )
 
+type RPCConfig struct {
+	Host string
+	Port uint16
+}
+
 type HTTPConfig struct {
 	Host              string
 	Port              uint16
@@ -26,6 +31,7 @@ type LogConfig struct {
 
 type Config struct {
 	HTTP    HTTPConfig
+	RPC     RPCConfig
 	Storage StorageConfig
 	Log     LogConfig
 }

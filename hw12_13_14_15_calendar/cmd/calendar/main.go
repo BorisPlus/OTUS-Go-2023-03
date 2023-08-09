@@ -6,7 +6,9 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
+
 	// "time"
 
 	"github.com/spf13/pflag"
@@ -15,7 +17,8 @@ import (
 	"hw12_13_14_15_calendar/internal/app"
 	"hw12_13_14_15_calendar/internal/config"
 	"hw12_13_14_15_calendar/internal/logger"
-	internalhttp "hw12_13_14_15_calendar/internal/server/http"
+	http "hw12_13_14_15_calendar/internal/server/http"
+	rpc "hw12_13_14_15_calendar/internal/protobuf/server"
 	middleware "hw12_13_14_15_calendar/internal/server/http/middleware"
 	"hw12_13_14_15_calendar/internal/storage"
 )
@@ -55,7 +58,7 @@ func main() {
 	middleware.Init(mainLogger)
 	storage := storage.NewStorageByType(mainConfig.Storage.Type, mainConfig.Storage.DSN)
 	calendar := app.NewApp(mainLogger, storage)
-	httpServer := internalhttp.NewHTTPServer(
+	httpServer := http.NewHTTPServer(
 		mainConfig.HTTP.Host,
 		mainConfig.HTTP.Port,
 		mainConfig.HTTP.ReadTimeout,
@@ -65,16 +68,28 @@ func main() {
 		mainLogger,
 		calendar,
 	)
+	rpcServer := rpc.Server(
+		mainConfig.RPC.Host,
+		mainConfig.RPC.Port,
+	)
 
 	ctx, stop := signal.NotifyContext(context.Background(),
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGTSTP)
 	defer stop()
+	wg := sync.WaitGroup{}
+	wg.Add(1)
 	go func() {
-		if err := httpServer.Start(ctx); err != nil {
-			mainLogger.Error("failed to start http server: " + err.Error())
-			stop()
+		defer wg.Done()
+		<-ctx.Done()
+		if err := httpServer.Stop(); err != nil {
+			fmt.Println(err)
 		}
 	}()
+
+	if err := httpServer.Start(ctx); err != nil {
+		mainLogger.Error("failed to start http server: " + err.Error())
+		stop()
+	}
 	log.Println("Println Calendar is running...")
 	mainLogger.Info("calendar is running...")
 	<-ctx.Done()

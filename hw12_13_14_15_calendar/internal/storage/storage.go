@@ -6,11 +6,16 @@ import (
 	pgsqldtb "hw12_13_14_15_calendar/internal/storage/pgsqldtb"
 )
 
+var (
+	GOMEMORY_STORAGE = "gomemory"
+	POSTGRES_STORAGE = "pgsqldtb"
+)
+
 func NewStorageByType(storageType string, a ...any) interfaces.Storager {
 	switch storageType {
-	case "gomemory":
+	case GOMEMORY_STORAGE:
 		return gomemory.NewStorage()
-	case "pgsqldtb":
+	case POSTGRES_STORAGE:
 		return pgsqldtb.NewStorage(a[0].(string))
 	default:
 		return gomemory.NewStorage()
