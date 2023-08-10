@@ -1,8 +1,11 @@
 package integration
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 	"os"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -15,7 +18,7 @@ import (
 	storage "hw12_13_14_15_calendar/internal/storage"
 )
 
-func TestLogger(t *testing.T) {
+func TestIntegration(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	var once sync.Once
 	defer once.Do(cancel)
@@ -23,14 +26,15 @@ func TestLogger(t *testing.T) {
 	mainLogger := logger.NewLogger(logger.INFO, os.Stdout)
 	storage := storage.NewStorageByType(storage.GOMEMORY_STORAGE)
 	calendar := app.NewApp(mainLogger, storage)
-	grpcServer := server.RPCServer{App: calendar}
+	grpcServer := server.NewRPCServer(calendar, mainLogger)
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		<-ctx.Done()
-		grpcServer.Stop(ctx)
+		mainLogger.Info("GracefulStop")
+		grpcServer.GracefulStop()
 	}()
 	//
 	wg.Add(1)
@@ -109,7 +113,56 @@ func TestLogger(t *testing.T) {
 		mainLogger.Error(err.Error())
 	}
 	mainLogger.Info("%+v", events)
+	grpcClient.Close()
 	//
-	cancel()
+	once.Do(cancel) // TODO: поискать по коду подобное
+	wg.Wait()
+}
+
+func TestInterceptorLogging(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	var once sync.Once
+	defer once.Do(cancel)
+
+	grpcOutput := &bytes.Buffer{}
+	mainLogger := logger.NewLogger(logger.INFO, grpcOutput)
+
+	storage := storage.NewStorageByType(storage.GOMEMORY_STORAGE)
+	calendar := app.NewApp(mainLogger, storage)
+	grpcServer := server.NewRPCServer(calendar, mainLogger)
+
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		<-ctx.Done()
+		mainLogger.Info("GracefulStop")
+		grpcServer.GracefulStop()
+	}()
+	//
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		mainLogger.Info("server listening at %v", "localhost:5000")
+		grpcServer.Start(ctx, "localhost:5000")
+	}()
+	//
+	grpcClient := client.Client{}
+	grpcClient.Connect("localhost:5000")
+	//
+	pbEvent1 := pb.Event{}
+	pbEvent1.Title = "Title 1"
+	_, err := grpcClient.CreateEvent(ctx, &pbEvent1)
+	if err != nil {
+		mainLogger.Error(err.Error())
+		return
+	}
+	if !strings.Contains(grpcOutput.String(), "/calendar.Application/CreateEvent") {
+		t.Error("Log not contain interceptor data")
+	} else {
+		fmt.Println("It's OK.")
+	}
+	grpcClient.Close()
+	once.Do(cancel)
 	wg.Wait()
 }

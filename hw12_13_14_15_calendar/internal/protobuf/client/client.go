@@ -30,7 +30,7 @@ func (c *Client) Connect(dsn string) error {
 	return nil
 }
 
-func (c *Client) Close(dsn string) error {
+func (c *Client) Close() error {
 	err := c.connection.Close()
 	if err != nil {
 		return err

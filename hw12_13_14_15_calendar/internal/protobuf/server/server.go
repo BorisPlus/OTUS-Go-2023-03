@@ -14,13 +14,21 @@ import (
 
 type RPCServer struct {
 	pb.UnimplementedApplicationServer
+	logger interfaces.Logger
+	app    interfaces.Applicationer
 	server *grpc.Server
-	App    interfaces.Applicationer
+}
+
+func NewRPCServer(app interfaces.Applicationer, logger interfaces.Logger) *RPCServer {
+	self := &RPCServer{}
+	self.app = app
+	self.logger = logger
+	return self
 }
 
 func (s *RPCServer) CreateEvent(ctx context.Context, pbEvent *pb.Event) (*pb.Event, error) {
 	event := common.PBEvent2Event(pbEvent)
-	createdEvent, err := s.App.CreateEvent(event)
+	createdEvent, err := s.app.CreateEvent(event)
 	if err != nil {
 		return nil, err
 	}
@@ -28,7 +36,7 @@ func (s *RPCServer) CreateEvent(ctx context.Context, pbEvent *pb.Event) (*pb.Eve
 }
 
 func (s *RPCServer) ReadEvent(ctx context.Context, ident *pb.Id) (*pb.Event, error) {
-	event, err := s.App.ReadEvent(int(ident.Pk))
+	event, err := s.app.ReadEvent(int(ident.Pk))
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +45,7 @@ func (s *RPCServer) ReadEvent(ctx context.Context, ident *pb.Id) (*pb.Event, err
 
 func (s *RPCServer) UpdateEvent(ctx context.Context, pbEvent *pb.Event) (*pb.Event, error) {
 	event := common.PBEvent2Event(pbEvent)
-	updatedEvent, err := s.App.UpdateEvent(event)
+	updatedEvent, err := s.app.UpdateEvent(event)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +54,7 @@ func (s *RPCServer) UpdateEvent(ctx context.Context, pbEvent *pb.Event) (*pb.Eve
 
 func (s *RPCServer) DeleteEvent(ctx context.Context, pbEvent *pb.Event) (*pb.Event, error) {
 	event := common.PBEvent2Event(pbEvent)
-	deletedEvent, err := s.App.DeleteEvent(event)
+	deletedEvent, err := s.app.DeleteEvent(event)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +62,7 @@ func (s *RPCServer) DeleteEvent(ctx context.Context, pbEvent *pb.Event) (*pb.Eve
 }
 
 func (s *RPCServer) ListEvents(_ *emptypb.Empty, stream pb.Application_ListEventsServer) error {
-	events, err := s.App.ListEvents()
+	events, err := s.app.ListEvents()
 	if err != nil {
 		return err
 	}
@@ -67,20 +75,68 @@ func (s *RPCServer) ListEvents(_ *emptypb.Empty, stream pb.Application_ListEvent
 	return nil
 }
 
+// type UnaryInterceptorType func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error)
+
+func LoggedUnaryInterceptor(logger interfaces.Logger) func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	return func(
+		ctx context.Context,
+		req interface{},
+		info *grpc.UnaryServerInfo,
+		handler grpc.UnaryHandler,
+	) (interface{}, error) {
+		logger.Info("UnaryInterceptor: %q <-- OBJECT{%s}", info.FullMethod, req)
+		return handler(ctx, req)
+	}
+}
+
+// type StreamInterceptorType func(
+// 	srv interface{},
+// 	stream grpc.ServerStream,
+// 	info *grpc.StreamServerInfo,
+// 	handler grpc.StreamHandler,
+// ) error
+
+func LoggedStreamInterceptor(logger interfaces.Logger) func(srv interface{}, stream grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+	return func(
+		srv interface{},
+		stream grpc.ServerStream,
+		info *grpc.StreamServerInfo,
+		handler grpc.StreamHandler,
+	) error {
+		logger.Info("StreamInterceptor: %q %s", info.FullMethod)
+		return handler(srv, stream)
+	}
+}
+
 func (s *RPCServer) Start(ctx context.Context, address string) error {
 	lis, err := net.Listen("tcp", address)
 	if err != nil {
 		return err
 	}
-	gRPCServer := grpc.NewServer()
+	go func() {
+		<-ctx.Done()
+		s.logger.Info("RPCServer - Graceful Shutdown")
+		s.GracefulStop()
+	}()
+	gRPCServer := grpc.NewServer(
+		grpc.UnaryInterceptor(LoggedUnaryInterceptor(s.logger)),
+		grpc.StreamInterceptor(LoggedStreamInterceptor(s.logger)),
+	)
 	pb.RegisterApplicationServer(gRPCServer, s)
 	s.server = gRPCServer
+	s.logger.Info("GRPCServer.Start()")
 	if err := s.server.Serve(lis); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *RPCServer) Stop(ctx context.Context) {
+func (s *RPCServer) Stop() {
+	s.logger.Info("GRPCServer.Stop()")
 	s.server.Stop()
+}
+
+func (s *RPCServer) GracefulStop() {
+	s.logger.Info("GRPCServer.GracefulStop()")
+	s.server.GracefulStop()
 }

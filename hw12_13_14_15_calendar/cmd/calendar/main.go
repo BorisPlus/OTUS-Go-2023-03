@@ -9,18 +9,16 @@ import (
 	"sync"
 	"syscall"
 
-	// "time"
-
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
-	"hw12_13_14_15_calendar/internal/app"
-	"hw12_13_14_15_calendar/internal/config"
-	"hw12_13_14_15_calendar/internal/logger"
-	http "hw12_13_14_15_calendar/internal/server/http"
+	app "hw12_13_14_15_calendar/internal/app"
+	config "hw12_13_14_15_calendar/internal/config"
+	logger "hw12_13_14_15_calendar/internal/logger"
 	rpc "hw12_13_14_15_calendar/internal/protobuf/server"
+	http "hw12_13_14_15_calendar/internal/server/http"
 	middleware "hw12_13_14_15_calendar/internal/server/http/middleware"
-	"hw12_13_14_15_calendar/internal/storage"
+	storage "hw12_13_14_15_calendar/internal/storage"
 )
 
 var configFile string
@@ -68,15 +66,15 @@ func main() {
 		mainLogger,
 		calendar,
 	)
-	rpcServer := rpc.Server(
-		mainConfig.RPC.Host,
-		mainConfig.RPC.Port,
-	)
+	rpcServer := rpc.NewRPCServer(calendar, mainLogger)
 
 	ctx, stop := signal.NotifyContext(context.Background(),
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGTSTP)
 	defer stop()
 	wg := sync.WaitGroup{}
+
+	var once sync.Once
+	// GRASEFULL: httpServer.Stop
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -86,17 +84,38 @@ func main() {
 		}
 	}()
 
-	if err := httpServer.Start(ctx); err != nil {
-		mainLogger.Error("failed to start http server: " + err.Error())
-		stop()
-	}
+	// GRASEFULL: rpcServer.GracefulStop
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		<-ctx.Done()
+		rpcServer.GracefulStop()
+	}()
+
+	// httpServer.Start
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if err := httpServer.Start(ctx); err != nil {
+			mainLogger.Error("failed to start HTTP server: " + err.Error())
+			once.Do(stop)
+		}
+	}()
+
+	// rpcServer.Start
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if err := rpcServer.Start(ctx, fmt.Sprintf("%s:%d", mainConfig.RPC.Host, mainConfig.RPC.Port)); err != nil {
+			mainLogger.Error("failed to start RPC server: " + err.Error())
+			once.Do(stop)
+		}
+	}()
+
 	log.Println("Println Calendar is running...")
 	mainLogger.Info("calendar is running...")
 	<-ctx.Done()
-	stop()
-	log.Println("Println Shutting down gracefully by signal....")
-	mainLogger.Info("Shutting down gracefully by signal.")
-	if err := httpServer.Stop(); err != nil {
-		fmt.Println(err)
-	}
+	// stop()
+	mainLogger.Info("Complex Shutting down was done gracefully by signal.")
+	wg.Wait()
 }

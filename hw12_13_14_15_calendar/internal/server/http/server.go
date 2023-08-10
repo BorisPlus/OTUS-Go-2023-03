@@ -49,11 +49,11 @@ func NewHTTPServer(
 }
 
 func (s *HTTPServer) Start(ctx context.Context) error {
-	s.logger.Info("Server.Start()")
+	s.logger.Info("HTTPServer.Start()")
 	s.context = ctx
 	go func() {
 		<-ctx.Done()
-		s.logger.Info("Graceful Shutdown")
+		s.logger.Info("HTTPServer - Graceful Shutdown")
 		if err := s.Stop(); err != nil {
 			s.logger.Info("Stop error: %v\n", err)
 		}
@@ -66,8 +66,12 @@ func (s *HTTPServer) Start(ctx context.Context) error {
 }
 
 func (s *HTTPServer) Stop() error {
-	s.logger.Info("Server.Stop()")
-	return s.server.Shutdown(s.context)
+	err := s.server.Shutdown(s.context)
+	if err != nil {
+		return err
+	}
+	s.logger.Info("HTTPServer.Stop()")
+	return nil
 }
 
 func handleTeapot(w http.ResponseWriter, _ *http.Request) {

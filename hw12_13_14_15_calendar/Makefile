@@ -16,6 +16,9 @@ build-img:
 		-t $(DOCKER_IMG) \
 		-f build/Dockerfile .
 
+protoc:
+	protoc --go-grpc_out=./internal/protobuf/api --go_out=./internal/protobuf/api ./internal/protobuf/protofiles/calendar.proto
+
 run-img: build-img
 	docker run $(DOCKER_IMG)
 
