@@ -37,4 +37,7 @@ install-lint-deps:
 lint: install-lint-deps
 	golangci-lint run --out-format=github-actions ./...
 
+fixlint:
+	golangci-lint run --out-format=github-actions --fix ./...
+
 .PHONY: build run build-img run-img version test lint
