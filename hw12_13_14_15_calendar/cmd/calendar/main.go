@@ -15,9 +15,9 @@ import (
 	app "hw12_13_14_15_calendar/internal/app"
 	config "hw12_13_14_15_calendar/internal/config"
 	logger "hw12_13_14_15_calendar/internal/logger"
-	rpc "hw12_13_14_15_calendar/internal/protobuf/server"
-	http "hw12_13_14_15_calendar/internal/server/http"
+	httpServer "hw12_13_14_15_calendar/internal/server/http"
 	middleware "hw12_13_14_15_calendar/internal/server/http/middleware"
+	rpcServer "hw12_13_14_15_calendar/internal/server/rpc/server"
 	storage "hw12_13_14_15_calendar/internal/storage"
 )
 
@@ -50,13 +50,12 @@ func main() {
 		log.Fatalf("unable to decode into struct, %v", err)
 	}
 
-	log.Printf("%+v\n", mainConfig.HTTP)
-	log.Println(mainConfig.Log.Level)
+	log.Printf("HTTP Config - %+v\n", mainConfig.HTTP)
 	mainLogger := logger.NewLogger(mainConfig.Log.Level, os.Stdout)
 	middleware.Init(mainLogger)
 	storage := storage.NewStorageByType(mainConfig.Storage.Type, mainConfig.Storage.DSN)
 	calendar := app.NewApp(mainLogger, storage)
-	httpServer := http.NewHTTPServer(
+	httpServer := httpServer.NewHTTPServer(
 		mainConfig.HTTP.Host,
 		mainConfig.HTTP.Port,
 		mainConfig.HTTP.ReadTimeout,
@@ -66,7 +65,7 @@ func main() {
 		mainLogger,
 		calendar,
 	)
-	rpcServer := rpc.NewRPCServer(calendar, mainLogger)
+	rpcServer := rpcServer.NewRPCServer(calendar, mainLogger)
 
 	ctx, stop := signal.NotifyContext(context.Background(),
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGTSTP)
@@ -103,6 +102,7 @@ func main() {
 	}()
 
 	// rpcServer.Start
+	log.Printf("RPC Config - %+v\n", mainConfig.RPC)
 	wg.Add(1)
 	go func() {
 		defer wg.Done()

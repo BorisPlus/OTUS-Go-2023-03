@@ -7,15 +7,15 @@ import (
 )
 
 var (
-	GOMEMORY_STORAGE = "gomemory"
-	POSTGRES_STORAGE = "pgsqldtb"
+	GoMemoryStorage = "gomemory"
+	PostgresStorage = "pgsqldtb"
 )
 
 func NewStorageByType(storageType string, a ...any) interfaces.Storager {
 	switch storageType {
-	case GOMEMORY_STORAGE:
+	case GoMemoryStorage:
 		return gomemory.NewStorage()
-	case POSTGRES_STORAGE:
+	case PostgresStorage:
 		return pgsqldtb.NewStorage(a[0].(string))
 	default:
 		return gomemory.NewStorage()

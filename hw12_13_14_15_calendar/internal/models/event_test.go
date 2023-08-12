@@ -19,8 +19,9 @@ func TestLogger(t *testing.T) {
 	if err := json.Unmarshal([]byte(line), &event); err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println(event.StartAt)
 	if event.Title != "title" {
 		t.Errorf("Could not Unmarshal object")
+	} else {
+		fmt.Println("Unmarshaled. OK.")
 	}
 }

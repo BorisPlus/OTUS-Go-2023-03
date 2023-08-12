@@ -36,6 +36,8 @@ linters-settings:
           - 'hw12_13_14_15_calendar/internal/server/http/regexphandlers'
           - 'hw12_13_14_15_calendar/internal/storage/gomemory'
           - 'hw12_13_14_15_calendar/internal/storage/pgsqldtb'
+          - 'hw12_13_14_15_calendar/internal/server/rpc/api'
+          - 'hw12_13_14_15_calendar/internal/server/rpc/calendarcommon'
       test:
         files:
           - "$test"
@@ -56,8 +58,13 @@ linters-settings:
           - 'hw12_13_14_15_calendar/internal/server/http/api/handlers/events'
           - 'hw12_13_14_15_calendar/internal/server/http/middleware'
           - 'hw12_13_14_15_calendar/internal/server/http/regexphandlers'
+          - 'hw12_13_14_15_calendar/internal/storage'
           - 'hw12_13_14_15_calendar/internal/storage/gomemory'
           - 'hw12_13_14_15_calendar/internal/storage/pgsqldtb'
+          - 'hw12_13_14_15_calendar/internal/server/rpc/api'
+          - 'hw12_13_14_15_calendar/internal/server/rpc/client'
+          - 'hw12_13_14_15_calendar/internal/server/rpc/server'
+          - 'hw12_13_14_15_calendar/internal/server/rpc/calendarcommon'
 
 issues:
   exclude-rules:

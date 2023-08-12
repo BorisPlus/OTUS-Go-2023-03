@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"net/http"
 
 	responses "hw12_13_14_15_calendar/internal/server/http/api/api_response"
@@ -15,7 +16,7 @@ func (h VersionHandler) ServeHTTP(rw http.ResponseWriter, _ *http.Request) {
 	}{
 		Version: "1.0.0",
 	}
-	apiResponseJSON, _ := apiResponse.MarshalJSON()
+	apiResponseJSON, _ := json.Marshal(apiResponse)
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(http.StatusOK)
 	rw.Write(apiResponseJSON)

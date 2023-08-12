@@ -33,7 +33,7 @@ var (
 )
 
 func TestServerAPICreatePKSequence(t *testing.T) {
-	var port uint16 = 9002
+	var port uint16 = 8002
 	var response *http.Response
 	var err error
 	ctx := context.Background()

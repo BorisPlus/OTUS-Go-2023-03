@@ -1,4 +1,4 @@
-package integration
+package integration_test
 
 import (
 	"bytes"
@@ -12,9 +12,9 @@ import (
 
 	app "hw12_13_14_15_calendar/internal/app"
 	logger "hw12_13_14_15_calendar/internal/logger"
-	pb "hw12_13_14_15_calendar/internal/protobuf/api"
-	client "hw12_13_14_15_calendar/internal/protobuf/client"
-	server "hw12_13_14_15_calendar/internal/protobuf/server"
+	pb "hw12_13_14_15_calendar/internal/server/rpc/api"
+	client "hw12_13_14_15_calendar/internal/server/rpc/client"
+	server "hw12_13_14_15_calendar/internal/server/rpc/server"
 	storage "hw12_13_14_15_calendar/internal/storage"
 )
 
@@ -24,7 +24,7 @@ func TestIntegration(t *testing.T) {
 	defer once.Do(cancel)
 
 	mainLogger := logger.NewLogger(logger.INFO, os.Stdout)
-	storage := storage.NewStorageByType(storage.GOMEMORY_STORAGE)
+	storage := storage.NewStorageByType(storage.GoMemoryStorage)
 	calendar := app.NewApp(mainLogger, storage)
 	grpcServer := server.NewRPCServer(calendar, mainLogger)
 
@@ -127,7 +127,7 @@ func TestInterceptorLogging(t *testing.T) {
 	grpcOutput := &bytes.Buffer{}
 	mainLogger := logger.NewLogger(logger.INFO, grpcOutput)
 
-	storage := storage.NewStorageByType(storage.GOMEMORY_STORAGE)
+	storage := storage.NewStorageByType(storage.GoMemoryStorage)
 	calendar := app.NewApp(mainLogger, storage)
 	grpcServer := server.NewRPCServer(calendar, mainLogger)
 

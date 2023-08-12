@@ -18,7 +18,6 @@ type EventsUpdateHandler struct {
 
 func (h EventsUpdateHandler) ServeHTTP(rw http.ResponseWriter, rr *http.Request) {
 	apiMethod := "api.events.update"
-	h.Logger.Info("%+v", rr.Form)
 	if rr.Method != "PATCH" {
 		commonHandlers.InvalidHTTPMethod{APIMethod: apiMethod}.ServeHTTP(rw, rr)
 		return

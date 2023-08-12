@@ -1,16 +1,14 @@
-package calendar_common
+package calendarcommon
 
 import (
-	"google.golang.org/protobuf/types/known/timestamppb"
+	"hw12_13_14_15_calendar/internal/models"
+	calendarrpcapi "hw12_13_14_15_calendar/internal/server/rpc/api"
 
-	models "hw12_13_14_15_calendar/internal/models"
-	pb "hw12_13_14_15_calendar/internal/protobuf/api"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func Event2PBEvent(event *models.Event) *pb.Event {
-	pbEvent := new(pb.Event)
-	// `event::models.Event`` - переменная models.Event-типа, возвращаемого БД через App
-	// Как конвертировать `pbEvent::pb.Event` в `event::models.Event` и обратно?
+func Event2PBEvent(event *models.Event) *calendarrpcapi.Event {
+	pbEvent := new(calendarrpcapi.Event)
 	pbEvent.PK = int32(event.PK)
 	pbEvent.Title = event.Title
 	pbEvent.Description = event.Description
@@ -21,7 +19,7 @@ func Event2PBEvent(event *models.Event) *pb.Event {
 	return pbEvent
 }
 
-func PBEvent2Event(pbEvent *pb.Event) *models.Event {
+func PBEvent2Event(pbEvent *calendarrpcapi.Event) *models.Event {
 	event := new(models.Event)
 	event.PK = int(pbEvent.PK)
 	event.Title = pbEvent.Title

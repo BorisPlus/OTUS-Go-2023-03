@@ -17,7 +17,6 @@ type EventsGetHandler struct {
 
 func (h EventsGetHandler) ServeHTTP(response http.ResponseWriter, request *http.Request) {
 	apiMethod := "api.events.get"
-	h.Logger.Info("%+v", request.Form)
 	if request.Method != "GET" {
 		commonHandlers.InvalidHTTPMethod{APIMethod: apiMethod}.ServeHTTP(response, request)
 		return

@@ -3,7 +3,7 @@ syntax = "proto3";
 
 package calendar;
 
-option go_package = "./;calendar";
+option go_package = "./;calendarrpcapi";
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";

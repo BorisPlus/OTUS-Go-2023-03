@@ -66,11 +66,11 @@ func (s *HTTPServer) Start(ctx context.Context) error {
 }
 
 func (s *HTTPServer) Stop() error {
+	s.logger.Info("HTTPServer.Stop()")
 	err := s.server.Shutdown(s.context)
 	if err != nil {
 		return err
 	}
-	s.logger.Info("HTTPServer.Stop()")
 	return nil
 }
 

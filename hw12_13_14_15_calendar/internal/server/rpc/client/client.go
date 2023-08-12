@@ -2,18 +2,18 @@ package client
 
 import (
 	"context"
+	"errors"
 	"io"
 	"log"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/protobuf/types/known/emptypb"
-
-	pb "hw12_13_14_15_calendar/internal/protobuf/api"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
+	calendarrpcapi "hw12_13_14_15_calendar/internal/server/rpc/api"
 )
 
 type Client struct {
-	grpcClient pb.ApplicationClient
+	grpcClient calendarrpcapi.ApplicationClient
 	connection *grpc.ClientConn
 }
 
@@ -26,7 +26,7 @@ func (c *Client) Connect(dsn string) error {
 		return err
 	}
 	c.connection = connection
-	c.grpcClient = pb.NewApplicationClient(c.connection)
+	c.grpcClient = calendarrpcapi.NewApplicationClient(c.connection)
 	return nil
 }
 
@@ -38,32 +38,32 @@ func (c *Client) Close() error {
 	return nil
 }
 
-func (c *Client) CreateEvent(ctx context.Context, event *pb.Event) (*pb.Event, error) {
+func (c *Client) CreateEvent(ctx context.Context, event *calendarrpcapi.Event) (*calendarrpcapi.Event, error) {
 	return c.grpcClient.CreateEvent(ctx, event, localOpts...)
 }
 
-func (c *Client) ReadEvent(ctx context.Context, event *pb.Id) (*pb.Event, error) {
+func (c *Client) ReadEvent(ctx context.Context, event *calendarrpcapi.Id) (*calendarrpcapi.Event, error) {
 	return c.grpcClient.ReadEvent(ctx, event, localOpts...)
 }
 
-func (c *Client) UpdateEvent(ctx context.Context, event *pb.Event) (*pb.Event, error) {
+func (c *Client) UpdateEvent(ctx context.Context, event *calendarrpcapi.Event) (*calendarrpcapi.Event, error) {
 	return c.grpcClient.UpdateEvent(ctx, event, localOpts...)
 }
 
-func (c *Client) DeleteEvent(ctx context.Context, event *pb.Event, opts ...grpc.CallOption) (*pb.Event, error) {
+func (c *Client) DeleteEvent(ctx context.Context, event *calendarrpcapi.Event) (*calendarrpcapi.Event, error) {
 	return c.grpcClient.DeleteEvent(ctx, event, localOpts...)
 }
 
-func (c *Client) ListEvents(ctx context.Context) ([]*pb.Event, error) {
+func (c *Client) ListEvents(ctx context.Context) ([]*calendarrpcapi.Event, error) {
 	events, err := c.grpcClient.ListEvents(ctx, &emptypb.Empty{}, localOpts...)
 	if err != nil {
 		return nil, err
 	}
-	pbEvents := make([]*pb.Event, 0)
+	pbEvents := make([]*calendarrpcapi.Event, 0)
 	for {
 		pbEvent, err := events.Recv()
 		// err := events.RecvMsg(&pbEvent)
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		if err != nil {
