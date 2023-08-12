@@ -1,23 +1,5 @@
 # Дз 13
 
-
-## Тестирование
-
-```bash
-go test -v ./internal/models/.
-=== RUN   TestLogger
-Unmarshaled. OK.
---- PASS: TestLogger (0.00s)
-PASS
-ok      hw12_13_14_15_calendar/internal/models  0.008s
-
-
-
-
-```
-
-## Из задач ДЗ
-
 ## HTTP API
 
 Для HTTP API необходимо:
@@ -69,47 +51,39 @@ ok      hw12_13_14_15_calendar/internal/models  0.008s
 * тестирование сервера [server_test.go](internal/server/http/server_test.go)
 
 ```bash
-go test -v ./internal/server/http/server.go ./internal/server/http/server_test.go 
+go test -v ./internal/server/http/server.go ./internal/server/http/server_test.go
 
 === RUN   TestServerStopNotStarted
-INFO [2023-08-11 21:41:28] HTTPServer.Stop()
+INFO [2023-08-12 14:07:20] HTTPServer.Stop()
 --- PASS: TestServerStopNotStarted (0.00s)
 
 === RUN   TestServerStopNormally
-INFO [2023-08-11 21:41:28] HTTPServer.Start()
-INFO [2023-08-11 21:41:31] HTTPServer.Stop()
+INFO [2023-08-12 14:07:20] HTTPServer.Start()
+INFO [2023-08-12 14:07:23] HTTPServer.Stop()
 --- PASS: TestServerStopNormally (3.00s)
 
 === RUN   TestServerStopBySignalNoWait
-INFO [2023-08-11 21:41:31] HTTPServer.Start()
-INFO [2023-08-11 21:41:31] HTTPServer - Graceful Shutdown
-INFO [2023-08-11 21:41:31] HTTPServer.Stop()
+INFO [2023-08-12 14:07:23] HTTPServer.Start()
+INFO [2023-08-12 14:07:23] HTTPServer.Stop()
 --- PASS: TestServerStopBySignalNoWait (0.00s)
 
 === RUN   TestServerStopBySignalWithWait
-INFO [2023-08-11 21:41:31] HTTPServer.Start()
-INFO [2023-08-11 21:41:34] HTTPServer - Graceful Shutdown
-INFO [2023-08-11 21:41:34] HTTPServer.Stop()
+INFO [2023-08-12 14:07:23] HTTPServer.Start()
+INFO [2023-08-12 14:07:26] HTTPServer.Stop()
 --- PASS: TestServerStopBySignalWithWait (3.00s)
 
-=== RUN   TestServerStopByCancelNoWait
-INFO [2023-08-11 21:41:34] HTTPServer.Start()
-INFO [2023-08-11 21:41:34] HTTPServer - Graceful Shutdown
-INFO [2023-08-11 21:41:34] HTTPServer.Stop()
---- PASS: TestServerStopByCancelNoWait (0.00s)
-
-=== RUN   TestServerStopByCancelWithWait
-INFO [2023-08-11 21:41:34] HTTPServer.Start()
-INFO [2023-08-11 21:41:37] HTTPServer - Graceful Shutdown
-INFO [2023-08-11 21:41:37] HTTPServer.Stop()
---- PASS: TestServerStopByCancelWithWait (3.00s)
+=== RUN   TestServerStopByCancel
+INFO [2023-08-12 14:07:26] HTTPServer.Start()
+INFO [2023-08-12 14:07:29] HTTPServer.Stop()
+--- PASS: TestServerStopByCancel (3.00s)
 
 === RUN   TestServerCode
-INFO [2023-08-11 21:41:40] {StatusCode:418 UserAgent:Go-http-client/1.1 ClientIPAddress:127.0.0.1:47808 HTTPMethod:GET HTTPVersion:HTTP/1.1 URLPath:/ StartAt:2023-08-12 00:41:40.295600571 +0300 MSK m=+12.020231410 Latency:4.7µs}
+INFO [2023-08-12 14:07:32] {StatusCode:418 UserAgent:Go-http-client/1.1 ClientIPAddress:127.0.0.1:41000 HTTPMethod:GET HTTPVersion:HTTP/1.1 URLPath:/ StartAt:2023-08-12 17:07:32.820781484 +0300 MSK m=+12.019219372 Latency:8.25µs}
 OK. StatusCode '418'
 --- PASS: TestServerCode (3.01s)
+
 PASS
-ok      command-line-arguments  12.027s
+ok      command-line-arguments  12.033s
 ```
 
 * тестирование RESTful API ветки сервера [server_api_test.go](internal/server/http/server_api_test.go)
@@ -158,7 +132,7 @@ ok      command-line-arguments  0.024s
 * Тестирование имплементаций [internal/server/rpc/client/client.go](internal/server/rpc/integration/integration_test.go):
 
 ```bash
-go test -v ./internal/server/rpc/integration_test/integration_test.go 
+go test -v ./internal/server/rpc/integration/integration_test.go 
 
 === RUN   TestIntegration
 INFO [2023-08-12 08:55:18] server listening at localhost:5000
@@ -194,23 +168,18 @@ ok      command-line-arguments  5.053s
 
 ```bash
 go run ./cmd/calendar/ --config ./configs/config.yaml 
-2023/08/12 12:12:26 HTTP Config - {Host:localhost Port:8080 ReadTimeout:5s ReadHeaderTimeout:5s WriteTimeout:5s MaxHeaderBytes:1048576}
-2023/08/12 12:12:26 RPC Config - {Host:localhost Port:5000}
-2023/08/12 12:12:26 Println Calendar is running...
-INFO [2023-08-12 09:12:26] calendar is running...
-INFO [2023-08-12 09:12:26] HTTPServer.Start()
-INFO [2023-08-12 09:12:26] GRPCServer.Start()
-^C
-INFO [2023-08-12 09:12:37] GRPCServer.GracefulStop()
-INFO [2023-08-12 09:12:37] RPCServer - Graceful Shutdown
-INFO [2023-08-12 09:12:37] GRPCServer.GracefulStop()
-INFO [2023-08-12 09:12:37] HTTPServer.Stop()
-INFO [2023-08-12 09:12:37] HTTPServer - Graceful Shutdown
-INFO [2023-08-12 09:12:37] HTTPServer.Stop()
-INFO [2023-08-12 09:12:37] Complex Shutting down was done gracefully by signal.
-```
+2023/08/12 17:10:05 HTTP Config - {Host:localhost Port:8080 ReadTimeout:5s ReadHeaderTimeout:5s WriteTimeout:5s MaxHeaderBytes:1048576}
+2023/08/12 17:10:05 RPC Config - {Host:localhost Port:5000}
+2023/08/12 17:10:05 Println Calendar is running...
 
-> Замечание: Видно, что методы `HTTPServer.Stop()` и `GRPCServer.GracefulStop()` запускаются дважды, что связано с особенностями автоматической остановки процессов при завершении контекста. Это можно победить, внеся дополнительную логику с `sync.Once` внутри объектов имплементаций, но в целях наглядности для данного конечного решения данная особенность оставлена.
+INFO [2023-08-12 14:10:05] calendar is running...
+INFO [2023-08-12 14:10:05] HTTPServer.Start()
+INFO [2023-08-12 14:10:05] GRPCServer.Start()
+^C
+INFO [2023-08-12 14:10:08] Complex Shutting down was done gracefully by signal.
+INFO [2023-08-12 14:10:08] HTTPServer.Stop()
+INFO [2023-08-12 14:10:08] GRPCServer.GracefulStop()
+```
 
 ## Заметки
 
