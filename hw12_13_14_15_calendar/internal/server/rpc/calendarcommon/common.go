@@ -1,10 +1,9 @@
 package calendarcommon
 
 import (
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"hw12_13_14_15_calendar/internal/models"
 	calendarrpcapi "hw12_13_14_15_calendar/internal/server/rpc/api"
-
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func Event2PBEvent(event *models.Event) *calendarrpcapi.Event {
