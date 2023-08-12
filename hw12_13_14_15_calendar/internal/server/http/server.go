@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	// "sync"
+	// "sync".
 	"time"
 
 	interfaces "hw12_13_14_15_calendar/internal/interfaces"
@@ -15,9 +15,9 @@ import (
 )
 
 type HTTPServer struct {
-	server  *http.Server
-	logger  interfaces.Logger
-	app     interfaces.Applicationer
+	server *http.Server
+	logger interfaces.Logger
+	app    interfaces.Applicationer
 	// context context.Context
 }
 

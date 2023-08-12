@@ -53,7 +53,7 @@ func TestServerStopNormally(t *testing.T) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		time.Sleep(3*time.Second)
+		time.Sleep(3 * time.Second)
 		err := httpServer.Stop(context.Background()) // STOP
 		if err != nil {
 			t.Errorf(err.Error())

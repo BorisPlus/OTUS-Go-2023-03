@@ -57,8 +57,8 @@ func TestServerAPICreatePKSequence(t *testing.T) {
 		defer wg.Done()
 		httpServer.Start()
 	}()
-	time.Sleep(2*time.Second)
-	// 
+	time.Sleep(2 * time.Second)
+	//
 	client := &http.Client{}
 	// CREATE
 	requestOfCreate := fmt.Sprintf("http://%s:%d/api/events/create", host, port)
