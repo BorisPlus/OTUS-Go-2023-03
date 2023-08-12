@@ -447,3 +447,7 @@ curl -v -H "Content-Type: application/json" "http://localhost:8080/api/events/"
 > ```bash
 > export PATH="$PATH:$(go env GOPATH)/bin"
 > ```
+
+### Иное
+
+Важны названия веток для автотестов.
