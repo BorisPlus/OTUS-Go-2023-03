@@ -451,3 +451,5 @@ curl -v -H "Content-Type: application/json" "http://localhost:8080/api/events/"
 ### Иное
 
 Важны названия веток для автотестов.
+
+Конфлик линтеров.
