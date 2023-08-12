@@ -124,16 +124,11 @@ func LoggedStreamInterceptor(logger interfaces.Logger) func(
 	}
 }
 
-func (s *RPCServer) Start(ctx context.Context, address string) error {
+func (s *RPCServer) Start(address string) error {
 	lis, err := net.Listen("tcp", address)
 	if err != nil {
 		return err
 	}
-	go func() {
-		<-ctx.Done()
-		s.logger.Info("RPCServer - Graceful Shutdown")
-		s.GracefulStop()
-	}()
 	gRPCServer := grpc.NewServer(
 		grpc.UnaryInterceptor(LoggedUnaryInterceptor(s.logger)),
 		grpc.StreamInterceptor(LoggedStreamInterceptor(s.logger)),

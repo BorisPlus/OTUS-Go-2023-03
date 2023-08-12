@@ -55,8 +55,10 @@ func TestServerAPICreatePKSequence(t *testing.T) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		httpServer.Start(ctx)
+		httpServer.Start()
 	}()
+	time.Sleep(2*time.Second)
+	// 
 	client := &http.Client{}
 	// CREATE
 	requestOfCreate := fmt.Sprintf("http://%s:%d/api/events/create", host, port)
@@ -149,7 +151,7 @@ func TestServerAPICreatePKSequence(t *testing.T) {
 		fmt.Printf("OK: get event PK %d\n", apiResponse.Data.Item.PK)
 	}
 	//
-	httpServer.Stop()
+	httpServer.Stop(context.Background())
 	wg.Wait()
 }
 
@@ -170,12 +172,11 @@ func TestServerAPIVersion(t *testing.T) {
 		log,
 		calendarApp,
 	)
-	ctx := context.Background()
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		if err := httpServer.Start(ctx); err != nil {
+		if err := httpServer.Start(); err != nil {
 			log.Error("http server goroutine: " + err.Error())
 		}
 	}()
@@ -207,6 +208,6 @@ func TestServerAPIVersion(t *testing.T) {
 		fmt.Printf("OK: %s\n", body)
 	}
 	//
-	httpServer.Stop()
+	httpServer.Stop(context.Background())
 	wg.Wait()
 }

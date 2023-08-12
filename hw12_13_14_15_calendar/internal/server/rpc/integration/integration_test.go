@@ -41,7 +41,7 @@ func TestIntegration(t *testing.T) {
 	go func() {
 		defer wg.Done()
 		mainLogger.Info("server listening at %v", "localhost:5000")
-		grpcServer.Start(ctx, "localhost:5000")
+		grpcServer.Start("localhost:5000")
 	}()
 	//
 	time.Sleep(5 * time.Second)
@@ -144,7 +144,7 @@ func TestInterceptorLogging(t *testing.T) {
 	go func() {
 		defer wg.Done()
 		mainLogger.Info("server listening at %v", "localhost:5000")
-		grpcServer.Start(ctx, "localhost:5000")
+		grpcServer.Start("localhost:5000")
 	}()
 	//
 	grpcClient := client.Client{}

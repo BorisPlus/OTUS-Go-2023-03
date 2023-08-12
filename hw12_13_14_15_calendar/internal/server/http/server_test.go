@@ -30,14 +30,13 @@ func TestServerStopNotStarted(t *testing.T) {
 		log,
 		nil,
 	)
-	err := httpServer.Stop()
+	err := httpServer.Stop(context.Background())
 	if err != nil {
 		t.Errorf(err.Error())
 	}
 }
 
 func TestServerStopNormally(t *testing.T) {
-	ctx := context.Background()
 	log := logger.NewLogger(logger.INFO, os.Stdout)
 	middleware.Init(log)
 	httpServer := NewHTTPServer(
@@ -54,14 +53,14 @@ func TestServerStopNormally(t *testing.T) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		if err := httpServer.Start(ctx); err != nil { // START
-			fmt.Println("http server goroutine: " + err.Error())
+		time.Sleep(3*time.Second)
+		err := httpServer.Stop(context.Background()) // STOP
+		if err != nil {
+			t.Errorf(err.Error())
 		}
 	}()
-	time.Sleep(3 * time.Second)
-	err := httpServer.Stop() // STOP
-	if err != nil {
-		t.Errorf(err.Error())
+	if err := httpServer.Start(); err != nil { // START
+		fmt.Println("http server goroutine: " + err.Error())
 	}
 	wg.Wait()
 }
@@ -85,8 +84,16 @@ func TestServerStopBySignalNoWait(_ *testing.T) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		if err := httpServer.Start(ctx); err != nil { // START
-			fmt.Println("http server goroutine: " + err.Error())
+		if err := httpServer.Start(); err != nil { // START
+			fmt.Println("http server Start goroutine: " + err.Error())
+		}
+	}()
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		<-ctx.Done()
+		if err := httpServer.Stop(ctx); err != nil { // START
+			fmt.Println("http server Stop goroutine: " + err.Error())
 		}
 	}()
 	pid, _, _ := syscall.Syscall(syscall.SYS_GETPID, 0, 0, 0)
@@ -114,8 +121,16 @@ func TestServerStopBySignalWithWait(_ *testing.T) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		if err := httpServer.Start(ctx); err != nil { // START
-			fmt.Println("http server goroutine: " + err.Error())
+		if err := httpServer.Start(); err != nil { // START
+			fmt.Println("http server Start goroutine: " + err.Error())
+		}
+	}()
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		<-ctx.Done()
+		if err := httpServer.Stop(ctx); err != nil { // START
+			fmt.Println("http server Stop goroutine: " + err.Error())
 		}
 	}()
 	time.Sleep(3 * time.Second)
@@ -125,7 +140,7 @@ func TestServerStopBySignalWithWait(_ *testing.T) {
 	wg.Wait()
 }
 
-func TestServerStopByCancelNoWait(_ *testing.T) {
+func TestServerStopByCancel(_ *testing.T) {
 	ctx, ctxCancel := context.WithCancel(context.Background())
 	log := logger.NewLogger(logger.INFO, os.Stdout)
 	middleware.Init(log)
@@ -143,34 +158,16 @@ func TestServerStopByCancelNoWait(_ *testing.T) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		if err := httpServer.Start(ctx); err != nil { // START
-			fmt.Println("http server goroutine: " + err.Error())
+		if err := httpServer.Start(); err != nil { // START
+			fmt.Println("http server Start goroutine: " + err.Error())
 		}
 	}()
-	ctxCancel() // STOP
-	wg.Wait()
-}
-
-func TestServerStopByCancelWithWait(_ *testing.T) {
-	ctx, ctxCancel := context.WithCancel(context.Background())
-	log := logger.NewLogger(logger.INFO, os.Stdout)
-	middleware.Init(log)
-	httpServer := NewHTTPServer(
-		"localhost",
-		8000,
-		10*time.Second,
-		10*time.Second,
-		10*time.Second,
-		1<<20,
-		log,
-		nil,
-	)
-	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		if err := httpServer.Start(ctx); err != nil { // START
-			fmt.Println("http server goroutine: " + err.Error())
+		<-ctx.Done()
+		if err := httpServer.Stop(ctx); err != nil { // START
+			fmt.Println("http server Stop goroutine: " + err.Error())
 		}
 	}()
 	time.Sleep(3 * time.Second)
@@ -199,7 +196,7 @@ func TestServerCode(t *testing.T) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		if err := httpServer.Start(context.Background()); err != nil {
+		if err := httpServer.Start(); err != nil {
 			fmt.Println("http server goroutine: " + err.Error())
 		}
 	}()
@@ -222,7 +219,7 @@ func TestServerCode(t *testing.T) {
 	} else {
 		fmt.Printf("OK. StatusCode '418'\n")
 	}
-	httpServer.Stop()
+	httpServer.Stop(context.Background())
 	//
 	wg.Wait()
 }
