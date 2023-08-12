@@ -78,7 +78,7 @@ func main() {
 	go func() {
 		defer wg.Done()
 		<-ctx.Done()
-		if err := httpServer.Stop(); err != nil {
+		if err := httpServer.Stop(ctx); err != nil {
 			fmt.Println(err)
 		}
 	}()
@@ -95,7 +95,7 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		if err := httpServer.Start(ctx); err != nil {
+		if err := httpServer.Start(); err != nil {
 			mainLogger.Error("failed to start HTTP server: " + err.Error())
 			once.Do(stop)
 		}
@@ -106,7 +106,7 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		if err := rpcServer.Start(ctx, fmt.Sprintf("%s:%d", mainConfig.RPC.Host, mainConfig.RPC.Port)); err != nil {
+		if err := rpcServer.Start(fmt.Sprintf("%s:%d", mainConfig.RPC.Host, mainConfig.RPC.Port)); err != nil {
 			mainLogger.Error("failed to start RPC server: " + err.Error())
 			once.Do(stop)
 		}
