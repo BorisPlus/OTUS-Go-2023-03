@@ -21,6 +21,7 @@ func Event2PBEvent(event *models.Event) *calendarrpcapi.Event {
 	pbEvent.Duration = int32(event.Duration)
 	pbEvent.Owner = event.Owner
 	pbEvent.NotifyEarly = int32(event.NotifyEarly)
+	pbEvent.Sheduled = event.Sheduled
 	return pbEvent
 }
 
@@ -33,6 +34,7 @@ func PBEvent2Event(pbEvent *calendarrpcapi.Event) *models.Event {
 	event.Duration = int(pbEvent.Duration)
 	event.Owner = pbEvent.Owner
 	event.NotifyEarly = int(pbEvent.NotifyEarly)
+	event.Sheduled = pbEvent.Sheduled
 	return event
 }
 
@@ -91,6 +93,23 @@ func (s *RPCServer) DeleteEvent(ctx context.Context, pbEvent *calendarrpcapi.Eve
 
 func (s *RPCServer) ListEvents(_ *emptypb.Empty, stream calendarrpcapi.Application_ListEventsServer) error {
 	events, err := s.app.ListEvents()
+	if err != nil {
+		return err
+	}
+	for _, event := range events {
+		tmp := event
+		pbEvent := Event2PBEvent(&tmp)
+		if err := stream.Send(pbEvent); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *RPCServer) ListNotSheduledEvents(_ *emptypb.Empty,
+	stream calendarrpcapi.Application_ListNotSheduledEventsServer,
+) error {
+	events, err := s.app.ListNotSheduledEvents()
 	if err != nil {
 		return err
 	}

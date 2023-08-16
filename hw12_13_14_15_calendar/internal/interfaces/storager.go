@@ -12,4 +12,5 @@ type Storager interface {
 	UpdateEvent(*models.Event) (*models.Event, error)
 	DeleteEvent(*models.Event) (*models.Event, error)
 	ListEvents() ([]models.Event, error)
+	ListNotSheduledEvents() ([]models.Event, error)
 }

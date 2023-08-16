@@ -28,6 +28,7 @@ type ApplicationClient interface {
 	UpdateEvent(ctx context.Context, in *Event, opts ...grpc.CallOption) (*Event, error)
 	DeleteEvent(ctx context.Context, in *Event, opts ...grpc.CallOption) (*Event, error)
 	ListEvents(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (Application_ListEventsClient, error)
+	ListNotSheduledEvents(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (Application_ListNotSheduledEventsClient, error)
 }
 
 type applicationClient struct {
@@ -106,6 +107,38 @@ func (x *applicationListEventsClient) Recv() (*Event, error) {
 	return m, nil
 }
 
+func (c *applicationClient) ListNotSheduledEvents(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (Application_ListNotSheduledEventsClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Application_ServiceDesc.Streams[1], "/calendar.Application/ListNotSheduledEvents", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &applicationListNotSheduledEventsClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type Application_ListNotSheduledEventsClient interface {
+	Recv() (*Event, error)
+	grpc.ClientStream
+}
+
+type applicationListNotSheduledEventsClient struct {
+	grpc.ClientStream
+}
+
+func (x *applicationListNotSheduledEventsClient) Recv() (*Event, error) {
+	m := new(Event)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // ApplicationServer is the server API for Application service.
 // All implementations must embed UnimplementedApplicationServer
 // for forward compatibility
@@ -115,6 +148,7 @@ type ApplicationServer interface {
 	UpdateEvent(context.Context, *Event) (*Event, error)
 	DeleteEvent(context.Context, *Event) (*Event, error)
 	ListEvents(*emptypb.Empty, Application_ListEventsServer) error
+	ListNotSheduledEvents(*emptypb.Empty, Application_ListNotSheduledEventsServer) error
 	mustEmbedUnimplementedApplicationServer()
 }
 
@@ -136,6 +170,9 @@ func (UnimplementedApplicationServer) DeleteEvent(context.Context, *Event) (*Eve
 }
 func (UnimplementedApplicationServer) ListEvents(*emptypb.Empty, Application_ListEventsServer) error {
 	return status.Errorf(codes.Unimplemented, "method ListEvents not implemented")
+}
+func (UnimplementedApplicationServer) ListNotSheduledEvents(*emptypb.Empty, Application_ListNotSheduledEventsServer) error {
+	return status.Errorf(codes.Unimplemented, "method ListNotSheduledEvents not implemented")
 }
 func (UnimplementedApplicationServer) mustEmbedUnimplementedApplicationServer() {}
 
@@ -243,6 +280,27 @@ func (x *applicationListEventsServer) Send(m *Event) error {
 	return x.ServerStream.SendMsg(m)
 }
 
+func _Application_ListNotSheduledEvents_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(emptypb.Empty)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(ApplicationServer).ListNotSheduledEvents(m, &applicationListNotSheduledEventsServer{stream})
+}
+
+type Application_ListNotSheduledEventsServer interface {
+	Send(*Event) error
+	grpc.ServerStream
+}
+
+type applicationListNotSheduledEventsServer struct {
+	grpc.ServerStream
+}
+
+func (x *applicationListNotSheduledEventsServer) Send(m *Event) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 // Application_ServiceDesc is the grpc.ServiceDesc for Application service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -271,6 +329,11 @@ var Application_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "ListEvents",
 			Handler:       _Application_ListEvents_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "ListNotSheduledEvents",
+			Handler:       _Application_ListNotSheduledEvents_Handler,
 			ServerStreams: true,
 		},
 	},

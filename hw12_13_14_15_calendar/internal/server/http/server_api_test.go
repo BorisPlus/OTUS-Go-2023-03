@@ -27,6 +27,12 @@ type APIResponseTest struct {
 	Data      struct{ Item models.Event }
 }
 
+type APIMultyResponseTest struct {
+	APIMethod string
+	Error     string
+	Data      struct{ Items []models.Event }
+}
+
 var (
 	apiResponse APIResponseTest
 	host        = "localhost"
@@ -149,6 +155,33 @@ func TestServerAPICreatePKSequence(t *testing.T) {
 		t.Errorf("FAIL: get event PK %d, expected 3\n", apiResponse.Data.Item.PK)
 	} else {
 		fmt.Printf("OK: get event PK %d\n", apiResponse.Data.Item.PK)
+	}
+	//
+	var apiMultyResponse APIMultyResponseTest
+	payloadOfListNotSheduled := strings.NewReader(``)
+	requestOfListNotSheduled := fmt.Sprintf("http://%s:%d/api/events/notsheduled", host, port)
+	request, err = http.NewRequestWithContext(ctx, "GET", requestOfListNotSheduled, payloadOfListNotSheduled)
+	if err != nil {
+		t.Errorf("FAIL: error prepare http request: %s\n", requestOfListNotSheduled)
+		return
+	}
+	request.Header.Set("Content-Type", "application/json")
+	response, err = client.Do(request)
+	if err != nil {
+		t.Errorf("FAIL: error decode event http request: %s\n", err)
+		return
+	}
+	err = json.NewDecoder(response.Body).Decode(&apiMultyResponse)
+	if err != nil {
+		t.Errorf("FAIL: error decode event http request: %s\n", err)
+		return
+	}
+	response.Body.Close()
+	count := len(apiMultyResponse.Data.Items)
+	if count != 2 {
+		t.Errorf("FAIL: get event %d, expected 2\n", count)
+	} else {
+		fmt.Printf("OK: get event PK %d\n", count)
 	}
 	//
 	httpServer.Stop(context.Background())

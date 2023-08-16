@@ -73,3 +73,22 @@ func (c *Client) ListEvents(ctx context.Context) ([]*calendarrpcapi.Event, error
 	}
 	return pbEvents, nil
 }
+
+func (c *Client) ListNotSheduledEvents(ctx context.Context) ([]*calendarrpcapi.Event, error) {
+	events, err := c.grpcClient.ListNotSheduledEvents(ctx, &emptypb.Empty{}, localOpts...)
+	if err != nil {
+		return nil, err
+	}
+	pbEvents := make([]*calendarrpcapi.Event, 0)
+	for {
+		pbEvent, err := events.Recv()
+		if errors.Is(err, io.EOF) {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		pbEvents = append(pbEvents, pbEvent)
+	}
+	return pbEvents, nil
+}

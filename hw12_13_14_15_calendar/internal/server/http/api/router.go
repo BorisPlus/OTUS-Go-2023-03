@@ -37,9 +37,14 @@ func Handlers(logger interfaces.Logger, app interfaces.Applicationer) regexped.R
 			middleware.Instance().Listen(apiEvents.EventsListHandler{Logger: logger, App: app}),
 		),
 		*regexped.NewRegexpHandler(
+			`/api/events/notsheduled`,
+			none,
+			middleware.Instance().Listen(apiEvents.EventsListNotSheduledHandler{Logger: logger, App: app}),
+		),
+		*regexped.NewRegexpHandler(
 			`/api/events/create`,
 			none,
-			apiEvents.EventsCreateHandler{Logger: logger, App: app},
+			middleware.Instance().Listen(apiEvents.EventsCreateHandler{Logger: logger, App: app}),
 		),
 		*regexped.NewRegexpHandler(
 			`/api/events/{numeric}`,

@@ -1,0 +1,32 @@
+rabbitmq: 
+  dsn: "amqp://guest:guest@localhost:5672/"
+  exchanges: [
+    { 
+      name: exch_events, 
+      bindings : [
+        { 
+          BindQueue: q_unspecified, 
+          BindKey:  
+        },
+        { 
+          BindQueue: q_events_for_notify, 
+          BindKey: notify 
+        },
+        { 
+          BindQueue: q_events_archive, 
+          BindKey: archive 
+        },
+        { 
+          BindQueue: q_events_archive, 
+          BindKey: send 
+        },
+        { 
+          BindQueue: q_events_send, 
+          BindKey: send 
+        },
+      ]
+    },
+  ]
+log:
+  level: INFO
+ 

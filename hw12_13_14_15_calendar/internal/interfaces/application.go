@@ -10,4 +10,5 @@ type Applicationer interface {
 	UpdateEvent(event *models.Event) (*models.Event, error)
 	DeleteEvent(event *models.Event) (*models.Event, error)
 	ListEvents() ([]models.Event, error)
+	ListNotSheduledEvents() ([]models.Event, error)
 }

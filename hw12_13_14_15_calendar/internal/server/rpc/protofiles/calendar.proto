@@ -8,30 +8,28 @@ option go_package = "./;calendarrpcapi";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
 
-// cd /hw12_13_14_15_calendar/internal/protobuf
-// protoc --go-grpc_out=./api --go_out=./api ./protofiles/calendar.proto
-
-// The service definition.
 service Application {
   rpc CreateEvent (Event) returns (Event) {}
   rpc ReadEvent   (Id)    returns (Event) {}
   rpc UpdateEvent (Event) returns (Event) {}
   rpc DeleteEvent (Event) returns (Event) {}
   rpc ListEvents  (google.protobuf.Empty)  returns (stream Event) {}
+  rpc ListNotSheduledEvents  (google.protobuf.Empty)  returns (stream Event) {}
 }
 
 message Nill {
 }
 
 message Event {
-  int32  p_k           = 1;
+  int32  p_k          = 1;
   string title        = 2;
-  google.protobuf.Timestamp  start_at      = 3;
+  google.protobuf.Timestamp start_at = 3;
   int32  duration     = 4;
   string description  = 5;
   string owner        = 6;
-  int32 notify_early  = 7;
-}
+  int32  notify_early = 7;
+  bool  sheduled      = 8;
+} 
 
 message Error {
   string error = 1;
@@ -40,7 +38,3 @@ message Error {
 message Id {
   int32 pk = 1;
 }
-
-// message EventsPB {
-//   repeated Event items = 1;
-// }

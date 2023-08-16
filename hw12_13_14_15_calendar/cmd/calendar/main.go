@@ -44,7 +44,7 @@ func main() {
 		return
 	}
 	viper.ReadConfig(file)
-	mainConfig := config.NewConfig()
+	mainConfig := config.NewCalendarConfig()
 	err = viper.Unmarshal(mainConfig)
 	if err != nil {
 		log.Fatalf("unable to decode into struct, %v", err)

@@ -113,6 +113,13 @@ func TestIntegration(t *testing.T) {
 		mainLogger.Error(err.Error())
 	}
 	mainLogger.Info("%+v", events)
+	//
+	events, err = grpcClient.ListNotSheduledEvents(ctx)
+	if err != nil {
+		mainLogger.Error(err.Error())
+	}
+	mainLogger.Info("%+v", events)
+	//
 	grpcClient.Close()
 	//
 	once.Do(cancel) // TODO: поискать по коду подобное

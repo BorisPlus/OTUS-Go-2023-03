@@ -7,6 +7,11 @@ import (
 	responses "hw12_13_14_15_calendar/internal/server/http/api/api_response"
 )
 
+var (
+	GET  = "GET"
+	POST = "POST"
+)
+
 type InvalidHTTPMethod struct {
 	APIMethod string
 }

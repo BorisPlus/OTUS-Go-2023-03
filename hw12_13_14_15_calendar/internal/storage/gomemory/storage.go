@@ -95,3 +95,19 @@ func (s *Storage) ListEvents() ([]models.Event, error) {
 	}
 	return events, nil
 }
+
+func (s *Storage) ListNotSheduledEvents() ([]models.Event, error) {
+	if s.data == nil {
+		return nil, fmt.Errorf("may by is need to reconnect")
+	}
+	events := []models.Event{}
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	for _, event := range s.data {
+		if event.Sheduled {
+			continue
+		}
+		events = append(events, *event)
+	}
+	return events, nil
+}

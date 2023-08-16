@@ -19,7 +19,7 @@ type EventsCreateHandler struct {
 
 func (h EventsCreateHandler) ServeHTTP(rw http.ResponseWriter, rr *http.Request) {
 	apiMethod := "api.events.create"
-	if rr.Method != "POST" {
+	if rr.Method != commonHandlers.POST {
 		commonHandlers.InvalidHTTPMethod{APIMethod: apiMethod}.ServeHTTP(rw, rr)
 		return
 	}

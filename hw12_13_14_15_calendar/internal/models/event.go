@@ -12,4 +12,5 @@ type Event struct {
 	Description string    `json:"description"`
 	Owner       string    `json:"owner"`
 	NotifyEarly int       `json:"notifyearly"` // TODO: time.Duration
+	Sheduled    bool      `json:"sheduled"`
 }

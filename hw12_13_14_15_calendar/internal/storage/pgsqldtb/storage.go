@@ -42,11 +42,11 @@ func (s *Storage) Close() error {
 func (s *Storage) CreateEvent(e *models.Event) (*models.Event, error) {
 	sqlStatement := `
 	INSERT INTO hw12calendar.events(
-		"title", "description", "startat", "durationseconds", "owner", "notifyearlyseconds"
-	) values($1, $2, $3, $4, $5, $6)
+		"title", "description", "startat", "durationseconds", "owner", "notifyearlyseconds", "Sheduled"
+	) values($1, $2, $3, $4, $5, $6, $7)
 	RETURNING "pk";`
 	err := s.connection.QueryRow(sqlStatement,
-		e.Title, e.Description, e.StartAt, e.Duration, e.Owner, e.NotifyEarly,
+		e.Title, e.Description, e.StartAt, e.Duration, e.Owner, e.NotifyEarly, &e.Sheduled,
 	).Scan(&(e.PK))
 	if err != nil {
 		return nil, err
@@ -57,10 +57,12 @@ func (s *Storage) CreateEvent(e *models.Event) (*models.Event, error) {
 func (s *Storage) ReadEvent(pk int) (*models.Event, error) {
 	var e models.Event
 	sqlStatement := `
-	SELECT "pk", "title", "description", "startat", "durationseconds", "owner", "notifyearlyseconds"
+	SELECT "pk", "title", "description", "startat", "durationseconds", "owner", "notifyearlyseconds", "sheduled"
 	FROM hw12calendar.events WHERE "pk"=$1`
 	row := s.connection.QueryRow(sqlStatement, pk)
-	err := row.Scan(&(e.PK), &(e.Title), &(e.Description), &(e.StartAt), &(e.Duration), &(e.Owner), &(e.NotifyEarly))
+	err := row.Scan(&(e.PK),
+		&(e.Title), &(e.Description), &(e.StartAt), &(e.Duration),
+		&(e.Owner), &(e.NotifyEarly), &(e.Sheduled))
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
@@ -76,9 +78,13 @@ func (s *Storage) UpdateEvent(e *models.Event) (*models.Event, error) {
 	}
 	sqlStatement := `
 	UPDATE hw12calendar.events 
-	SET "title"=$1, "description"=$2, "startat"=$3, "durationseconds"=$4, "owner"=$5, "notifyearlyseconds"=$6
-	WHERE pk=$7;`
-	_, err := s.connection.Exec(sqlStatement, e.Title, e.Description, e.StartAt, e.Duration, e.Owner, e.NotifyEarly, e.PK)
+	SET 
+	"title"=$1, "description"=$2, "startat"=$3, "durationseconds"=$4, 
+	"owner"=$5, "notifyearlyseconds"=$6, "sheduled"=$7
+	WHERE pk=$8;`
+	_, err := s.connection.Exec(sqlStatement, e.Title, e.Description,
+		e.StartAt, e.Duration, e.Owner, e.NotifyEarly, e.Sheduled,
+		e.PK)
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +108,7 @@ func (s *Storage) ListEvents() ([]models.Event, error) {
 	var e models.Event
 	var events []models.Event
 	sqlStatement := `
-	SELECT "pk", "title", "description", "startat", "durationseconds", "owner", "notifyearlyseconds"
+	SELECT "pk", "title", "description", "startat", "durationseconds", "owner", "notifyearlyseconds", "sheduled"
 	FROM hw12calendar.events`
 	rows, err := s.connection.Query(sqlStatement)
 	if err != nil {
@@ -110,7 +116,29 @@ func (s *Storage) ListEvents() ([]models.Event, error) {
 	}
 	defer rows.Close()
 	for rows.Next() {
-		err = rows.Scan(&e.PK, &e.Title, &e.Description, &e.StartAt, &e.Duration, &e.Owner, &e.NotifyEarly)
+		err = rows.Scan(&e.PK, &e.Title, &e.Description, &e.StartAt, &e.Duration, &e.Owner, &e.NotifyEarly, &e.Sheduled)
+		if err != nil {
+			return nil, err
+		}
+		events = append(events, e)
+	}
+	return events, nil
+}
+
+func (s *Storage) ListNotSheduledEvents() ([]models.Event, error) {
+	var e models.Event
+	var events []models.Event
+	sqlStatement := `
+	SELECT "pk", "title", "description", "startat", "durationseconds", "owner", "notifyearlyseconds", "sheduled"
+	FROM hw12calendar.events
+	WHERE "sheduled" IF FALSE`
+	rows, err := s.connection.Query(sqlStatement)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		err = rows.Scan(&e.PK, &e.Title, &e.Description, &e.StartAt, &e.Duration, &e.Owner, &e.NotifyEarly, &e.Sheduled)
 		if err != nil {
 			return nil, err
 		}

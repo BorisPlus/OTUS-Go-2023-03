@@ -59,3 +59,12 @@ func (a *App) ListEvents() ([]models.Event, error) {
 	defer a.storage.Close()
 	return a.storage.ListEvents()
 }
+
+func (a *App) ListNotSheduledEvents() ([]models.Event, error) {
+	err := a.storage.Connect()
+	if err != nil {
+		return nil, err
+	}
+	defer a.storage.Close()
+	return a.storage.ListNotSheduledEvents()
+}
