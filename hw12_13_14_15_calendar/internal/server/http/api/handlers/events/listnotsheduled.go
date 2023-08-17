@@ -1,5 +1,7 @@
 package api
 
+// dupl-disable.
+
 import (
 	"encoding/json"
 	"net/http"
@@ -37,3 +39,5 @@ func (h EventsListNotSheduledHandler) ServeHTTP(rw http.ResponseWriter, rr *http
 	rw.WriteHeader(http.StatusOK)
 	rw.Write(apiResponseJSON)
 }
+
+// dupl-enable.
