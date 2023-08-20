@@ -4,8 +4,7 @@ import "hw12_13_14_15_calendar/internal/models"
 
 type SenderConfig struct {
 	Source     models.RabbitMQSource
-	SendTo     models.RabbitMQTarget
-	ArchiveTo  models.RabbitMQTarget
+	Targets    models.RabbitMQMultyTarget
 	Log        LogConfig
 	TimeoutSec int64
 }

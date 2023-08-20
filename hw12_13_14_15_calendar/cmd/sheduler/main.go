@@ -12,8 +12,8 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
-	config "hw12_13_14_15_calendar/internal/config"
-	logger "hw12_13_14_15_calendar/internal/logger"
+	"hw12_13_14_15_calendar/internal/config"
+	"hw12_13_14_15_calendar/internal/logger"
 )
 
 var configFile string
@@ -48,12 +48,11 @@ func main() {
 	mainLogger := logger.NewLogger(cfg.Log.Level, os.Stdout)
 
 	sheduler := NewSheduler(
-		cfg.Source.DSN,
-		cfg.Target,
+		NewEventsSource(cfg.Source.DSN, mainLogger),
+		NewEventsTarget(cfg.Target, mainLogger),
 		mainLogger,
 		cfg.TimeoutSec,
 	)
-
 	var once sync.Once
 	ctx, stop := signal.NotifyContext(context.Background(),
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGTSTP)
@@ -63,7 +62,7 @@ func main() {
 	go func() {
 		defer wg.Done()
 		<-ctx.Done()
-		if err := sheduler.Stop(); err != nil {
+		if err := sheduler.Stop(ctx); err != nil {
 			fmt.Println(err)
 		}
 	}()
@@ -71,5 +70,5 @@ func main() {
 		once.Do(stop)
 	}
 	wg.Wait()
-	log.Println("RabbitMQ (re-)configure done.")
+	log.Println("Sheduler done.")
 }

@@ -13,10 +13,14 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-var configFile string
+var (
+	configFile string
+	withDrop   bool
+)
 
 func init() {
 	pflag.StringVar(&configFile, "config", "", "Path to configuration file")
+	pflag.BoolVarP(&withDrop, "with-drop", "d", false, "Preverious drop exchanges and queues")
 }
 
 func main() {
@@ -63,12 +67,23 @@ func main() {
 		log.Println("Channel close.")
 		_ = channel.Close()
 	}()
-
+	fmt.Println(withDrop)
 	for _, exch := range cfg.RabbitMQ.Exchanges {
-		if pflag.Arg(0) == "drop" {
-			channel.ExchangeDelete(exch.Name, false, true)
-			log.Printf("drop exchange: %q.\n", exch.Name)
-			continue
+		if withDrop {
+			err = channel.ExchangeDelete(exch.Name, false, false)
+			if err != nil {
+				log.Printf("ERROR. Drop exchange: %q.\n%s\n", exch.Name, err.Error())
+			} else {
+				log.Printf("OK. Drop exchange: %q.\n", exch.Name)
+			}
+			for _, binding := range exch.Bindings {
+				_, err = channel.QueueDelete(binding.BindQueue, false, false, false)
+				if err != nil {
+					log.Printf("ERROR. Drop queue: %q.\n%s\n", binding.BindQueue, err.Error())
+				} else {
+					log.Printf("OK. Drop queue: %q.\n", binding.BindQueue)
+				}
+			}
 		}
 		// TODO: почему Passive закрывает channel
 		err = channel.ExchangeDeclare(exch.Name, "direct", true, false, false, false, nil)

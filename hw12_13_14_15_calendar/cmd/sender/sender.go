@@ -5,116 +5,61 @@ import (
 	"encoding/json"
 	"time"
 
-	amqp "github.com/rabbitmq/amqp091-go"
+	"hw12_13_14_15_calendar/internal/interfaces"
+	"hw12_13_14_15_calendar/internal/server/rpc/rpcapi"
+	"hw12_13_14_15_calendar/internal/transmitter"
 
-	interfaces "hw12_13_14_15_calendar/internal/interfaces"
-	models "hw12_13_14_15_calendar/internal/models"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type Sender struct {
-	source                   models.RabbitMQSource
-	sourceRabbitMQConnection *amqp.Connection
-	sender                   interfaces.Transmitter
-	archiver                 interfaces.Transmitter
-	logger                   interfaces.Logger
+	Transmitter transmitter.Transmitter[amqp.Delivery]
+	Logger      interfaces.Logger
+}
+
+func (self *Sender) Start(ctx context.Context) error {
+	return self.Transmitter.Start(ctx)
+}
+
+func (self *Sender) Stop(ctx context.Context) error {
+	return self.Transmitter.Stop(ctx)
 }
 
 func NewSender(
-	source models.RabbitMQSource,
-	sender interfaces.Transmitter,
-	archiver interfaces.Transmitter,
+	source *EventsSource,
+	target *EventsTarget,
 	logger interfaces.Logger,
+	timeoutSec int64,
 ) *Sender {
-	return &Sender{
-		source:   source,
-		sender:   sender,
-		archiver: archiver,
-		logger:   logger,
-	}
-}
-
-func (s *Sender) Stop() error {
-	errSource := s.sourceRabbitMQConnection.Close()
-	if errSource != nil {
-		s.logger.Error(errSource.Error())
-	}
-	s.logger.Info("Sender.Stop()")
-	return errSource
-}
-
-func (s *Sender) Start(ctx context.Context) error {
-	s.logger.Info("Sender.Start()")
-	var err error
-	s.sourceRabbitMQConnection, err = amqp.Dial(s.source.DSN)
-	if err != nil {
-		s.logger.Error(err.Error())
-		return err
-	}
-	defer func() {
-		s.Stop()
-	}()
-	sourceChannel, err := s.sourceRabbitMQConnection.Channel()
-	if err != nil {
-		s.logger.Error(err.Error())
-		return err
-	}
-	defer func() {
-		s.logger.Info("Channel close.")
-		_ = sourceChannel.Close()
-	}()
-	queue, err := sourceChannel.QueueDeclarePassive(s.source.QueueName, true, false, false, false, nil)
-	if err != nil {
-		s.logger.Error(err.Error())
-		return err
-	}
-	err = sourceChannel.Qos(1, 0, false)
-	if err != nil {
-		s.logger.Error(err.Error())
-		return err
-	}
-	messageChannel, err := sourceChannel.Consume(
-		queue.Name,
-		"",
-		false,
-		false,
-		false,
-		false,
-		nil,
+	Transmitter := transmitter.NewTransmitter[amqp.Delivery](
+		source,
+		target,
+		logger,
+		timeoutSec,
 	)
-	if err != nil {
-		s.logger.Error(err.Error())
-		return err
-	}
-
-	var event models.Event
-	for {
-		select {
-		case d := <-messageChannel:
-			data := d.Body
-			json.Unmarshal(data, &event)
-			s.logger.Info("Received a message: %s", data)
-			// now := time.Now()
-			_ = time.Now()
-			if true {
-				// if event.StartAt.Add(-time.Duration(event.Duration)*time.Second).Before(now) && now.Before(event.StartAt) {
-				if err := d.Ack(false); err != nil {
-					s.logger.Info("Error acknowledging message : %s", err)
-					return err
-				} else {
-					err = s.sender.Transmit(ctx, data)
-					if err != nil {
-						return err
-					}
-					err = s.archiver.Transmit(ctx, data)
-					if err != nil {
-						return err
-					}
-				}
+	Transmitter.Transmit = func(ctx context.Context, candidate amqp.Delivery) error {
+		data := candidate.Body
+		var event rpcapi.Event
+		json.Unmarshal(data, &event)
+		Transmitter.Logger.Info("Received a message: %s", data)
+		now := time.Now()
+		if event.StartAt.AsTime().Add(-time.Second*time.Duration(event.Duration)).After(now) && event.StartAt.AsTime().Before(now) {
+			if err := Transmitter.Source.AcknowledgeEvent(ctx, candidate); err != nil {
+				Transmitter.Logger.Info("Error acknowledging message : %s", err)
+				return err
 			} else {
-				d.Reject(true)
+				Transmitter.Logger.Info("Archiver.Transmit()")
+				if err != nil {
+					return err
+				}
 			}
-		case <-ctx.Done():
-			return nil
+		} else {
+			candidate.Reject(true)
 		}
+		return nil
+	}
+	return &Sender{
+		Transmitter: *Transmitter,
+		Logger:      logger,
 	}
 }

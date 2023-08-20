@@ -4,7 +4,7 @@
 // - protoc             v3.21.12
 // source: internal/server/rpc/protofiles/calendar.proto
 
-package calendarrpcapi
+package rpcapi
 
 import (
 	context "context"

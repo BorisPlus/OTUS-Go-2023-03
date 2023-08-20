@@ -1,14 +1,13 @@
 Source: 
   DSN: "amqp://guest:guest@localhost:5672/"
   QueueName: "q_events_for_notify"
-SendTo:
+Target:
   dsn: "amqp://guest:guest@localhost:5672/"
   ExchangeName: "exch_events"
-  RoutingKey: "send"
-ArchiveTo:
-  dsn: "amqp://guest:guest@localhost:5672/"
-  ExchangeName: "exch_events"
-  RoutingKey: "archive"
+  RoutingKey: 
+    - "send"
+    - "archive"
+TimeoutSec: 5
 log:
   level: INFO
  

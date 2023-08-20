@@ -12,8 +12,8 @@ import (
 
 	app "hw12_13_14_15_calendar/internal/app"
 	logger "hw12_13_14_15_calendar/internal/logger"
-	pb "hw12_13_14_15_calendar/internal/server/rpc/api"
 	client "hw12_13_14_15_calendar/internal/server/rpc/client"
+	pb "hw12_13_14_15_calendar/internal/server/rpc/rpcapi"
 	server "hw12_13_14_15_calendar/internal/server/rpc/server"
 	storage "hw12_13_14_15_calendar/internal/storage"
 )

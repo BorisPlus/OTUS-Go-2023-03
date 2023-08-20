@@ -14,7 +14,6 @@ import (
 
 	config "hw12_13_14_15_calendar/internal/config"
 	logger "hw12_13_14_15_calendar/internal/logger"
-	rmq "hw12_13_14_15_calendar/internal/rmq"
 )
 
 var configFile string
@@ -46,14 +45,11 @@ func main() {
 		log.Fatalf("unable to decode into struct, %v", err)
 	}
 	mainLogger := logger.NewLogger(cfg.Log.Level, os.Stdout)
-	archiveTo := rmq.NewNotifier(
-		cfg.ArchiveTo,
+	archiver := NewArchiver(
+		NewEventsSource(cfg.Source, mainLogger),
+		NewEventsTarget(cfg.ArchiveTo, mainLogger),
 		mainLogger,
-	)
-	sender := NewArchiver(
-		cfg.Source,
-		archiveTo,
-		mainLogger,
+		0,
 	)
 	var once sync.Once
 	ctx, stop := signal.NotifyContext(context.Background(),
@@ -64,11 +60,11 @@ func main() {
 	go func() {
 		defer wg.Done()
 		<-ctx.Done()
-		if err := sender.Stop(); err != nil {
+		if err := archiver.Stop(ctx); err != nil {
 			fmt.Println(err)
 		}
 	}()
-	if err := sender.Start(ctx); err != nil {
+	if err := archiver.Start(ctx); err != nil {
 		once.Do(stop)
 	}
 	wg.Wait()
