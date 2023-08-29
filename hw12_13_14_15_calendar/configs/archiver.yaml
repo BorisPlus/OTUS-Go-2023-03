@@ -1,11 +1,11 @@
 Source: 
   DSN: "amqp://guest:guest@localhost:5672/"
-  QueueName: q_events_for_notify
-  GetbackToExchangeName: exch_events
-  GetbackKey: notify
+  QueueName: q_noticies_sheduled
+  GetbackToExchangeName: notice_exchange
+  GetbackKey: shedule
 Target:
   DSN: "amqp://guest:guest@localhost:5672/"
-  ExchangeName: "exch_events"
+  ExchangeName: notice_exchange
   RoutingKey: archive
 TimeoutSec: 0
 log:

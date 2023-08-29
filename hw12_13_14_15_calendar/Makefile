@@ -5,7 +5,12 @@ GIT_HASH := $(shell git log --format="%h" -n 1)
 LDFLAGS := -X main.release="develop" -X main.buildDate=$(shell date -u +%Y-%m-%dT%H:%M:%S) -X main.gitHash=$(GIT_HASH)
 
 build:
-	go build -v -o $(BIN) -ldflags "$(LDFLAGS)" ./cmd/calendar
+	go build -v -o "./bin/calendar.goc" -ldflags "$(LDFLAGS)" ./cmd/calendar
+	go build -v -o "./bin/sheduler.goc" -ldflags "$(LDFLAGS)" ./cmd/sheduler
+	go build -v -o "./bin/archiver.goc" -ldflags "$(LDFLAGS)" ./cmd/archiver
+	go build -v -o "./bin/sender.goc" -ldflags "$(LDFLAGS)" ./cmd/sender
+	go build -v -o "./bin/mgm_rmqdevops.goc" -ldflags "$(LDFLAGS)" ./cmd/management/rmqdevops
+	go build -v -o "./bin/mgm_dataset.goc" -ldflags "$(LDFLAGS)" ./cmd/management/dataset
 
 run: build
 	$(BIN) --config ./configs/config.yaml

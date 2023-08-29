@@ -67,9 +67,10 @@ func main() {
 			fmt.Println(err)
 		}
 	}()
+	mainLogger.Info("Sheduler start.")
 	if err := sheduler.Start(ctx); err != nil {
 		once.Do(stop)
 	}
 	wg.Wait()
-	log.Println("Sheduler done.")
+	mainLogger.Info("Sheduler end.")
 }

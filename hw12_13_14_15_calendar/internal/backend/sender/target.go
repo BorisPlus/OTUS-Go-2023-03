@@ -4,10 +4,9 @@ import (
 	"context"
 	"encoding/json"
 
+	amqp "github.com/rabbitmq/amqp091-go"
 	"hw12_13_14_15_calendar/internal/interfaces"
 	"hw12_13_14_15_calendar/internal/models"
-
-	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type Notifier interface {
@@ -33,56 +32,59 @@ func NewNoticesTarget(
 	}
 }
 
-func (self *NoticesTarget) Connect(ctx context.Context) error {
+func (t *NoticesTarget) Connect(ctx context.Context) error {
 	_ = ctx // TODO
 	var err error
-	self.connection, err = amqp.Dial(self.target.DSN)
+	t.connection, err = amqp.Dial(t.target.DSN)
 	if err != nil {
-		self.logger.Error(err.Error())
+		t.logger.Error(err.Error())
 		return err
 	}
 	return nil
 }
 
-func (self *NoticesTarget) Disconnect(ctx context.Context) error {
+func (t *NoticesTarget) Disconnect(ctx context.Context) error {
 	_ = ctx // TODO: usage
-	err := self.connection.Close()
+	if t.connection.IsClosed() {
+		return nil
+	}
+	err := t.connection.Close()
 	if err != nil {
-		self.logger.Error(err.Error())
+		t.logger.Error(err.Error())
 		return err
 	}
 	return nil
 }
 
-func (self *NoticesTarget) Put(ctx context.Context, notice *models.Notice) error {
-	err := self.notifier.Notify(*notice)
+func (t *NoticesTarget) Put(ctx context.Context, notice *models.Notice) error {
+	err := t.notifier.Notify(*notice)
 	if err != nil {
-		self.logger.Error(err.Error())
+		t.logger.Error(err.Error())
 		return err
 	}
-	channel, err := self.connection.Channel()
+	channel, err := t.connection.Channel()
 	if err != nil {
-		self.logger.Error(err.Error())
+		t.logger.Error(err.Error())
 		return err
 	}
-	err = channel.ExchangeDeclarePassive(self.target.ExchangeName, "direct", true, false, false, false, nil)
+	err = channel.ExchangeDeclarePassive(t.target.ExchangeName, "direct", true, false, false, false, nil)
 	if err != nil {
-		self.logger.Error(err.Error())
+		t.logger.Error(err.Error())
 		return err
 	}
 	data, err := json.Marshal(notice)
 	if err != nil {
-		self.logger.Error(err.Error())
+		t.logger.Error(err.Error())
 		return err
 	}
 	message := amqp.Publishing{
 		Body: data,
 	}
-	err = channel.PublishWithContext(ctx, self.target.ExchangeName, self.target.RoutingKey, false, false, message)
+	err = channel.PublishWithContext(ctx, t.target.ExchangeName, t.target.RoutingKey, false, false, message)
 	if err != nil {
-		self.logger.Error(err.Error())
+		t.logger.Error(err.Error())
 		return err
 	}
-	self.logger.Info("DONE. Send to exchange %q with routing key %q\n", self.target.ExchangeName, self.target.RoutingKey)
+	t.logger.Info("DONE. Send to exchange %q with routing key %q\n", t.target.ExchangeName, t.target.RoutingKey)
 	return nil
 }

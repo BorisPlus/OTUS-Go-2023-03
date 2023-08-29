@@ -2,12 +2,11 @@ package sheduler
 
 import (
 	"context"
-
 	"hw12_13_14_15_calendar/internal/backend/transmitter"
 	"hw12_13_14_15_calendar/internal/interfaces"
 	"hw12_13_14_15_calendar/internal/models"
-	"hw12_13_14_15_calendar/internal/server/rpc/rpcapi"
 	"hw12_13_14_15_calendar/internal/server/rpc/common"
+	"hw12_13_14_15_calendar/internal/server/rpc/rpcapi"
 )
 
 type Sheduler struct {
@@ -15,12 +14,12 @@ type Sheduler struct {
 	Logger      interfaces.Logger
 }
 
-func (self *Sheduler) Start(ctx context.Context) error {
-	return self.Transmitter.Start(ctx)
+func (t *Sheduler) Start(ctx context.Context) error {
+	return t.Transmitter.Start(ctx)
 }
 
-func (self *Sheduler) Stop(ctx context.Context) error {
-	return self.Transmitter.Stop(ctx)
+func (t *Sheduler) Stop(ctx context.Context) error {
+	return t.Transmitter.Stop(ctx)
 }
 
 func NewSheduler(

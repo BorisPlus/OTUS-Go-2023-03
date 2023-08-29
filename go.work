@@ -8,10 +8,10 @@ use (
 	hw09_struct_validator
 	hw12_13_14_15_calendar
 	hw12_13_14_15_calendar/cmd/calendar
+	hw12_13_14_15_calendar/cmd/management/rmqdevops
 	hw12_13_14_15_calendar/cmd/management/dataset
 	hw12_13_14_15_calendar/cmd/sheduler
 	hw12_13_14_15_calendar/cmd/sender
-	hw12_13_14_15_calendar/cmd/rmqdevops
 	hw12_13_14_15_calendar/cmd/archiver
 	hw10_program_optimization
 	hw11_telnet_client

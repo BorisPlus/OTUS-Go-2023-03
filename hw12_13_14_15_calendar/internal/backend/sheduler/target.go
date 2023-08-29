@@ -4,10 +4,9 @@ import (
 	"context"
 	"encoding/json"
 
+	amqp "github.com/rabbitmq/amqp091-go"
 	"hw12_13_14_15_calendar/internal/interfaces"
 	"hw12_13_14_15_calendar/internal/models"
-
-	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type NoticesTarget struct {
@@ -26,50 +25,53 @@ func NewNoticesTarget(
 	}
 }
 
-func (self *NoticesTarget) Connect(ctx context.Context) error {
+func (s *NoticesTarget) Connect(ctx context.Context) error {
 	_ = ctx // TODO
 	var err error
-	self.connection, err = amqp.Dial(self.target.DSN)
+	s.connection, err = amqp.Dial(s.target.DSN)
 	if err != nil {
-		self.logger.Error(err.Error())
-		return err
+		s.logger.Error(err.Error())
+		return nil
 	}
 	return nil
 }
 
-func (self *NoticesTarget) Disconnect(ctx context.Context) error {
+func (s *NoticesTarget) Disconnect(ctx context.Context) error {
 	_ = ctx // TODO: usage
-	err := self.connection.Close()
+	err := s.connection.Close()
+	if s.connection.IsClosed() {
+		return nil
+	}
 	if err != nil {
-		self.logger.Error(err.Error())
+		// s.logger.Error(err.Error())
 		return err
 	}
 	return nil
 }
 
-func (self *NoticesTarget) Put(ctx context.Context, notice *models.Notice) error {
-	channel, err := self.connection.Channel()
+func (s *NoticesTarget) Put(ctx context.Context, notice *models.Notice) error {
+	channel, err := s.connection.Channel()
 	if err != nil {
-		self.logger.Error(err.Error())
+		s.logger.Error(err.Error())
 		return err
 	}
 	defer channel.Close()
-	err = channel.ExchangeDeclarePassive(self.target.ExchangeName, "direct", true, false, false, false, nil)
+	err = channel.ExchangeDeclarePassive(s.target.ExchangeName, "direct", true, false, false, false, nil)
 	if err != nil {
-		self.logger.Error(err.Error())
+		s.logger.Error(err.Error())
 		return err
 	}
 	data, err := json.Marshal(notice)
 	if err != nil {
-		self.logger.Error(err.Error())
+		s.logger.Error(err.Error())
 		return err
 	}
 	message := amqp.Publishing{
 		Body: data,
 	}
-	err = channel.PublishWithContext(ctx, self.target.ExchangeName, self.target.RoutingKey, false, false, message)
+	err = channel.PublishWithContext(ctx, s.target.ExchangeName, s.target.RoutingKey, false, false, message)
 	if err != nil {
-		self.logger.Error(err.Error())
+		s.logger.Error(err.Error())
 		return err
 	}
 	return nil

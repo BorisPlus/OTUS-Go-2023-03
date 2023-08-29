@@ -38,7 +38,11 @@ linters-settings:
           - 'hw12_13_14_15_calendar/internal/storage/gomemory'
           - 'hw12_13_14_15_calendar/internal/storage/pgsqldtb'
           - 'hw12_13_14_15_calendar/internal/server/rpc/api'
-          - 'hw12_13_14_15_calendar/internal/server/rpc/calendarcommon'
+          - 'hw12_13_14_15_calendar/internal/server/rpc/client'
+          - 'hw12_13_14_15_calendar/internal/server/rpc/server'
+          - 'hw12_13_14_15_calendar/internal/server/rpc/common'
+          - 'hw12_13_14_15_calendar/internal/server/rpc/rpcapi'
+          - 'hw12_13_14_15_calendar/internal/backend/transmitter'
       test:
         files:
           - "$test"
@@ -66,7 +70,9 @@ linters-settings:
           - 'hw12_13_14_15_calendar/internal/server/rpc/api'
           - 'hw12_13_14_15_calendar/internal/server/rpc/client'
           - 'hw12_13_14_15_calendar/internal/server/rpc/server'
-          - 'hw12_13_14_15_calendar/internal/server/rpc/calendarcommon'
+          - 'hw12_13_14_15_calendar/internal/server/rpc/common'
+          - 'hw12_13_14_15_calendar/internal/server/rpc/rpcapi'
+          - 'hw12_13_14_15_calendar/internal/backend/transmitter'
 
 issues:
   exclude-rules:

@@ -5,11 +5,10 @@ import (
 	"encoding/json"
 	"time"
 
+	amqp "github.com/rabbitmq/amqp091-go"
 	"hw12_13_14_15_calendar/internal/backend/transmitter"
 	"hw12_13_14_15_calendar/internal/interfaces"
 	"hw12_13_14_15_calendar/internal/models"
-
-	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type Sender struct {
@@ -17,12 +16,12 @@ type Sender struct {
 	Logger      interfaces.Logger
 }
 
-func (self *Sender) Start(ctx context.Context) error {
-	return self.Transmitter.Start(ctx)
+func (s *Sender) Start(ctx context.Context) error {
+	return s.Transmitter.Start(ctx)
 }
 
-func (self *Sender) Stop(ctx context.Context) error {
-	return self.Transmitter.Stop(ctx)
+func (s *Sender) Stop(ctx context.Context) error {
+	return s.Transmitter.Stop(ctx)
 }
 
 func NewSender(

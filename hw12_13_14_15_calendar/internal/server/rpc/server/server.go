@@ -4,12 +4,11 @@ import (
 	"context"
 	"net"
 
+	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/emptypb"
 	interfaces "hw12_13_14_15_calendar/internal/interfaces"
 	common "hw12_13_14_15_calendar/internal/server/rpc/common"
 	calendarrpcapi "hw12_13_14_15_calendar/internal/server/rpc/rpcapi"
-
-	"google.golang.org/grpc"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type RPCServer struct {

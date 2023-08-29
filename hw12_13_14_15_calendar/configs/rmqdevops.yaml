@@ -2,26 +2,26 @@ rabbitmq:
   dsn: "amqp://guest:guest@localhost:5672/"
   exchanges: [
     { 
-      name: exch_events, 
+      name: notice_exchange, 
       bindings : [
         { 
           BindQueue: q_unspecified, 
           BindKey:  
         },
         { 
-          BindQueue: q_events_for_notify, 
-          BindKey: notify 
+          BindQueue: q_noticies_sheduled, 
+          BindKey: shedule 
         },
         { 
-          BindQueue: q_events_archive, 
+          BindQueue: q_noticies_archived, 
           BindKey: archive 
         },
         { 
-          BindQueue: q_events_archive, 
+          BindQueue: q_noticies_archived, 
           BindKey: send 
         },
         { 
-          BindQueue: q_events_send, 
+          BindQueue: q_noticies_send, 
           BindKey: send 
         },
       ]

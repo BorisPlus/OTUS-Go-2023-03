@@ -2,52 +2,120 @@
 
 ## Особенности реализации
 
-1. Отправщик рассылщика представлен в виде [интерфейса](internal/interfaces/transmitter.go), его реализация в качестве [перекладчика](internal/rmq/notifier.go) из одной очреди в другую RabbitMQ-одчередь.
-2. [Архивируется](cmd/archiver/archiver.go) то, что просрочено по уведомлениям.
+> Реализация немного отличается от требуемой, но конструктивно, на мой взгляд, она нагляднее. Так, например, архивирование это отдельный процесс. А ахивируются именно просроченные уведомления, а не события в исходной БД (я вообще не люблю удалять данные из БД, заменяя в своих проектах это действие понятием "скрыть с глаз"). В базу введен признак обработки планировщиком, что позволяет останавливать исходное приложение и запускать его заново, без ущерба двойных уведомлений об одном и том же событии.
+
+Процессы рассылки, архивирования и отправки уведомлений сведены к одному общему абстрактному "знаменателю" - `Перекладчик`.
 
 ```go
-if event.StartAt.Before(time.Now())
+package transmitter
+
+type Item interface {
+   any
+}
+
+...
+
+type Streamer interface {
+   Connect(context.Context) error
+   Disconnect(context.Context) error
+}
+
+...
+
+type Source[FROM Item] interface {
+   Streamer
+   DataChannel(context.Context) (<-chan FROM, error)
+   Confirm(context.Context, *FROM) error
+   Getback(context.Context, *FROM) error
+}
+
+...
+
+type Target[TO Item] interface {
+   Streamer
+   Put(context.Context, *TO) error
+}
+
+...
+
+type Transmitter[FROM Item, TO Item] struct {
+   Source         Source[FROM]
+   Target         Target[TO]
+   Transmit       func(ctx context.Context, candidate FROM) (bool, error)
+   Logger         interfaces.Logger
+   LoopTimeoutSec int64
+}
+
+...
+
 ```
 
-3. [Рассылка](cmd/sender/sender.go) производится, если текущее время попало в период между началом уведомления и началом события, при этом тут же отправляется в архив.
+Так:
 
-```go
-if event.StartAt.Add(-time.Duration(event.Duration)*time.Second).Before(now) && now.Before(event.StartAt)
-```
+* Планировщик `sheduler` перекладывает события из хранилища (через приложение по RPC) в очередь сообщений "RabbitMQ", переконвертируя объекты событий в уведомления. При этом фиксируется факт того, что событие было забрано, и при слудующем цикле выборки повтороного его помещения в очередь не происходит.
+* Архиватор `archive` архивирует просроченные по времени (`event.StartAt.Before(time.Now())`) рассылки уведомления, перекладывая их из одной очереди "q_noticies_sheduled" в другую "q_noticies_archived".
+* Рассылщик `sender` отбирает из очереди сообщений актуальные для отправки уведомления (_если текущее время попало в период между началом уведомления о событии и началом самого события_ - `event.StartAt.Add(-time.Duration(event.Duration)*time.Second).Before(now) && now.Before(event.StartAt)`) и отправляет их, зеркаля данные в две очереди: "q_noticies_send" и "q_noticies_archived" (все происходит через один exchange, но бинд-тег ведет в дву очереди). При это так же содержит осылку на интерфейс `type Notifier interface { Notify(models.Notice) error }`. В конечной реализации `Notify` - это вывод в STDOUT.
+
+Остается реализовать в терминах:
+
+* источника `Source[FROM Item]` метод `DataChannel(context.Context) (<-chan FROM, error)` и иные при необходимости;
+* цели/назначения `Target[TO Item]` метод `Put(context.Context, *TO) error`;
+* объявить функцию метода перекладчика `Transmit func(ctx context.Context, candidate FROM) (bool, error)` требуемой бизнес-логики в зависимости от источника и цели/назначения.
+
+Для чего именно сделан перекладчик:
+
+* Для главного посыла ДЗ: "Процессы не должны зависеть от конкретной реализации RMQ-клиента";
+* Тренировки работы с RabbitMQ: взяв событие на принятие решения "отправлять"/"архивировать" или оставить в очереди, его нужно не просто вернуть, а вернуть в начало очереди.
+* Тренировкb работы с интерфейсами и каналами в Go.
 
 ## Процессы
 
-Порядок выполнения ДЗ:
+```bash
+make build
+```
 
-* установить локально очередь сообщений RabbitMQ (или сразу через Docker, если знаете как);
-* создать процесс Планировщик (`scheduler`), который периодически сканирует основную базу данных,
-выбирая события о которых нужно напомнить:
-  * при запуске процесс должен подключаться к RabbitMQ и создавать все необходимые структуры
-    (топики и пр.) в ней;
-  * процесс должен выбирать сообытия для которых следует отправить уведомление (у события есть соотв. поле),
-    создавать для каждого Уведомление (описание сущности см. в [ТЗ](./CALENDAR.MD)),
-    сериализовать его (например, в JSON) и складывать в очередь;
-  * процесс должен очищать старые (произошедшие более 1 года назад) события.
-* создать процесс Рассыльщик (`sender`), который читает сообщения из очереди и шлёт уведомления;
-непосредственно отправку делать не нужно - достаточно логировать сообщения / выводить в STDOUT.
-* настройки подключения к очереди, периодичность запуска и пр. настройки процессов вынести в конфиг проекта;
-* работу с кроликом вынести в отдельный пакет, который будут использовать пакеты, реализующие процессы выше.
+### (Пере-)настройка RabbitMQ очередей
 
-Процессы не должны зависеть от конкретной реализации RMQ-клиента.
-
-В результате компиляции проекта (`make build`) должно получаться 3 отдельных исполняемых файла
-(по одному на микросервис):
-
-* API (`calendar`);
-* Планировщик (`calendar_scheduler`);
-* Рассыльщик (`calendar_sender`).
-
-Каждый из сервисов должен принимать путь файлу конфигурации:
+Вынесена в отдельный модуль аля DevOps. Ответственность на подъем вынтреннего устройства RabbitMQ в итоге сосредоточна в атомарнойм модуле:
 
 ```bash
-./calendar           --config=/path/to/calendar_config.yaml
-./calendar_scheduler --config=/path/to/scheduler_config.yaml
-./calendar_sender    --config=/path/to/sender_config.yaml
+cd hw12_13_14_15_calendar 
+go run ./cmd/management/rmqdevops/ --with-drop --config ./configs/rmqdevops.yaml
+```
+
+или после `make build`
+
+```bash
+cd hw12_13_14_15_calendar 
+./bin/mgm_rmqdevops.goc --with-drop --config ./configs/rmqdevops.yaml
+```
+
+Лог:
+
+```text
+2023/08/29 23:54:47 Connect to "amqp://guest:guest@localhost:5672/".
+2023/08/29 23:54:47 Channel open.
+2023/08/29 23:54:47 withDrop true
+2023/08/29 23:54:47 OK. Drop exchange: "notice_exchange".
+2023/08/29 23:54:47 OK. Drop queue: "q_unspecified".
+2023/08/29 23:54:47 OK. Drop queue: "q_noticies_sheduled".
+2023/08/29 23:54:47 OK. Drop queue: "q_noticies_archived".
+2023/08/29 23:54:47 OK. Drop queue: "q_noticies_archived".
+2023/08/29 23:54:47 OK. Drop queue: "q_noticies_send".
+2023/08/29 23:54:47 Declare exchange: "notice_exchange".
+2023/08/29 23:54:47 Declare queue: "q_unspecified".
+2023/08/29 23:54:47 Bind queue: "q_unspecified" to exchange "notice_exchange" with routing key "".
+2023/08/29 23:54:47 Declare queue: "q_noticies_sheduled".
+2023/08/29 23:54:47 Bind queue: "q_noticies_sheduled" to exchange "notice_exchange" with routing key "shedule".
+2023/08/29 23:54:47 Declare queue: "q_noticies_archived".
+2023/08/29 23:54:47 Bind queue: "q_noticies_archived" to exchange "notice_exchange" with routing key "archive".
+2023/08/29 23:54:47 Declare queue: "q_noticies_archived".
+2023/08/29 23:54:47 Bind queue: "q_noticies_archived" to exchange "notice_exchange" with routing key "send".
+2023/08/29 23:54:47 Declare queue: "q_noticies_send".
+2023/08/29 23:54:47 Bind queue: "q_noticies_send" to exchange "notice_exchange" with routing key "send".
+2023/08/29 23:54:47 RabbitMQ (re-)configure done.
+2023/08/29 23:54:47 Channel close.
+2023/08/29 23:54:47 Connection close.
 ```
 
 ### Кадендарь
@@ -57,7 +125,30 @@ cd hw12_13_14_15_calendar
 go run ./cmd/calendar/ --config ./configs/calendar.yaml
 ```
 
+или после `make build`
+
+```bash
+cd hw12_13_14_15_calendar 
+./bin/calendar/ --config ./configs/calendar.yaml
+```
+
+Лог
+
+```text
+INFO [2023-08-29 20:59:09] HTTP Config - {Host:localhost Port:8080 ReadTimeout:5s ReadHeaderTimeout:5s WriteTimeout:5s MaxHeaderBytes:1048576}
+INFO [2023-08-29 20:59:09] RPC Config - {Host:localhost Port:5000}
+INFO [2023-08-29 20:59:09] calendar is running...
+INFO [2023-08-29 20:59:09] HTTPServer.Start()
+INFO [2023-08-29 20:59:09] GRPCServer.Start()
+^C                                                  <----------- В случае прерывания
+INFO [2023-08-29 20:59:11] Complex Shutting down was done gracefully by signal.
+INFO [2023-08-29 20:59:11] HTTPServer.Stop()
+INFO [2023-08-29 20:59:11] GRPCServer.GracefulStop()
+```
+
 ### Наполнение тестовыми данными
+
+Реализует наполнение хранилища исходного приложения тестовыми данными:
 
 * 10 кандидатов для архивирования.
 * 10 на первоочередную отправку.
@@ -68,11 +159,46 @@ cd hw12_13_14_15_calendar
 go run ./cmd/management/dataset/ --config ./configs/calendar.yaml
 ```
 
-### (Пере-)настройка очередей
+или после `make build`
 
 ```bash
 cd hw12_13_14_15_calendar 
-go run ./cmd/rmqdevops/ --with-drop --config ./configs/rmqdevops.yaml
+./bin/mgm_dataset.goc --with-drop --config ./configs/calendar.yaml
+```
+
+Лог
+
+```text
+2023/08/30 01:01:51 Put event: {PK:0 Title:AD ISTE VELIT ARCHITECTO NESCIUNT StartAt:2023-08-30 01:51:51.414568391 +0300 MSK m=+3000.002230691 Duration:1800 Description:id accusantium ut placeat voluptas quia consectetur aliquam. Owner:accusamus@Eimbee.mil NotifyEarly:3600 Sheduled:false}
+2023/08/30 01:01:51 Put event: {PK:0 Title:ENIM EIUS SUSCIPIT ALIQUID VOLUPTATEM StartAt:2023-08-30 01:51:51.414568391 +0300 MSK m=+3000.002230691 Duration:1800 Description:nihil perspiciatis quia ea ut eos! Owner:DonaldHawkins@Npath.com NotifyEarly:3600 Sheduled:false}
+2023/08/30 01:01:51 Put event: {PK:0 Title:QUAS EST NATUS UNDE StartAt:2023-08-30 01:51:51.414568391 +0300 MSK m=+3000.002230691 Duration:1800 Description:ut fugiat est dolorem id harum est pariatur doloremque dolores non aut. Owner:BeverlyDuncan@Realmix.net NotifyEarly:3600 Sheduled:false}
+2023/08/30 01:01:51 Put event: {PK:0 Title:PERFERENDIS ET CUM StartAt:2023-08-30 01:51:51.414568391 +0300 MSK m=+3000.002230691 Duration:1800 Description:consequatur placeat officiis totam. Owner:aStanley@Yacero.gov NotifyEarly:3600 Sheduled:false}
+2023/08/30 01:01:51 Put event: {PK:0 Title:QUO SED LABORUM ADIPISCI StartAt:2023-08-30 01:51:51.414568391 +0300 MSK m=+3000.002230691 Duration:1800 Description:eum adipisci dolor qui recusandae ratione id. Owner:earum_rem_quod@Wikizz.gov NotifyEarly:3600 Sheduled:false}
+2023/08/30 01:01:51 Put event: {PK:0 Title:UT RERUM ELIGENDI VOLUPTATEM StartAt:2023-08-30 01:51:51.414568391 +0300 MSK m=+3000.002230691 Duration:1800 Description:libero et quia magni ducimus velit. Owner:omnis@Skipstorm.net NotifyEarly:3600 Sheduled:false}
+2023/08/30 01:01:51 Put event: {PK:0 Title:RECUSANDAE ATQUE CORRUPTI StartAt:2023-08-30 01:51:51.414568391 +0300 MSK m=+3000.002230691 Duration:1800 Description:recusandae quasi porro libero. Owner:TimothyCook@Meeveo.org NotifyEarly:3600 Sheduled:false}
+2023/08/30 01:01:51 Put event: {PK:0 Title:SED MAGNAM DOLORIBUS StartAt:2023-08-30 01:51:51.414568391 +0300 MSK m=+3000.002230691 Duration:1800 Description:odio omnis dolorum eveniet quis placeat soluta sapiente dolor modi. Owner:impedit@Gigabox.biz NotifyEarly:3600 Sheduled:false}
+2023/08/30 01:01:51 Put event: {PK:0 Title:SINT CORRUPTI StartAt:2023-08-30 01:51:51.414568391 +0300 MSK m=+3000.002230691 Duration:1800 Description:enim et magnam et. Owner:minima@Thoughtbridge.biz NotifyEarly:3600 Sheduled:false}
+2023/08/30 01:01:51 Put event: {PK:0 Title:NOBIS IMPEDIT StartAt:2023-08-30 01:51:51.414568391 +0300 MSK m=+3000.002230691 Duration:1800 Description:provident voluptates qui officiis molestias aspernatur fuga dolore eum. Owner:PhyllisTorres@Twinder.net NotifyEarly:3600 Sheduled:false}
+2023/08/30 01:01:51 Put event: {PK:0 Title:NEMO ET DOLOR StartAt:2023-08-17 13:01:51.414568391 +0300 MSK m=-1079999.997769309 Duration:1800 Description:sed maxime ut facere ducimus et. Owner:odio_voluptatem@Skinder.info NotifyEarly:60 Sheduled:false}
+2023/08/30 01:01:51 Put event: {PK:0 Title:OFFICIIS FUGIT EIUS QUI MAGNAM StartAt:2023-08-17 13:01:51.414568391 +0300 MSK m=-1079999.997769309 Duration:1800 Description:cum et ut odio ut quis cumque. Owner:oStanley@Wordware.org NotifyEarly:60 Sheduled:false}
+2023/08/30 01:01:51 Put event: {PK:0 Title:LABORUM EOS AUT StartAt:2023-08-17 13:01:51.414568391 +0300 MSK m=-1079999.997769309 Duration:1800 Description:veniam consequatur ipsum nisi delectus incidunt. Owner:delectus@Twiyo.info NotifyEarly:60 Sheduled:false}
+2023/08/30 01:01:51 Put event: {PK:0 Title:EST NEMO VOLUPTAS SIMILIQUE VENIAM StartAt:2023-08-17 13:01:51.414568391 +0300 MSK m=-1079999.997769309 Duration:1800 Description:qui repudiandae numquam sint amet saepe laudantium quia molestias. Owner:corrupti@Tekfly.info NotifyEarly:60 Sheduled:false}
+2023/08/30 01:01:51 Put event: {PK:0 Title:QUIBUSDAM ACCUSANTIUM StartAt:2023-08-17 13:01:51.414568391 +0300 MSK m=-1079999.997769309 Duration:1800 Description:maxime perspiciatis quasi ipsam nulla voluptas sit ullam. Owner:voluptatem@Rhycero.mil NotifyEarly:60 Sheduled:false}
+2023/08/30 01:01:51 Put event: {PK:0 Title:ALIQUID AUT ADIPISCI StartAt:2023-08-17 13:01:51.414568391 +0300 MSK m=-1079999.997769309 Duration:1800 Description:qui architecto ea. Owner:repudiandae_unde_est@Edgeclub.org NotifyEarly:60 Sheduled:false}
+2023/08/30 01:01:51 Put event: {PK:0 Title:NON EST SUNT StartAt:2023-08-17 13:01:51.414568391 +0300 MSK m=-1079999.997769309 Duration:1800 Description:aperiam ea ad amet aut praesentium aspernatur in non. Owner:pJacobs@Devpoint.info NotifyEarly:60 Sheduled:false}
+2023/08/30 01:01:51 Put event: {PK:0 Title:FACERE FUGA RECUSANDAE QUIA StartAt:2023-08-17 13:01:51.414568391 +0300 MSK m=-1079999.997769309 Duration:1800 Description:reprehenderit aliquam ut nobis consequuntur molestias dignissimos ut natus. Owner:necessitatibus@Twitterworks.name NotifyEarly:60 Sheduled:false}
+2023/08/30 01:01:51 Put event: {PK:0 Title:REPELLAT MAXIME AUT StartAt:2023-08-17 13:01:51.414568391 +0300 MSK m=-1079999.997769309 Duration:1800 Description:et aut aperiam voluptatibus et veniam et. Owner:RyanAllen@Ainyx.edu NotifyEarly:60 Sheduled:false}
+2023/08/30 01:01:51 Put event: {PK:0 Title:REPREHENDERIT QUI VOLUPTATE StartAt:2023-08-17 13:01:51.414568391 +0300 MSK m=-1079999.997769309 Duration:1800 Description:nostrum fugit inventore dolor quis sed velit molestias. Owner:MarthaLawrence@Jaloo.biz NotifyEarly:60 Sheduled:false}
+2023/08/30 01:01:51 Put event: {PK:0 Title:QUI NEQUE APERIAM UT SAPIENTE StartAt:2023-08-30 11:01:51.414568391 +0300 MSK m=+36000.002230691 Duration:1800 Description:voluptate quo consequatur quaerat rem rerum. Owner:dolor_quisquam@Babblestorm.com NotifyEarly:1 Sheduled:false}
+2023/08/30 01:01:51 Put event: {PK:0 Title:ASPERIORES AUT PROVIDENT ESSE SIMILIQUE StartAt:2023-08-30 11:01:51.414568391 +0300 MSK m=+36000.002230691 Duration:1800 Description:et aliquid odio nam dolores modi. Owner:numquam_aut_et@Lazz.net NotifyEarly:1 Sheduled:false}
+2023/08/30 01:01:51 Put event: {PK:0 Title:REPELLENDUS NIHIL DOLORUM StartAt:2023-08-30 11:01:51.414568391 +0300 MSK m=+36000.002230691 Duration:1800 Description:quo architecto aut quo molestias quia consequatur nihil enim omnis esse itaque. Owner:gDixon@Edgeify.edu NotifyEarly:1 Sheduled:false}
+2023/08/30 01:01:51 Put event: {PK:0 Title:QUI APERIAM ET StartAt:2023-08-30 11:01:51.414568391 +0300 MSK m=+36000.002230691 Duration:1800 Description:aut debitis pariatur. Owner:JoseWells@Aimbo.biz NotifyEarly:1 Sheduled:false}
+2023/08/30 01:01:51 Put event: {PK:0 Title:DISTINCTIO SED SUNT VOLUPTATEM StartAt:2023-08-30 11:01:51.414568391 +0300 MSK m=+36000.002230691 Duration:1800 Description:officia omnis autem dicta. Owner:iure_tempora@Mynte.mil NotifyEarly:1 Sheduled:false}
+2023/08/30 01:01:51 Put event: {PK:0 Title:QUASI EUM StartAt:2023-08-30 11:01:51.414568391 +0300 MSK m=+36000.002230691 Duration:1800 Description:molestias et quia a vel. Owner:quaerat_qui_est@Trudeo.edu NotifyEarly:1 Sheduled:false}
+2023/08/30 01:01:51 Put event: {PK:0 Title:EVENIET PORRO LIBERO VOLUPTATEM ALIQUAM StartAt:2023-08-30 11:01:51.414568391 +0300 MSK m=+36000.002230691 Duration:1800 Description:non id fugit repellendus velit. Owner:impedit_cum_neque@Fiveclub.mil NotifyEarly:1 Sheduled:false}
+2023/08/30 01:01:51 Put event: {PK:0 Title:IPSA ENIM CORPORIS NUMQUAM StartAt:2023-08-30 11:01:51.414568391 +0300 MSK m=+36000.002230691 Duration:1800 Description:modi commodi et. Owner:StephanieHarrison@Skinte.name NotifyEarly:1 Sheduled:false}
+2023/08/30 01:01:51 Put event: {PK:0 Title:ET MINIMA REPREHENDERIT TEMPORIBUS StartAt:2023-08-30 11:01:51.414568391 +0300 MSK m=+36000.002230691 Duration:1800 Description:iure unde eveniet quo laborum aliquam omnis in doloribus. Owner:MelissaDay@Mydo.info NotifyEarly:1 Sheduled:false}
+2023/08/30 01:01:51 Put event: {PK:0 Title:EST DOLOREM MOLESTIAE VEL ET StartAt:2023-08-30 11:01:51.414568391 +0300 MSK m=+36000.002230691 Duration:1800 Description:nulla quis id deserunt veniam possimus quaerat. Owner:pAndrews@Dablist.org NotifyEarly:1 Sheduled:false}
 ```
 
 ### Планировщик
@@ -82,11 +208,54 @@ cd hw12_13_14_15_calendar
 go run ./cmd/sheduler/ --config ./configs/sheduler.yaml
 ```
 
+или после `make build`
+
+```bash
+cd hw12_13_14_15_calendar 
+./bin/sheduler.goc --config ./configs/sheduler.yaml
+```
+
+```text
+INFO [2023-08-29 21:49:23] Sheduler start.
+INFO [2023-08-29 21:49:23] Transmitter.Start()
+^C                                                  <----------- В случае прерывания
+INFO [2023-08-29 21:49:28] Transmitter.Stop()
+ERROR [2023-08-29 21:49:28] rpc error: code = Canceled desc = context canceled
+ERROR [2023-08-29 21:49:28] rpc error: code = Canceled desc = context canceled
+INFO [2023-08-29 21:49:28] Sheduler end.
+```
+
 ### Архиватор
 
 ```bash
 cd hw12_13_14_15_calendar 
 go run ./cmd/archiver/ --config ./configs/archiver.yaml
+```
+
+или после `make build`
+
+```bash
+cd hw12_13_14_15_calendar 
+./bin/archiver.goc --config ./configs/archiver.yaml
+```
+
+Лог:
+
+```text
+INFO [2023-08-29 21:30:47] Transmitter.Start()
+INFO [2023-08-29 21:30:47] Must be archived: 15
+INFO [2023-08-29 21:30:47] Must be archived: 20
+INFO [2023-08-29 21:30:47] Must be archived: 12
+INFO [2023-08-29 21:30:47] Must be archived: 11
+INFO [2023-08-29 21:30:47] Must be archived: 17
+INFO [2023-08-29 21:30:47] Must be archived: 14
+INFO [2023-08-29 21:30:47] Must be archived: 16
+INFO [2023-08-29 21:30:47] Must be archived: 13
+INFO [2023-08-29 21:30:47] Must be archived: 19
+INFO [2023-08-29 21:30:47] Must be archived: 18
+^C                                                  <----------- В случае прерывания
+INFO [2023-08-29 21:35:55] Transmitter.Stop()
+ERROR [2023-08-29 21:35:55] Exception (504) Reason: "channel/connection is not open"  <-- TODO: найти где
 ```
 
 ### Рассылщик
@@ -96,7 +265,29 @@ cd hw12_13_14_15_calendar
 go run ./cmd/sender/ --config ./configs/sender.yaml
 ```
 
-## Заметки для себя
+или после `make build`
+
+```bash
+cd hw12_13_14_15_calendar 
+./bin/sender.goc --config ./configs/sender.yaml
+```
+
+Лог (по мере добавления уведомлений, например, посредством `mgm_dataset.goc`, будут видны новые отправляемые сообщения):
+
+```text
+Notice "AD ISTE VELIT ARCHITECTO NESCIUNT" send to "accusamus@Eimbee.mil"
+Notice "UT RERUM ELIGENDI VOLUPTATEM" send to "omnis@Skipstorm.net"
+Notice "ENIM EIUS SUSCIPIT ALIQUID VOLUPTATEM" send to "DonaldHawkins@Npath.com"
+Notice "QUO SED LABORUM ADIPISCI" send to "earum_rem_quod@Wikizz.gov"
+Notice "RECUSANDAE ATQUE CORRUPTI" send to "TimothyCook@Meeveo.org"
+Notice "SINT CORRUPTI" send to "minima@Thoughtbridge.biz"
+Notice "SED MAGNAM DOLORIBUS" send to "impedit@Gigabox.biz"
+Notice "NOBIS IMPEDIT" send to "PhyllisTorres@Twinder.net"
+Notice "PERFERENDIS ET CUM" send to "aStanley@Yacero.gov"
+Notice "QUAS EST NATUS UNDE" send to "BeverlyDuncan@Realmix.net"
+```
+
+## Заметки (для себя)
 
 [go get github.com/streadway/amqp](https://nuancesprog.ru/p/4907/)
 

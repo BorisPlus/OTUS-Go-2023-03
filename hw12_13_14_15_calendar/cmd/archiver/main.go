@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"os/signal"
@@ -46,7 +45,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("unable to decode into struct, %v", err)
 	}
-	mainLogger := logger.NewLogger(cfg.Log.Level, io.Discard)
+	mainLogger := logger.NewLogger(cfg.Log.Level, os.Stdout)
 	archiver := archiver.NewArchiver(
 		archiver.NewEventsSource(cfg.Source, mainLogger),
 		archiver.NewEventsTarget(cfg.Target, mainLogger),

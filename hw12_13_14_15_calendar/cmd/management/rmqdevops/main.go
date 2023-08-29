@@ -67,7 +67,7 @@ func main() {
 		log.Println("Channel close.")
 		_ = channel.Close()
 	}()
-	fmt.Println(withDrop)
+	log.Printf("withDrop %v\n", withDrop)
 	for _, exch := range cfg.RabbitMQ.Exchanges {
 		if withDrop {
 			err = channel.ExchangeDelete(exch.Name, false, true)

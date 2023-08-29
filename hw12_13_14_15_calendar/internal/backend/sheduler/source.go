@@ -2,7 +2,6 @@ package sheduler
 
 import (
 	"context"
-
 	"hw12_13_14_15_calendar/internal/interfaces"
 	"hw12_13_14_15_calendar/internal/server/rpc/client"
 	"hw12_13_14_15_calendar/internal/server/rpc/rpcapi"
@@ -24,50 +23,50 @@ func NewEventsSource(
 	}
 }
 
-func (self *EventsSource) Connect(ctx context.Context) error {
+func (s *EventsSource) Connect(ctx context.Context) error {
 	_ = ctx // TODO: usage
-	err := self.rpcClient.Connect(self.dsn)
+	err := s.rpcClient.Connect(s.dsn)
 	if err != nil {
-		self.logger.Error(err.Error())
+		s.logger.Error(err.Error())
 		return err
 	}
 	return nil
 }
 
-func (self *EventsSource) Disconnect(ctx context.Context) error {
+func (s *EventsSource) Disconnect(ctx context.Context) error {
 	_ = ctx // TODO: usage
-	err := self.rpcClient.Close()
+	err := s.rpcClient.Close()
 	if err != nil {
-		self.logger.Error(err.Error())
+		// s.logger.Error(err.Error())
 		return err
 	}
 	return nil
 }
 
-func (self *EventsSource) Confirm(ctx context.Context, event **rpcapi.Event) error {
+func (s *EventsSource) Confirm(ctx context.Context, event **rpcapi.Event) error {
 	(*event).Sheduled = true
-	_, err := self.rpcClient.UpdateEvent(ctx, *(event))
+	_, err := s.rpcClient.UpdateEvent(ctx, *(event))
 	if err != nil {
-		self.logger.Error(err.Error())
+		s.logger.Error(err.Error())
 		return err
 	}
 	return nil
 }
 
-func (self *EventsSource) Getback(ctx context.Context, event **rpcapi.Event) error {
+func (s *EventsSource) Getback(ctx context.Context, event **rpcapi.Event) error {
 	(*event).Sheduled = false
-	_, err := self.rpcClient.UpdateEvent(ctx, *(event))
+	_, err := s.rpcClient.UpdateEvent(ctx, *(event))
 	if err != nil {
-		self.logger.Error(err.Error())
+		s.logger.Error(err.Error())
 		return err
 	}
 	return nil
 }
 
-func (self *EventsSource) DataChannel(ctx context.Context) (<-chan *rpcapi.Event, error) {
-	events, err := self.rpcClient.ListNotSheduledEvents(ctx)
+func (s *EventsSource) DataChannel(ctx context.Context) (<-chan *rpcapi.Event, error) {
+	events, err := s.rpcClient.ListNotSheduledEvents(ctx)
 	if err != nil {
-		self.logger.Error(err.Error())
+		s.logger.Error(err.Error())
 		return nil, err
 	}
 	eventsChan := make(chan *rpcapi.Event, len(events))

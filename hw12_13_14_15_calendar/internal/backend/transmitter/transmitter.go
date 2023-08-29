@@ -27,16 +27,16 @@ type Transmitter[FROM Item, TO Item] struct {
 }
 
 func NewTransmitter[FROM Item, TO Item](
-	Source Source[FROM],
-	Target Target[TO],
-	Logger interfaces.Logger,
-	LoopTimeoutSec int64,
+	source Source[FROM],
+	target Target[TO],
+	levelLogger interfaces.Logger,
+	loopTimeoutSec int64,
 ) *Transmitter[FROM, TO] {
 	return &Transmitter[FROM, TO]{
-		Source:         Source,
-		Target:         Target,
-		Logger:         Logger,
-		LoopTimeoutSec: LoopTimeoutSec,
+		Source:         source,
+		Target:         target,
+		Logger:         levelLogger,
+		LoopTimeoutSec: loopTimeoutSec,
 	}
 }
 
@@ -68,7 +68,7 @@ func (t *Transmitter[FROM, TO]) Start(ctx context.Context) error {
 		return err
 	}
 	for {
-		t.Logger.Info("Retry")
+		t.Logger.Debug("Retry")
 		eventsChan, err := t.Source.DataChannel(ctx)
 		if err != nil {
 			t.Logger.Error(err.Error())
@@ -80,16 +80,16 @@ func (t *Transmitter[FROM, TO]) Start(ctx context.Context) error {
 			case candidate, ok := <-eventsChan:
 				if !ok {
 					breakMe = true
-					t.Logger.Warning("No candidates")
+					t.Logger.Debug("No candidates")
 					break
 				}
-				t.Logger.Info("Transmit candidate begin")
+				t.Logger.Debug("Transmit candidate begin")
 				indicator, err := t.Transmit(ctx, candidate)
 				if err != nil {
 					t.Logger.Error(err.Error())
 					return err
 				}
-				t.Logger.Info("Transmit candidate done with status %v", indicator)
+				t.Logger.Debug("Transmit candidate done with status %v", indicator)
 			case <-ctx.Done():
 				return nil
 			}

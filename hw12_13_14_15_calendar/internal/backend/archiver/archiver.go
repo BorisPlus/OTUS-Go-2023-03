@@ -3,14 +3,12 @@ package archiver
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"time"
 
+	amqp "github.com/rabbitmq/amqp091-go"
 	"hw12_13_14_15_calendar/internal/backend/transmitter"
 	"hw12_13_14_15_calendar/internal/interfaces"
 	"hw12_13_14_15_calendar/internal/models"
-
-	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type Archiver struct {
@@ -18,12 +16,12 @@ type Archiver struct {
 	Logger      interfaces.Logger
 }
 
-func (self *Archiver) Start(ctx context.Context) error {
-	return self.Transmitter.Start(ctx)
+func (a *Archiver) Start(ctx context.Context) error {
+	return a.Transmitter.Start(ctx)
 }
 
-func (self *Archiver) Stop(ctx context.Context) error {
-	return self.Transmitter.Stop(ctx)
+func (a *Archiver) Stop(ctx context.Context) error {
+	return a.Transmitter.Stop(ctx)
 }
 
 func NewArchiver(
@@ -45,9 +43,6 @@ func NewArchiver(
 		now := time.Now()
 		if notice.StartAt.Before(now) {
 			Transmitter.Logger.Info("Must be archived: %d", notice.PK)
-			fmt.Println()
-			fmt.Println(now)
-			fmt.Println(notice.StartAt)
 			if err := Transmitter.Source.Confirm(ctx, &candidate); err != nil {
 				return false, err
 			}
@@ -57,7 +52,7 @@ func NewArchiver(
 			}
 			return true, nil
 		}
-		Transmitter.Logger.Info("Must be getback PK:%d\n", notice.PK)
+		Transmitter.Logger.Debug("Must be getback PK:%d\n", notice.PK)
 		// TODO: how to make it in one transaction
 		// BEGIN TRANSACTION
 		if err := Transmitter.Source.Getback(ctx, &candidate); err != nil {

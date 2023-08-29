@@ -50,8 +50,8 @@ func main() {
 		log.Fatalf("unable to decode into struct, %v", err)
 	}
 
-	log.Printf("HTTP Config - %+v\n", mainConfig.HTTP)
 	mainLogger := logger.NewLogger(mainConfig.Log.Level, os.Stdout)
+	mainLogger.Info("HTTP Config - %+v", mainConfig.HTTP)
 	middleware.Init(mainLogger)
 	storage := storage.NewStorageByType(mainConfig.Storage.Type, mainConfig.Storage.DSN)
 	calendar := app.NewApp(mainLogger, storage)
@@ -79,7 +79,7 @@ func main() {
 		defer wg.Done()
 		<-ctx.Done()
 		if err := httpServer.Stop(ctx); err != nil {
-			fmt.Println(err)
+			mainLogger.Error(err.Error())
 		}
 	}()
 
@@ -102,7 +102,7 @@ func main() {
 	}()
 
 	// rpcServer.Start
-	log.Printf("RPC Config - %+v\n", mainConfig.RPC)
+	mainLogger.Info("RPC Config - %+v\n", mainConfig.RPC)
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -112,7 +112,6 @@ func main() {
 		}
 	}()
 
-	log.Println("Println Calendar is running...")
 	mainLogger.Info("calendar is running...")
 	<-ctx.Done()
 	// stop()
