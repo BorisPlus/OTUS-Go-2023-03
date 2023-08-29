@@ -21,7 +21,7 @@ type RabbitMQTarget struct {
 	RoutingKey   string
 }
 
-type RabbitMQMultyTarget struct {
+type RabbitMQMultiTarget struct {
 	DSN          string
 	ExchangeName string
 	RoutingKeys  []string
@@ -30,4 +30,11 @@ type RabbitMQMultyTarget struct {
 type RabbitMQSource struct {
 	DSN       string
 	QueueName string
+}
+
+type RabbitMQSourceWithGetback struct {
+	DSN                   string
+	QueueName             string
+	GetbackToExchangeName string
+	GetbackKey            string
 }

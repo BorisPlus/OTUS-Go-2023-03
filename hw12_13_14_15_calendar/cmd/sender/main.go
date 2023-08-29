@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/signal"
@@ -12,11 +13,20 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
-	config "hw12_13_14_15_calendar/internal/config"
-	logger "hw12_13_14_15_calendar/internal/logger"
+	"hw12_13_14_15_calendar/internal/backend/sender"
+	"hw12_13_14_15_calendar/internal/config"
+	"hw12_13_14_15_calendar/internal/logger"
+	"hw12_13_14_15_calendar/internal/models"
 )
 
 var configFile string
+
+type SentByFmt struct{}
+
+func (s *SentByFmt) Notify(notice models.Notice) error {
+	_, err := fmt.Printf("Notice %q send to %q\n", notice.Title, notice.Owner)
+	return err
+}
 
 func init() {
 	pflag.StringVar(&configFile, "config", "", "Path to configuration file")
@@ -44,12 +54,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("unable to decode into struct, %v", err)
 	}
-	mainLogger := logger.NewLogger(cfg.Log.Level, os.Stdout)
-	archiver := NewSender(
-		NewEventsSource(cfg.Source, mainLogger),
-		NewEventsTarget(cfg.Targets, mainLogger),
+	mainLogger := logger.NewLogger(cfg.Log.Level, io.Discard)
+	sender := sender.NewSender(
+		sender.NewNoticesSource(cfg.Source, mainLogger),
+		sender.NewNoticesTarget(cfg.Target, mainLogger, &SentByFmt{}),
 		mainLogger,
-		0,
+		cfg.TimeoutSec,
 	)
 	var once sync.Once
 	ctx, stop := signal.NotifyContext(context.Background(),
@@ -60,11 +70,11 @@ func main() {
 	go func() {
 		defer wg.Done()
 		<-ctx.Done()
-		if err := archiver.Stop(ctx); err != nil {
+		if err := sender.Stop(ctx); err != nil {
 			fmt.Println(err)
 		}
 	}()
-	if err := archiver.Start(ctx); err != nil {
+	if err := sender.Start(ctx); err != nil {
 		once.Do(stop)
 	}
 	wg.Wait()

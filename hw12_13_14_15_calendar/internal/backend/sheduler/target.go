@@ -1,4 +1,4 @@
-package main
+package sheduler
 
 import (
 	"context"
@@ -10,24 +10,23 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-type EventsTarget struct {
+type NoticesTarget struct {
 	target     models.RabbitMQTarget
 	connection *amqp.Connection
-	channel    *amqp.Channel
 	logger     interfaces.Logger
 }
 
-func NewEventsTarget(
+func NewNoticesTarget(
 	target models.RabbitMQTarget,
 	logger interfaces.Logger,
-) *EventsTarget {
-	return &EventsTarget{
+) *NoticesTarget {
+	return &NoticesTarget{
 		target: target,
 		logger: logger,
 	}
 }
 
-func (self *EventsTarget) Connect(ctx context.Context) error {
+func (self *NoticesTarget) Connect(ctx context.Context) error {
 	_ = ctx // TODO
 	var err error
 	self.connection, err = amqp.Dial(self.target.DSN)
@@ -35,22 +34,12 @@ func (self *EventsTarget) Connect(ctx context.Context) error {
 		self.logger.Error(err.Error())
 		return err
 	}
-	self.channel, err = self.connection.Channel()
-	if err != nil {
-		self.logger.Error(err.Error())
-		return err
-	}
 	return nil
 }
 
-func (self *EventsTarget) Disconnect(ctx context.Context) error {
+func (self *NoticesTarget) Disconnect(ctx context.Context) error {
 	_ = ctx // TODO: usage
-	err := self.channel.Close()
-	if err != nil {
-		self.logger.Error(err.Error())
-		// return err
-	}
-	err = self.connection.Close()
+	err := self.connection.Close()
 	if err != nil {
 		self.logger.Error(err.Error())
 		return err
@@ -58,13 +47,19 @@ func (self *EventsTarget) Disconnect(ctx context.Context) error {
 	return nil
 }
 
-func (self *EventsTarget) PutEvent(ctx context.Context, event amqp.Delivery) error {
-	err := self.channel.ExchangeDeclarePassive(self.target.ExchangeName, "direct", true, false, false, false, nil)
+func (self *NoticesTarget) Put(ctx context.Context, notice *models.Notice) error {
+	channel, err := self.connection.Channel()
 	if err != nil {
 		self.logger.Error(err.Error())
 		return err
 	}
-	data, err := json.Marshal(event)
+	defer channel.Close()
+	err = channel.ExchangeDeclarePassive(self.target.ExchangeName, "direct", true, false, false, false, nil)
+	if err != nil {
+		self.logger.Error(err.Error())
+		return err
+	}
+	data, err := json.Marshal(notice)
 	if err != nil {
 		self.logger.Error(err.Error())
 		return err
@@ -72,7 +67,7 @@ func (self *EventsTarget) PutEvent(ctx context.Context, event amqp.Delivery) err
 	message := amqp.Publishing{
 		Body: data,
 	}
-	err = self.channel.PublishWithContext(ctx, self.target.ExchangeName, self.target.RoutingKey, false, false, message)
+	err = channel.PublishWithContext(ctx, self.target.ExchangeName, self.target.RoutingKey, false, false, message)
 	if err != nil {
 		self.logger.Error(err.Error())
 		return err

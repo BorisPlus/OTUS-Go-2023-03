@@ -70,14 +70,14 @@ func main() {
 	fmt.Println(withDrop)
 	for _, exch := range cfg.RabbitMQ.Exchanges {
 		if withDrop {
-			err = channel.ExchangeDelete(exch.Name, false, false)
+			err = channel.ExchangeDelete(exch.Name, false, true)
 			if err != nil {
 				log.Printf("ERROR. Drop exchange: %q.\n%s\n", exch.Name, err.Error())
 			} else {
 				log.Printf("OK. Drop exchange: %q.\n", exch.Name)
 			}
 			for _, binding := range exch.Bindings {
-				_, err = channel.QueueDelete(binding.BindQueue, false, false, false)
+				_, err = channel.QueueDelete(binding.BindQueue, false, false, true)
 				if err != nil {
 					log.Printf("ERROR. Drop queue: %q.\n%s\n", binding.BindQueue, err.Error())
 				} else {

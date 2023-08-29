@@ -65,7 +65,7 @@ go run ./cmd/calendar/ --config ./configs/calendar.yaml
 
 ```bash
 cd hw12_13_14_15_calendar 
-go run ./cmd/dataset/ --config ./configs/calendar.yaml
+go run ./cmd/management/dataset/ --config ./configs/calendar.yaml
 ```
 
 ### (Пере-)настройка очередей

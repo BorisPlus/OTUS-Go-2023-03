@@ -3,8 +3,8 @@ package config
 import "hw12_13_14_15_calendar/internal/models"
 
 type SenderConfig struct {
-	Source     models.RabbitMQSource
-	Targets    models.RabbitMQMultyTarget
+	Source     models.RabbitMQSourceWithGetback
+	Target     models.RabbitMQTarget
 	Log        LogConfig
 	TimeoutSec int64
 }

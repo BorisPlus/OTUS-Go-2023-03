@@ -1,4 +1,4 @@
-package main
+package sheduler
 
 import (
 	"context"
@@ -44,9 +44,9 @@ func (self *EventsSource) Disconnect(ctx context.Context) error {
 	return nil
 }
 
-func (self *EventsSource) AcknowledgeEvent(ctx context.Context, event *rpcapi.Event) error {
-	event.Sheduled = true
-	event, err := self.rpcClient.UpdateEvent(ctx, event)
+func (self *EventsSource) Confirm(ctx context.Context, event **rpcapi.Event) error {
+	(*event).Sheduled = true
+	_, err := self.rpcClient.UpdateEvent(ctx, *(event))
 	if err != nil {
 		self.logger.Error(err.Error())
 		return err
@@ -54,7 +54,17 @@ func (self *EventsSource) AcknowledgeEvent(ctx context.Context, event *rpcapi.Ev
 	return nil
 }
 
-func (self *EventsSource) GetEvents(ctx context.Context) (<-chan *rpcapi.Event, error) {
+func (self *EventsSource) Getback(ctx context.Context, event **rpcapi.Event) error {
+	(*event).Sheduled = false
+	_, err := self.rpcClient.UpdateEvent(ctx, *(event))
+	if err != nil {
+		self.logger.Error(err.Error())
+		return err
+	}
+	return nil
+}
+
+func (self *EventsSource) DataChannel(ctx context.Context) (<-chan *rpcapi.Event, error) {
 	events, err := self.rpcClient.ListNotSheduledEvents(ctx)
 	if err != nil {
 		self.logger.Error(err.Error())
@@ -64,5 +74,6 @@ func (self *EventsSource) GetEvents(ctx context.Context) (<-chan *rpcapi.Event, 
 	for _, event := range events {
 		eventsChan <- event
 	}
+	close(eventsChan)
 	return eventsChan, nil
 }

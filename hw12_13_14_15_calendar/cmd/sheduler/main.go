@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
+	"hw12_13_14_15_calendar/internal/backend/sheduler"
 	"hw12_13_14_15_calendar/internal/config"
 	"hw12_13_14_15_calendar/internal/logger"
 )
@@ -47,9 +48,9 @@ func main() {
 
 	mainLogger := logger.NewLogger(cfg.Log.Level, os.Stdout)
 
-	sheduler := NewSheduler(
-		NewEventsSource(cfg.Source.DSN, mainLogger),
-		NewEventsTarget(cfg.Target, mainLogger),
+	sheduler := sheduler.NewSheduler(
+		sheduler.NewEventsSource(cfg.Source.DSN, mainLogger),
+		sheduler.NewNoticesTarget(cfg.Target, mainLogger),
 		mainLogger,
 		cfg.TimeoutSec,
 	)

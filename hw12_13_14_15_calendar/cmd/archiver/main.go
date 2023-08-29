@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/signal"
@@ -12,8 +13,9 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
-	config "hw12_13_14_15_calendar/internal/config"
-	logger "hw12_13_14_15_calendar/internal/logger"
+	"hw12_13_14_15_calendar/internal/backend/archiver"
+	"hw12_13_14_15_calendar/internal/config"
+	"hw12_13_14_15_calendar/internal/logger"
 )
 
 var configFile string
@@ -44,12 +46,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("unable to decode into struct, %v", err)
 	}
-	mainLogger := logger.NewLogger(cfg.Log.Level, os.Stdout)
-	archiver := NewArchiver(
-		NewEventsSource(cfg.Source, mainLogger),
-		NewEventsTarget(cfg.ArchiveTo, mainLogger),
+	mainLogger := logger.NewLogger(cfg.Log.Level, io.Discard)
+	archiver := archiver.NewArchiver(
+		archiver.NewEventsSource(cfg.Source, mainLogger),
+		archiver.NewEventsTarget(cfg.Target, mainLogger),
 		mainLogger,
-		0,
+		cfg.TimeoutSec,
 	)
 	var once sync.Once
 	ctx, stop := signal.NotifyContext(context.Background(),

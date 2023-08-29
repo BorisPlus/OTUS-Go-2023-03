@@ -47,15 +47,16 @@ func main() {
 	// CREATE DATASET SERIA
 	client := &http.Client{}
 	requestOfCreate := fmt.Sprintf("http://%s:%d/api/events/create", mainConfig.HTTP.Host, mainConfig.HTTP.Port)
+	now := time.Now()
 	// MUST BY NOTIFIED
 	for i := 1; i <= datasetSize; i++ {
 		event := models.Event{
 			Title:       fake.Title(),
-			StartAt:     time.Now().Add(29 * time.Second),
+			StartAt:     now.Add(3000 * time.Second),
 			Duration:    1800,
 			Description: fake.EmailSubject(),
 			Owner:       fake.EmailAddress(),
-			NotifyEarly: 30,
+			NotifyEarly: 3600,
 		}
 		payloadOfCreateRaw, _ := json.Marshal(event)
 		payloadOfCreate := strings.NewReader(string(payloadOfCreateRaw))
@@ -77,11 +78,11 @@ func main() {
 	for i := 1; i <= datasetSize; i++ {
 		event := models.Event{
 			Title:       fake.Title(),
-			StartAt:     time.Now().Add(-15 * time.Second),
+			StartAt:     now.Add(-18000 * time.Minute),
 			Duration:    1800,
 			Description: fake.EmailSubject(),
 			Owner:       fake.EmailAddress(),
-			NotifyEarly: 30,
+			NotifyEarly: 60,
 		}
 		payloadOfCreateRaw, _ := json.Marshal(event)
 		payloadOfCreate := strings.NewReader(string(payloadOfCreateRaw))
@@ -103,11 +104,11 @@ func main() {
 	for i := 1; i <= datasetSize; i++ {
 		event := models.Event{
 			Title:       fake.Title(),
-			StartAt:     time.Now().Add(600 * time.Second),
+			StartAt:     now.Add(36000 * time.Second),
 			Duration:    1800,
 			Description: fake.EmailSubject(),
 			Owner:       fake.EmailAddress(),
-			NotifyEarly: 30,
+			NotifyEarly: 1,
 		}
 		payloadOfCreateRaw, _ := json.Marshal(event)
 		payloadOfCreate := strings.NewReader(string(payloadOfCreateRaw))

@@ -4,7 +4,7 @@ Target:
   DSN: "amqp://guest:guest@localhost:5672/"
   ExchangeName: "exch_events"
   RoutingKey: "notify"
-TimeoutSec: 60
+TimeoutSec: 5
 log:
   level: INFO
  
