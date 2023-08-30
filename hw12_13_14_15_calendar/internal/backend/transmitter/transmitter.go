@@ -14,7 +14,9 @@ func SleepWithContext(ctx context.Context, d time.Duration) {
 		if !timer.Stop() {
 			<-timer.C
 		}
+		return
 	case <-timer.C:
+		return
 	}
 }
 
@@ -60,12 +62,10 @@ func (t *Transmitter[FROM, TO]) connect(ctx context.Context) error {
 func (t *Transmitter[FROM, TO]) disconnect(ctx context.Context) error {
 	err := t.Source.Disconnect(ctx)
 	if err != nil {
-		t.Logger.Error(err.Error())
 		return err
 	}
 	err = t.Target.Disconnect(ctx)
 	if err != nil {
-		t.Logger.Error(err.Error())
 		return err
 	}
 	return nil
@@ -78,13 +78,13 @@ func (t *Transmitter[FROM, TO]) Stop(ctx context.Context) error {
 
 func (t *Transmitter[FROM, TO]) Start(ctx context.Context) error {
 	t.Logger.Info("Transmitter.Start()")
-	err := t.connect(ctx)
-	if err != nil {
-		t.Logger.Error(err.Error())
-		return err
-	}
 	for {
-		t.Logger.Debug("Retry")
+		err := t.connect(ctx)
+		if err != nil {
+			t.Logger.Error(err.Error())
+			return err
+		}
+		t.Logger.Info("Transmitter step.")
 		eventsChan, err := t.Source.DataChannel(ctx)
 		if err != nil {
 			t.Logger.Error(err.Error())
@@ -108,18 +108,21 @@ func (t *Transmitter[FROM, TO]) Start(ctx context.Context) error {
 				t.Logger.Debug("Transmit candidate done with status %v", indicator)
 				if !indicator {
 					if t.Processed.has(candidate) {
+						t.Processed.clear()
 						breakMe = true
 						break
 					}
+					t.Logger.Info("new candidate.")
 					t.Processed.add(candidate)
 				}
 			case <-ctx.Done():
 				return nil
-			case <-time.After(10 * time.Second):
-				t.Logger.Info("Transmit fading")
-				SleepWithContext(ctx, 10*time.Second)
 			}
 		}
 		SleepWithContext(ctx, time.Duration(t.LoopTimeoutSec)*time.Second)
+		err = t.disconnect(ctx)
+		if err != nil {
+			return err
+		}
 	}
 }

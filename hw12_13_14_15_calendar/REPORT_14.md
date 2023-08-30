@@ -50,6 +50,8 @@ type Transmitter[FROM Item, TO Item] struct {
 
 ```
 
+> Также стало необходимым разработать структуру дженерика математического множества. Она помогает отслеживать появление цикла обработки. Когда необработанный элемент поступает опять на вход обработчику внутри одного цикла. Но это имплементировано и требует реализации только функции хеша от сохраняемого во множество элемента.
+
 Так:
 
 * Планировщик `sheduler` "перекладывает" события из хранилища (через приложение по RPC) в очередь сообщений "RabbitMQ", переконвертируя объекты `событие` в объекты `уведомление`. При этом фиксируется факт того, что событие было забрано, и при слудующем цикле выборки повтороного его помещения в очередь не происходит.
@@ -117,6 +119,10 @@ cd hw12_13_14_15_calendar
 2023/08/29 23:54:47 Channel close.
 2023/08/29 23:54:47 Connection close.
 ```
+
+![exchange.png](REPORT_14.files/exchange.png)
+
+![empty.png](REPORT_14.files/empty.png)
 
 ### Кадендарь
 
@@ -220,10 +226,10 @@ INFO [2023-08-29 21:49:23] Sheduler start.
 INFO [2023-08-29 21:49:23] Transmitter.Start()
 ^C                                                  <----------- В случае прерывания
 INFO [2023-08-29 21:49:28] Transmitter.Stop()
-ERROR [2023-08-29 21:49:28] rpc error: code = Canceled desc = context canceled
-ERROR [2023-08-29 21:49:28] rpc error: code = Canceled desc = context canceled
 INFO [2023-08-29 21:49:28] Sheduler end.
 ```
+
+![sheduled.png](REPORT_14.files/sheduled.png)
 
 ### Архиватор
 
@@ -255,8 +261,9 @@ INFO [2023-08-29 21:30:47] Must be archived: 19
 INFO [2023-08-29 21:30:47] Must be archived: 18
 ^C                                                  <----------- В случае прерывания
 INFO [2023-08-29 21:35:55] Transmitter.Stop()
-ERROR [2023-08-29 21:35:55] Exception (504) Reason: "channel/connection is not open"  <-- TODO: найти где
 ```
+
+![archived.png](REPORT_14.files/archived.png)
 
 ### Рассылщик
 
@@ -286,6 +293,8 @@ Notice "NOBIS IMPEDIT" send to "PhyllisTorres@Twinder.net"
 Notice "PERFERENDIS ET CUM" send to "aStanley@Yacero.gov"
 Notice "QUAS EST NATUS UNDE" send to "BeverlyDuncan@Realmix.net"
 ```
+
+![send.png](REPORT_14.files/send.png)
 
 ## Заметки (для себя)
 

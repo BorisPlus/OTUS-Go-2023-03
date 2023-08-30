@@ -1,6 +1,8 @@
 package transmitter
 
-import "sync"
+import (
+	"sync"
+)
 
 type HashFunc[T Item] func(T) string
 
@@ -10,11 +12,12 @@ type Set[T Item] struct {
 	Hash     HashFunc[T]
 }
 
-func NewSet[T Item](Func HashFunc[T]) Set[T] {
-	s := Set[T]{}
-	s.mutex = &sync.RWMutex{}
-	s.Hash = Func
-	return s
+func NewSet[T Item](Func HashFunc[T]) *Set[T] {
+	return &Set[T]{
+		make(map[string]T),
+		&sync.RWMutex{},
+		Func,
+	}
 }
 
 func (s *Set[T]) add(element T) {

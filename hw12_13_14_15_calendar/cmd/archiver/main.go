@@ -47,7 +47,7 @@ func main() {
 	}
 	mainLogger := logger.NewLogger(cfg.Log.Level, os.Stdout)
 	archiver := archiver.NewArchiver(
-		archiver.NewEventsSource(cfg.Source, mainLogger),
+		archiver.NewNoticesSource(cfg.Source, mainLogger),
 		archiver.NewEventsTarget(cfg.Target, mainLogger),
 		mainLogger,
 		cfg.TimeoutSec,
@@ -62,7 +62,7 @@ func main() {
 		defer wg.Done()
 		<-ctx.Done()
 		if err := archiver.Stop(ctx); err != nil {
-			fmt.Println(err)
+			// TODO: really logic need
 		}
 	}()
 	if err := archiver.Start(ctx); err != nil {

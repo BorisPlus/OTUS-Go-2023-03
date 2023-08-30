@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
+	"hw12_13_14_15_calendar/internal/backend/archiver"
 	"hw12_13_14_15_calendar/internal/backend/sender"
 	"hw12_13_14_15_calendar/internal/config"
 	"hw12_13_14_15_calendar/internal/logger"
@@ -56,7 +57,7 @@ func main() {
 	}
 	mainLogger := logger.NewLogger(cfg.Log.Level, io.Discard)
 	sender := sender.NewSender(
-		sender.NewNoticesSource(cfg.Source, mainLogger),
+		archiver.NewNoticesSource(cfg.Source, mainLogger),
 		sender.NewNoticesTarget(cfg.Target, mainLogger, &SentByFmt{}),
 		mainLogger,
 		cfg.TimeoutSec,

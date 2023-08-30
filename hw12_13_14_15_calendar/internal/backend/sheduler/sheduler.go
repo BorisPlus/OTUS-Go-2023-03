@@ -14,29 +14,16 @@ func HashFunc(event *rpcapi.Event) string {
 	return string(event.PK)
 }
 
-type Sheduler struct {
-	Transmitter transmitter.Transmitter[*rpcapi.Event, models.Notice]
-	Logger      interfaces.Logger
-}
-
-func (t *Sheduler) Start(ctx context.Context) error {
-	return t.Transmitter.Start(ctx)
-}
-
-func (t *Sheduler) Stop(ctx context.Context) error {
-	return t.Transmitter.Stop(ctx)
-}
-
 func NewSheduler(
 	source *EventsSource,
 	target *NoticesTarget,
 	logger interfaces.Logger,
 	timeoutSec int64,
-) *Sheduler {
+) *transmitter.Transmitter[*rpcapi.Event, models.Notice] {
 	Transmitter := transmitter.NewTransmitter[*rpcapi.Event, models.Notice](
 		source,
 		target,
-		transmitter.NewSet[*rpcapi.Event](HashFunc),
+		*transmitter.NewSet[*rpcapi.Event](HashFunc),
 		logger,
 		timeoutSec,
 	)
@@ -60,8 +47,5 @@ func NewSheduler(
 		Transmitter.Logger.Error(err.Error())
 		return false, err
 	}
-	return &Sheduler{
-		Transmitter: *Transmitter,
-		Logger:      logger,
-	}
+	return Transmitter
 }

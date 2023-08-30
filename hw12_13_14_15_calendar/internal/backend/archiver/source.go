@@ -3,9 +3,10 @@ package archiver
 import (
 	"context"
 
-	amqp "github.com/rabbitmq/amqp091-go"
 	"hw12_13_14_15_calendar/internal/interfaces"
 	"hw12_13_14_15_calendar/internal/models"
+
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type NoticesSource struct {
@@ -14,7 +15,7 @@ type NoticesSource struct {
 	logger     interfaces.Logger
 }
 
-func NewEventsSource(
+func NewNoticesSource(
 	source models.RabbitMQSourceWithGetback,
 	logger interfaces.Logger,
 ) *NoticesSource {
@@ -40,9 +41,8 @@ func (s *NoticesSource) Disconnect(ctx context.Context) error {
 	if s.connection.IsClosed() {
 		return nil
 	}
-	err := s.connection.Close()
+	err := s.connection.Close() // TODO: with .IsClosed() mutex need
 	if err != nil {
-		s.logger.Error(err.Error())
 		return err
 	}
 	return nil

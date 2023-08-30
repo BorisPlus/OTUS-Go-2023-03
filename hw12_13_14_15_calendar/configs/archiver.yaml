@@ -7,7 +7,7 @@ Target:
   DSN: "amqp://guest:guest@localhost:5672/"
   ExchangeName: notice_exchange
   RoutingKey: archive
-TimeoutSec: 0
+TimeoutSec: 10
 log:
   level: INFO
  

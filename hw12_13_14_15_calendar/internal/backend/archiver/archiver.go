@@ -19,29 +19,16 @@ func HashFunc(candidate amqp.Delivery) string { // TODO: err
 	return strconv.Itoa(notice.PK)
 }
 
-type Archiver struct {
-	Transmitter transmitter.Transmitter[amqp.Delivery, models.Notice]
-	Logger      interfaces.Logger
-}
-
-func (a *Archiver) Start(ctx context.Context) error {
-	return a.Transmitter.Start(ctx)
-}
-
-func (a *Archiver) Stop(ctx context.Context) error {
-	return a.Transmitter.Stop(ctx)
-}
-
 func NewArchiver(
 	source *NoticesSource,
 	target *NoticesTarget,
 	logger interfaces.Logger,
 	timeoutSec int64,
-) *Archiver {
+) *transmitter.Transmitter[amqp.Delivery, models.Notice] {
 	Transmitter := transmitter.NewTransmitter[amqp.Delivery, models.Notice](
 		source,
 		target,
-		transmitter.NewSet[amqp.Delivery](HashFunc),
+		*transmitter.NewSet[amqp.Delivery](HashFunc),
 		logger,
 		timeoutSec,
 	)
@@ -73,8 +60,5 @@ func NewArchiver(
 		// END TRANSACTION
 		return false, nil
 	}
-	return &Archiver{
-		Transmitter: *Transmitter,
-		Logger:      logger,
-	}
+	return Transmitter
 }
