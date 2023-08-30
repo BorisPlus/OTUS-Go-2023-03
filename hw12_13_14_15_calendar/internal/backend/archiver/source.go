@@ -3,10 +3,9 @@ package archiver
 import (
 	"context"
 
-	"hw12_13_14_15_calendar/internal/interfaces"
-	"hw12_13_14_15_calendar/internal/models"
-
 	amqp "github.com/rabbitmq/amqp091-go"
+	interfaces "hw12_13_14_15_calendar/internal/interfaces"
+	models "hw12_13_14_15_calendar/internal/models"
 )
 
 type NoticesSource struct {

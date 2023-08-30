@@ -24,7 +24,6 @@ linters-settings:
           - 'github.com/stretchr'
           - 'github.com/valyala/fastjson'
           - 'github.com/google'
-          - 'github.com/rabbitmq/amqp091-go'
           - 'hw12_13_14_15_calendar/internal/app'
           - 'hw12_13_14_15_calendar/internal/interfaces'
           - 'hw12_13_14_15_calendar/internal/logger'
@@ -43,6 +42,8 @@ linters-settings:
           - 'hw12_13_14_15_calendar/internal/server/rpc/common'
           - 'hw12_13_14_15_calendar/internal/server/rpc/rpcapi'
           - 'hw12_13_14_15_calendar/internal/backend/transmitter'
+          - 'hw12_13_14_15_calendar/internal/backend/archiver'
+          - 'github.com/rabbitmq/amqp091-go'
       test:
         files:
           - "$test"
@@ -96,7 +97,7 @@ linters:
     - exhaustive
     - exportloopref
     - funlen
-    - gci
+    # - gci
     - gocognit
     - goconst
     - gocritic

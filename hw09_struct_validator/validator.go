@@ -112,7 +112,7 @@ func ValidateField(field reflect.StructField, value reflect.Value, validationsRu
 				}
 			}
 			continue
-		} 
+		}
 		vRule := ValidationRule{field, value, validatorFieldRuleFunc, validatorFieldRuleParams}
 		fieldRuleValidationError := ValidateFieldByRule(vRule)
 		if fieldRuleValidationError.Err != nil {

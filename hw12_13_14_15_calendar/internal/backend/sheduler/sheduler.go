@@ -3,11 +3,11 @@ package sheduler
 import (
 	"context"
 
-	"hw12_13_14_15_calendar/internal/backend/transmitter"
-	"hw12_13_14_15_calendar/internal/interfaces"
-	"hw12_13_14_15_calendar/internal/models"
-	"hw12_13_14_15_calendar/internal/server/rpc/common"
-	"hw12_13_14_15_calendar/internal/server/rpc/rpcapi"
+	transmitter "hw12_13_14_15_calendar/internal/backend/transmitter"
+	interfaces "hw12_13_14_15_calendar/internal/interfaces"
+	models "hw12_13_14_15_calendar/internal/models"
+	common "hw12_13_14_15_calendar/internal/server/rpc/common"
+	rpcapi "hw12_13_14_15_calendar/internal/server/rpc/rpcapi"
 )
 
 func HashFunc(event *rpcapi.Event) string {

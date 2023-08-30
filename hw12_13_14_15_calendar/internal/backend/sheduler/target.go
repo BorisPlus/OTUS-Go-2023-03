@@ -5,8 +5,9 @@ import (
 	"encoding/json"
 
 	amqp "github.com/rabbitmq/amqp091-go"
-	"hw12_13_14_15_calendar/internal/interfaces"
-	"hw12_13_14_15_calendar/internal/models"
+
+	interfaces "hw12_13_14_15_calendar/internal/interfaces"
+	models "hw12_13_14_15_calendar/internal/models"
 )
 
 type NoticesTarget struct {

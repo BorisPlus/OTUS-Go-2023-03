@@ -12,11 +12,11 @@ type Set[T Item] struct {
 	Hash     HashFunc[T]
 }
 
-func NewSet[T Item](Func HashFunc[T]) *Set[T] {
+func NewSet[T Item](hashFunc HashFunc[T]) *Set[T] {
 	return &Set[T]{
 		make(map[string]T),
 		&sync.RWMutex{},
-		Func,
+		hashFunc,
 	}
 }
 
@@ -26,7 +26,7 @@ func (s *Set[T]) add(element T) {
 	s.internal[s.Hash(element)] = element
 }
 
-func (s *Set[T]) remove(element T) {
+func (s *Set[T]) remove(element T) { //nolint:unused
 	defer s.mutex.RUnlock()
 	s.mutex.RLock()
 	delete(s.internal, s.Hash(element))

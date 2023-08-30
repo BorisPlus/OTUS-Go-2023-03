@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"time"
 
-	"hw12_13_14_15_calendar/internal/backend/archiver"
-	"hw12_13_14_15_calendar/internal/backend/transmitter"
-	"hw12_13_14_15_calendar/internal/interfaces"
-	"hw12_13_14_15_calendar/internal/models"
+	archiver "hw12_13_14_15_calendar/internal/backend/archiver"
+	transmitter "hw12_13_14_15_calendar/internal/backend/transmitter"
+	interfaces "hw12_13_14_15_calendar/internal/interfaces"
+	models "hw12_13_14_15_calendar/internal/models"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )

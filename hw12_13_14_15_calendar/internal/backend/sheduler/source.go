@@ -2,6 +2,8 @@ package sheduler
 
 import (
 	"context"
+
+	//unlint:gci
 	"hw12_13_14_15_calendar/internal/interfaces"
 	"hw12_13_14_15_calendar/internal/server/rpc/client"
 	"hw12_13_14_15_calendar/internal/server/rpc/rpcapi"

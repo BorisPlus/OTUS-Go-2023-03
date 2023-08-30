@@ -2,13 +2,13 @@ package common
 
 import (
 	models "hw12_13_14_15_calendar/internal/models"
-	calendarrpcapi "hw12_13_14_15_calendar/internal/server/rpc/rpcapi"
+	rpcapi "hw12_13_14_15_calendar/internal/server/rpc/rpcapi"
 
-	"google.golang.org/protobuf/types/known/timestamppb"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func Event2PBEvent(event *models.Event) *calendarrpcapi.Event {
-	pbEvent := new(calendarrpcapi.Event)
+func Event2PBEvent(event *models.Event) *rpcapi.Event {
+	pbEvent := new(rpcapi.Event)
 	pbEvent.PK = int32(event.PK)
 	pbEvent.Title = event.Title
 	pbEvent.Description = event.Description
@@ -20,7 +20,7 @@ func Event2PBEvent(event *models.Event) *calendarrpcapi.Event {
 	return pbEvent
 }
 
-func PBEvent2Event(pbEvent *calendarrpcapi.Event) *models.Event {
+func PBEvent2Event(pbEvent *rpcapi.Event) *models.Event {
 	event := new(models.Event)
 	event.PK = int(pbEvent.PK)
 	event.Title = pbEvent.Title

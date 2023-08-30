@@ -298,6 +298,12 @@ Notice "QUAS EST NATUS UNDE" send to "BeverlyDuncan@Realmix.net"
 
 ## Заметки (для себя)
 
+```bash
+for f in $(find . -name go.mod)
+do (cd $(dirname $f); go mod tidy)
+done
+```
+
 [go get github.com/streadway/amqp](https://nuancesprog.ru/p/4907/)
 
 * 5671:5671
