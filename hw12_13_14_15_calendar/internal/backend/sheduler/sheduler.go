@@ -2,12 +2,17 @@ package sheduler
 
 import (
 	"context"
+
 	"hw12_13_14_15_calendar/internal/backend/transmitter"
 	"hw12_13_14_15_calendar/internal/interfaces"
 	"hw12_13_14_15_calendar/internal/models"
 	"hw12_13_14_15_calendar/internal/server/rpc/common"
 	"hw12_13_14_15_calendar/internal/server/rpc/rpcapi"
 )
+
+func HashFunc(event *rpcapi.Event) string {
+	return string(event.PK)
+}
 
 type Sheduler struct {
 	Transmitter transmitter.Transmitter[*rpcapi.Event, models.Notice]
@@ -31,6 +36,7 @@ func NewSheduler(
 	Transmitter := transmitter.NewTransmitter[*rpcapi.Event, models.Notice](
 		source,
 		target,
+		transmitter.NewSet[*rpcapi.Event](HashFunc),
 		logger,
 		timeoutSec,
 	)

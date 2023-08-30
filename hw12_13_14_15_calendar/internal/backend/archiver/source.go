@@ -63,7 +63,7 @@ func (s *NoticesSource) Getback(ctx context.Context, candidate *amqp.Delivery) e
 		return err
 	}
 	defer channel.Close()
-	err = channel.ExchangeDeclarePassive("exch_events", "direct", true, false, false, false, nil)
+	err = channel.ExchangeDeclarePassive(s.source.GetbackToExchangeName, "direct", true, false, false, false, nil)
 	if err != nil {
 		s.logger.Error(err.Error())
 		return err

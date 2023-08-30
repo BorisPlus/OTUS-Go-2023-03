@@ -3,13 +3,21 @@ package sender
 import (
 	"context"
 	"encoding/json"
+	"strconv"
 	"time"
 
-	amqp "github.com/rabbitmq/amqp091-go"
 	"hw12_13_14_15_calendar/internal/backend/transmitter"
 	"hw12_13_14_15_calendar/internal/interfaces"
 	"hw12_13_14_15_calendar/internal/models"
+
+	amqp "github.com/rabbitmq/amqp091-go"
 )
+
+func HashFunc(candidate amqp.Delivery) string { // TODO: err
+	var notice models.Notice
+	json.Unmarshal(candidate.Body, &notice) // TODO: err
+	return strconv.Itoa(notice.PK)
+}
 
 type Sender struct {
 	Transmitter transmitter.Transmitter[amqp.Delivery, models.Notice]
@@ -33,6 +41,7 @@ func NewSender(
 	Transmitter := transmitter.NewTransmitter[amqp.Delivery, models.Notice](
 		source,
 		target,
+		transmitter.NewSet[amqp.Delivery](HashFunc),
 		logger,
 		timeoutSec,
 	)

@@ -21,6 +21,7 @@ func SleepWithContext(ctx context.Context, d time.Duration) {
 type Transmitter[FROM Item, TO Item] struct {
 	Source         Source[FROM]
 	Target         Target[TO]
+	Processed      Set[FROM]
 	Transmit       func(ctx context.Context, candidate FROM) (bool, error)
 	Logger         interfaces.Logger
 	LoopTimeoutSec int64
@@ -29,19 +30,34 @@ type Transmitter[FROM Item, TO Item] struct {
 func NewTransmitter[FROM Item, TO Item](
 	source Source[FROM],
 	target Target[TO],
+	processed Set[FROM],
 	levelLogger interfaces.Logger,
 	loopTimeoutSec int64,
 ) *Transmitter[FROM, TO] {
 	return &Transmitter[FROM, TO]{
 		Source:         source,
 		Target:         target,
+		Processed:      processed,
 		Logger:         levelLogger,
 		LoopTimeoutSec: loopTimeoutSec,
 	}
 }
 
-func (t *Transmitter[FROM, TO]) Stop(ctx context.Context) error {
-	t.Logger.Info("Transmitter.Stop()")
+func (t *Transmitter[FROM, TO]) connect(ctx context.Context) error {
+	err := t.Source.Connect(ctx)
+	if err != nil {
+		t.Logger.Error(err.Error())
+		return err
+	}
+	err = t.Target.Connect(ctx)
+	if err != nil {
+		t.Logger.Error(err.Error())
+		return err
+	}
+	return nil
+}
+
+func (t *Transmitter[FROM, TO]) disconnect(ctx context.Context) error {
 	err := t.Source.Disconnect(ctx)
 	if err != nil {
 		t.Logger.Error(err.Error())
@@ -55,14 +71,14 @@ func (t *Transmitter[FROM, TO]) Stop(ctx context.Context) error {
 	return nil
 }
 
+func (t *Transmitter[FROM, TO]) Stop(ctx context.Context) error {
+	t.Logger.Info("Transmitter.Stop()")
+	return t.disconnect(ctx)
+}
+
 func (t *Transmitter[FROM, TO]) Start(ctx context.Context) error {
 	t.Logger.Info("Transmitter.Start()")
-	err := t.Source.Connect(ctx)
-	if err != nil {
-		t.Logger.Error(err.Error())
-		return err
-	}
-	err = t.Target.Connect(ctx)
+	err := t.connect(ctx)
 	if err != nil {
 		t.Logger.Error(err.Error())
 		return err
@@ -90,8 +106,18 @@ func (t *Transmitter[FROM, TO]) Start(ctx context.Context) error {
 					return err
 				}
 				t.Logger.Debug("Transmit candidate done with status %v", indicator)
+				if !indicator {
+					if t.Processed.has(candidate) {
+						breakMe = true
+						break
+					}
+					t.Processed.add(candidate)
+				}
 			case <-ctx.Done():
 				return nil
+			case <-time.After(10 * time.Second):
+				t.Logger.Info("Transmit fading")
+				SleepWithContext(ctx, 10*time.Second)
 			}
 		}
 		SleepWithContext(ctx, time.Duration(t.LoopTimeoutSec)*time.Second)
