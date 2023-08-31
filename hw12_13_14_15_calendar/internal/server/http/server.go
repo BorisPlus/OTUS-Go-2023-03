@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	// "sync".
 	"time"
 
 	interfaces "hw12_13_14_15_calendar/internal/interfaces"
@@ -18,7 +17,6 @@ type HTTPServer struct {
 	server *http.Server
 	logger interfaces.Logger
 	app    interfaces.Applicationer
-	// context context.Context
 }
 
 func NewHTTPServer(
@@ -51,22 +49,10 @@ func NewHTTPServer(
 
 func (s *HTTPServer) Start() error {
 	s.logger.Info("HTTPServer.Start()")
-	// s.context = ctx
-	// wg := sync.WaitGroup{}
-	// wg.Add(1)
-	// go func() {
-	// 	defer wg.Done()
-	// 	<-ctx.Done()
-	// 	s.logger.Info("HTTPServer - Graceful Shutdown")
-	// 	if err := s.Stop(); err != nil {
-	// 		s.logger.Info("Stop error: %v\n", err)
-	// 	}
-	// }()
 	if err := s.server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 		s.logger.Info("Start error: %v\n", err)
 		return err
 	}
-	// wg.Wait()
 	return nil
 }
 

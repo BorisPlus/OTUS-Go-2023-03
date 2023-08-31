@@ -13,22 +13,26 @@ import (
 	"testing"
 	"time"
 
+	app "hw12_13_14_15_calendar/internal/app"
 	logger "hw12_13_14_15_calendar/internal/logger"
 	middleware "hw12_13_14_15_calendar/internal/server/http/middleware"
+	storage "hw12_13_14_15_calendar/internal/storage/gomemory"
 )
 
 func TestServerStopNotStarted(t *testing.T) {
 	log := logger.NewLogger(logger.INFO, os.Stdout)
 	middleware.Init(log)
+	mainLogger := logger.NewLogger(logger.INFO, os.Stdout)
+	calendarApp := app.NewApp(mainLogger, storage.NewStorage())
 	httpServer := NewHTTPServer(
 		"localhost",
-		8000,
+		8080,
 		10*time.Second,
 		10*time.Second,
 		10*time.Second,
 		1<<20,
 		log,
-		nil,
+		calendarApp,
 	)
 	err := httpServer.Stop(context.Background())
 	if err != nil {
@@ -39,15 +43,17 @@ func TestServerStopNotStarted(t *testing.T) {
 func TestServerStopNormally(t *testing.T) {
 	log := logger.NewLogger(logger.INFO, os.Stdout)
 	middleware.Init(log)
+	mainLogger := logger.NewLogger(logger.INFO, os.Stdout)
+	calendarApp := app.NewApp(mainLogger, storage.NewStorage())
 	httpServer := NewHTTPServer(
 		"localhost",
-		8000,
+		8080,
 		10*time.Second,
 		10*time.Second,
 		10*time.Second,
 		1<<20,
 		log,
-		nil,
+		calendarApp,
 	)
 	wg := sync.WaitGroup{}
 	wg.Add(1)
@@ -70,15 +76,17 @@ func TestServerStopBySignalNoWait(_ *testing.T) {
 	defer ctxCancel()
 	log := logger.NewLogger(logger.INFO, os.Stdout)
 	middleware.Init(log)
+	mainLogger := logger.NewLogger(logger.INFO, os.Stdout)
+	calendarApp := app.NewApp(mainLogger, storage.NewStorage())
 	httpServer := NewHTTPServer(
 		"localhost",
-		8000,
+		8080,
 		10*time.Second,
 		10*time.Second,
 		10*time.Second,
 		1<<20,
 		log,
-		nil,
+		calendarApp,
 	)
 	wg := sync.WaitGroup{}
 	wg.Add(1)
@@ -107,15 +115,17 @@ func TestServerStopBySignalWithWait(_ *testing.T) {
 	defer ctxCancel()
 	log := logger.NewLogger(logger.INFO, os.Stdout)
 	middleware.Init(log)
+	mainLogger := logger.NewLogger(logger.INFO, os.Stdout)
+	calendarApp := app.NewApp(mainLogger, storage.NewStorage())
 	httpServer := NewHTTPServer(
 		"localhost",
-		8000,
+		8080,
 		10*time.Second,
 		10*time.Second,
 		10*time.Second,
 		1<<20,
 		log,
-		nil,
+		calendarApp,
 	)
 	wg := sync.WaitGroup{}
 	wg.Add(1)
@@ -144,15 +154,17 @@ func TestServerStopByCancel(_ *testing.T) {
 	ctx, ctxCancel := context.WithCancel(context.Background())
 	log := logger.NewLogger(logger.INFO, os.Stdout)
 	middleware.Init(log)
+	mainLogger := logger.NewLogger(logger.INFO, os.Stdout)
+	calendarApp := app.NewApp(mainLogger, storage.NewStorage())
 	httpServer := NewHTTPServer(
 		"localhost",
-		8000,
+		8080,
 		10*time.Second,
 		10*time.Second,
 		10*time.Second,
 		1<<20,
 		log,
-		nil,
+		calendarApp,
 	)
 	wg := sync.WaitGroup{}
 	wg.Add(1)
@@ -176,34 +188,45 @@ func TestServerStopByCancel(_ *testing.T) {
 }
 
 func TestServerCode(t *testing.T) {
+	ctx, ctxCancel := context.WithCancel(context.Background())
 	host := "localhost"
-	var port uint16 = 8000
+	var port uint16 = 8080
 	// Server
 	httpOutput := &bytes.Buffer{}
 	log := logger.NewLogger(logger.INFO, httpOutput)
 	middleware.Init(log)
+	mainLogger := logger.NewLogger(logger.INFO, os.Stdout)
+	calendarApp := app.NewApp(mainLogger, storage.NewStorage())
 	httpServer := NewHTTPServer(
-		host,
-		port,
+		"localhost",
+		8080,
 		10*time.Second,
 		10*time.Second,
 		10*time.Second,
 		1<<20,
-		log,
-		nil,
+		mainLogger,
+		calendarApp,
 	)
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		if err := httpServer.Start(); err != nil {
-			fmt.Println("http server goroutine: " + err.Error())
+		if err := httpServer.Start(); err != nil { // START
+			fmt.Println("http server Start goroutine: " + err.Error())
+		}
+	}()
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		<-ctx.Done()
+		if err := httpServer.Stop(ctx); err != nil { // START
+			fmt.Println("http server Stop goroutine: " + err.Error())
 		}
 	}()
 	// Wait
 	time.Sleep(3 * time.Second)
 	// Client
-	url := fmt.Sprintf("http://%s:%d", host, port)
+	url := fmt.Sprintf("http://%s:%d/", host, port)
 	request, err := http.NewRequestWithContext(context.Background(), http.MethodGet, url, strings.NewReader(``))
 	if err != nil {
 		t.Error(err.Error())
@@ -219,7 +242,7 @@ func TestServerCode(t *testing.T) {
 	} else {
 		fmt.Printf("OK. StatusCode '418'\n")
 	}
-	httpServer.Stop(context.Background())
 	//
+	ctxCancel() // STOP
 	wg.Wait()
 }
