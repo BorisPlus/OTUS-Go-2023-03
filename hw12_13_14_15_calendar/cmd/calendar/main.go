@@ -23,6 +23,10 @@ import (
 
 var configFile string
 
+func printVersion() {
+	fmt.Println("v.1")
+}
+
 func init() {
 	pflag.StringVar(&configFile, "config", "", "Path to configuration file")
 }
@@ -34,7 +38,7 @@ func main() {
 		return
 	}
 	if configFile == "" {
-		fmt.Println("Please set: '--config=<Path to configuration file>'")
+		fmt.Println("Please set: '--config <Path to configuration file>'")
 		return
 	}
 	viper.SetConfigType("yaml")

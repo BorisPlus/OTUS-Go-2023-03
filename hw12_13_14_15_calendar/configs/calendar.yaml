@@ -7,7 +7,7 @@ http:
   maxheaderbytes: 1048576
 rpc: 
   host: localhost
-  port: 5000
+  port: 8080
 storage:
   type: gomemory # pgsqldtb
   dsn: "" # "user=hw12user password=hw12user host='127.0.0.1' database=hw12calendar search_path=hw12calendar"

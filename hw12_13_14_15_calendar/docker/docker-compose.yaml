@@ -1,0 +1,113 @@
+version: "3"
+services:
+  calendar:
+    container_name: hw15calendar
+    hostname: hw15calendar
+    build:
+      context: ../.
+      args:
+        MICROSERVICE: calendar
+      dockerfile: ./docker/Dockerfile
+      target: alpine
+    ports:
+      - "9000:8000"
+      - "9080:8080"
+    network_mode: 'bridge'
+  # postgres:
+  #   image: postgres:13.3
+  #   container_name: hw15postgres
+  #   hostname: hw15postgres
+  #   environment:
+  #     POSTGRES_DB: "hw15"
+  #     POSTGRES_USER: "hw15user"
+  #     POSTGRES_PASSWORD: "hw15user"
+  #   volumes:
+  #     - .:/docker-entrypoint-initdb.d
+  #   ports:
+  #     - 5437:5432
+  #   networks:
+  #     - network
+  # pgadmin:
+  #   image: dpage/pgadmin4
+  #   container_name: hw15pgadmin
+  #   hostname: hw15pgadmin
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: hw15user@hw15user.com
+  #     PGADMIN_DEFAULT_PASSWORD: hw15user
+  #   ports:
+  #     - 5050:80
+  #   depends_on:
+  #     - postgres
+  #   networks:
+  #     - network
+  # rabbitmq:
+  #   image: rabbitmq:3.10.7-management
+  #   container_name: hw15rabbitmq
+  #   hostname: hw15rabbitmq
+  #   restart: always
+  #   environment:
+  #     - RABBITMQ_DEFAULT_USER=hw15user
+  #     - RABBITMQ_DEFAULT_PASS=hw15user
+  #   ports:
+  #     - 5661:5671
+  #     - 5662:5672
+  #     - 15661:15671
+  #     - 15673:15672
+  #     - 15681:15691
+  #     - 15682:15692
+  #     - 25662:25672
+  #     - 4359:4369
+  #   networks:
+  #     - network
+    # restart: always
+    # deploy:
+    #   restart_policy:
+    #     condition: on-failure
+    # depends_on:
+    #   - postgres
+    # networks:
+    #   - network
+  # sheduler:
+  #   container_name: hw15sheduler
+  #   hostname: hw15sheduler
+  #   build:
+  #     context: ../.
+  #     args:
+  #       SERVICE: sheduler
+  #     dockerfile: ./docker/Dockerfile.service
+  #   depends_on:
+  #     - postgres
+  #     - rabbitmq
+  #   networks:
+  #     - network
+  # archiver:
+  #   container_name: hw15archiver
+  #   hostname: hw15archiver
+  #   build:
+  #     context: ../.
+  #     args:
+  #       SERVICE: archiver
+  #     dockerfile: ./docker/Dockerfile.service
+  #   depends_on:
+  #     - rabbitmq
+  #   networks:
+  #     - network
+  # sender:
+  #   container_name: hw15sender
+  #   hostname: hw15sender
+  #   build:
+  #     context: ../.
+  #     args:
+  #       SERVICE: sender
+  #     dockerfile: ./docker/Dockerfile.service
+  #   depends_on:
+  #     - rabbitmq
+  #   networks:
+  #     - network
+# networks:
+#   default:
+#     attachable: true
+# networks:
+#   network:
+#     name: hw15network
+# BUILDKIT_PROGRESS=plain docker-compose -f ./docker/docker-compose.yaml up -d --build --remove-orphans

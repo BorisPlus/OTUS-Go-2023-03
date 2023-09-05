@@ -1,5 +1,5 @@
 rabbitmq: 
-  dsn: "amqp://guest:guest@localhost:5672/"
+  dsn: "amqp://hw15user:hw15user@localhost:5662/"
   exchanges: [
     { 
       name: notice_exchange, 

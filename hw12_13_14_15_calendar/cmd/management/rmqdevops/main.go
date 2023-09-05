@@ -14,19 +14,24 @@ import (
 )
 
 var (
-	configFile string
-	withDrop   bool
+	configFile     string
+	withDrop, drop bool
 )
 
 func init() {
 	pflag.StringVar(&configFile, "config", "", "Path to configuration file")
-	pflag.BoolVarP(&withDrop, "with-drop", "d", false, "Preverious drop exchanges and queues")
+	pflag.BoolVarP(&withDrop, "with-drop", "u", false, "Configure-preverious drop exchanges and queues")
+	pflag.BoolVarP(&drop, "drop", "d", false, "Drop exchanges and queues and Exit.")
 }
 
 func main() {
 	pflag.Parse()
 	if pflag.Arg(0) == "version" {
 		fmt.Printf("2023.08.13 v.1")
+		return
+	}
+	if drop && withDrop {
+		fmt.Println("Please use: separately '--drop' or '--with-drop', not both")
 		return
 	}
 	if configFile == "" {
@@ -69,6 +74,23 @@ func main() {
 	}()
 	log.Printf("withDrop %v\n", withDrop)
 	for _, exch := range cfg.RabbitMQ.Exchanges {
+		if drop {
+			err = channel.ExchangeDelete(exch.Name, false, true)
+			if err != nil {
+				log.Printf("ERROR. Drop exchange: %q.\n%s\n", exch.Name, err.Error())
+			} else {
+				log.Printf("OK. Drop exchange: %q.\n", exch.Name)
+			}
+			for _, binding := range exch.Bindings {
+				_, err = channel.QueueDelete(binding.BindQueue, false, false, true)
+				if err != nil {
+					log.Printf("ERROR. Drop queue: %q.\n%s\n", binding.BindQueue, err.Error())
+				} else {
+					log.Printf("OK. Drop queue: %q.\n", binding.BindQueue)
+				}
+			}
+			continue
+		}
 		if withDrop {
 			err = channel.ExchangeDelete(exch.Name, false, true)
 			if err != nil {

@@ -9,8 +9,8 @@ build:
 	go build -v -o "./bin/sheduler.goc" -ldflags "$(LDFLAGS)" ./cmd/sheduler
 	go build -v -o "./bin/archiver.goc" -ldflags "$(LDFLAGS)" ./cmd/archiver
 	go build -v -o "./bin/sender.goc" -ldflags "$(LDFLAGS)" ./cmd/sender
-	go build -v -o "./bin/mgm_rmqdevops.goc" -ldflags "$(LDFLAGS)" ./cmd/management/rmqdevops
-	go build -v -o "./bin/mgm_dataset.goc" -ldflags "$(LDFLAGS)" ./cmd/management/dataset
+	go build -v -o "./bin/rmqdevops.goc" -ldflags "$(LDFLAGS)" ./cmd/management/rmqdevops
+	go build -v -o "./bin/dataset.goc" -ldflags "$(LDFLAGS)" ./cmd/management/dataset
 
 run: build
 	$(BIN) --config ./configs/config.yaml
@@ -21,6 +21,12 @@ build-img:
 		-t $(DOCKER_IMG) \
 		-f build/Dockerfile .
 
+compose-up:
+	BUILDKIT_PROGRESS=plain docker-compose -f ./docker/docker-compose.yaml up -d
+
+compose-down:
+	docker-compose -f ./docker/docker-compose.yaml down
+
 protoc:
 	protoc --go-grpc_out=./internal/server/rpc/api --go_out=./internal/server/rpc/api ./internal/server/rpc/protofiles/calendar.proto
 
@@ -30,8 +36,23 @@ run-img: build-img
 version: build
 	$(BIN) version
 
-migrate: 
+migrate-sql-up: 
 	goose -dir ./migrations/migrations/ postgres "$(PG_DSN)" up
+
+migrate-sql-down: 
+	goose -dir ./migrations/migrations/ postgres "$(PG_DSN)" down
+
+migrate-rmq-up: 
+	go run ./cmd/management/rmqdevops/ --config ./configs/rmqdevops.yaml
+
+migrate-rmq-down: 
+	go run ./cmd/management/rmqdevops/ --drop --config ./configs/rmqdevops.yaml
+
+migrate-rmq-up-with-drop: 
+	go run ./cmd/management/rmqdevops/ --with-drop --config ./configs/rmqdevops.yaml
+
+dataset-example: 
+	go run ./cmd/management/dataset/ --config ./configs/calendar.yaml
 
 test:
 	go test -race ./internal/...
