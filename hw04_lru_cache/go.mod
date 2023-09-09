@@ -1,4 +1,4 @@
-module github.com/BorisPlus/OTUS-Go-2023-03/hw04_lru_cache
+module hw04_lru_cache
 
 go 1.19
 

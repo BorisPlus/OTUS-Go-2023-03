@@ -1,4 +1,4 @@
-package hw04lrucache
+package hw04_lru_cache
 
 type Key string
 

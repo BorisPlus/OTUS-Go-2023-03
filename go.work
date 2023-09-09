@@ -1,6 +1,7 @@
 go 1.19
 
 use (
+	hw04_lru_cache
 	hw05_parallel_execution
 	hw06_pipeline_execution
 	hw07_file_copying

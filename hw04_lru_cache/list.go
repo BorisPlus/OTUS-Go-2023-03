@@ -1,4 +1,4 @@
-package hw04lrucache
+package hw04_lru_cache
 
 // Lister - интерфейс двусвязного списка.
 type Lister interface {
