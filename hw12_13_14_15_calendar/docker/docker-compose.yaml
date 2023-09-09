@@ -1,18 +1,20 @@
-version: "3"
+version: "3.9"
 services:
   calendar:
-    container_name: hw15calendar
-    hostname: hw15calendar
+    # container_name: hw15calendar
+    # hostname: hw15calendar
     build:
       context: ../.
       args:
         MICROSERVICE: calendar
       dockerfile: ./docker/Dockerfile
-      target: alpine
+    restart: always
+    networks:
+      calendar:
     ports:
-      - "9000:8000"
-      - "9080:8080"
-    network_mode: 'bridge'
+      - '8080:8080'
+      - '5000:5000'
+      # target: production
   # postgres:
   #   image: postgres:13.3
   #   container_name: hw15postgres
@@ -23,23 +25,21 @@ services:
   #     POSTGRES_PASSWORD: "hw15user"
   #   volumes:
   #     - .:/docker-entrypoint-initdb.d
+  #   network_mode: bridge
   #   ports:
-  #     - 5437:5432
-  #   networks:
-  #     - network
+  #     - 8001:5432
   # pgadmin:
+  #   depends_on:
+  #     - postgres
   #   image: dpage/pgadmin4
   #   container_name: hw15pgadmin
   #   hostname: hw15pgadmin
   #   environment:
   #     PGADMIN_DEFAULT_EMAIL: hw15user@hw15user.com
   #     PGADMIN_DEFAULT_PASSWORD: hw15user
+  #   network_mode: bridge
   #   ports:
-  #     - 5050:80
-  #   depends_on:
-  #     - postgres
-  #   networks:
-  #     - network
+  #     - 8002:80
   # rabbitmq:
   #   image: rabbitmq:3.10.7-management
   #   container_name: hw15rabbitmq
@@ -110,4 +110,7 @@ services:
 # networks:
 #   network:
 #     name: hw15network
+
+networks:
+  calendar:
 # BUILDKIT_PROGRESS=plain docker-compose -f ./docker/docker-compose.yaml up -d --build --remove-orphans
