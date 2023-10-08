@@ -66,4 +66,11 @@ lint: install-lint-deps
 fixlint:
 	golangci-lint run --out-format=github-actions --fix ./...
 
+prune:
+	docker image prune -f
+	docker network prune -f
+	docker container prune -f
+	docker rm -f "$(docker ps -a -q)" || true
+	docker rmi -f "$(docker images -q)" || true
+
 .PHONY: build run build-img run-img version test lint

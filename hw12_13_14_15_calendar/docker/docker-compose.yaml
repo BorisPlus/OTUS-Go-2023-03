@@ -1,116 +1,151 @@
 version: "3.9"
 services:
   calendar:
-    # container_name: hw15calendar
-    # hostname: hw15calendar
+    container_name: hw15calendar
+    hostname: hw15calendar
+    restart: always
     build:
       context: ../.
       args:
         MICROSERVICE: calendar
       dockerfile: ./docker/Dockerfile
-    restart: always
     networks:
-      calendar:
+      public:
+      internal:
     ports:
       - '8080:8080'
       - '5000:5000'
-      # target: production
-  # postgres:
+  postgres:
+    image: postgres:13.3
+    container_name: hw15postgres
+    hostname: hw15postgres
+    restart: always
+    environment:
+      POSTGRES_DB: "hw15"
+      POSTGRES_USER: "hw15user"
+      POSTGRES_PASSWORD: "hw15user"
+    volumes:
+      - .:/docker-entrypoint-initdb.d
+    networks:
+      internal:
+    ports:
+      - 8432:5432
+  # migration:
   #   image: postgres:13.3
-  #   container_name: hw15postgres
-  #   hostname: hw15postgres
-  #   environment:
-  #     POSTGRES_DB: "hw15"
-  #     POSTGRES_USER: "hw15user"
-  #     POSTGRES_PASSWORD: "hw15user"
-  #   volumes:
-  #     - .:/docker-entrypoint-initdb.d
-  #   network_mode: bridge
-  #   ports:
-  #     - 8001:5432
-  # pgadmin:
   #   depends_on:
   #     - postgres
-  #   image: dpage/pgadmin4
-  #   container_name: hw15pgadmin
-  #   hostname: hw15pgadmin
-  #   environment:
-  #     PGADMIN_DEFAULT_EMAIL: hw15user@hw15user.com
-  #     PGADMIN_DEFAULT_PASSWORD: hw15user
-  #   network_mode: bridge
-  #   ports:
-  #     - 8002:80
-  # rabbitmq:
-  #   image: rabbitmq:3.10.7-management
-  #   container_name: hw15rabbitmq
-  #   hostname: hw15rabbitmq
-  #   restart: always
-  #   environment:
-  #     - RABBITMQ_DEFAULT_USER=hw15user
-  #     - RABBITMQ_DEFAULT_PASS=hw15user
-  #   ports:
-  #     - 5661:5671
-  #     - 5662:5672
-  #     - 15661:15671
-  #     - 15673:15672
-  #     - 15681:15691
-  #     - 15682:15692
-  #     - 25662:25672
-  #     - 4359:4369
+  #   container_name: hw15migration
+  #   hostname: hw15migration
+  #   command:  psql postgresql://hw15user:hw15user@postgres:5432/hw15 --command "
+  #             CREATE SCHEMA IF NOT EXISTS hw15calendar;
+  #             CREATE TABLE IF NOT EXISTS hw15calendar.events (
+  #               pk BIGSERIAL PRIMARY KEY,
+  #               title VARCHAR NOT NULL CHECK (title <> ''),
+  #               startAt TIMESTAMP WITH TIME ZONE NOT NULL,
+  #               durationSeconds BIGINT NOT NULL DEFAULT 0,
+  #               description TEXT NOT NULL DEFAULT '',
+  #               notifyEarlySeconds BIGINT,
+  #               "owner" VARCHAR NOT NULL CHECK (title <> ''),
+  #               sheduled BOOLEAN DEFAULT FALSE
+  #             );" 
   #   networks:
-  #     - network
-    # restart: always
-    # deploy:
-    #   restart_policy:
-    #     condition: on-failure
-    # depends_on:
-    #   - postgres
-    # networks:
-    #   - network
-  # sheduler:
-  #   container_name: hw15sheduler
-  #   hostname: hw15sheduler
-  #   build:
-  #     context: ../.
-  #     args:
-  #       SERVICE: sheduler
-  #     dockerfile: ./docker/Dockerfile.service
-  #   depends_on:
-  #     - postgres
-  #     - rabbitmq
-  #   networks:
-  #     - network
-  # archiver:
-  #   container_name: hw15archiver
-  #   hostname: hw15archiver
-  #   build:
-  #     context: ../.
-  #     args:
-  #       SERVICE: archiver
-  #     dockerfile: ./docker/Dockerfile.service
-  #   depends_on:
-  #     - rabbitmq
-  #   networks:
-  #     - network
-  # sender:
-  #   container_name: hw15sender
-  #   hostname: hw15sender
-  #   build:
-  #     context: ../.
-  #     args:
-  #       SERVICE: sender
-  #     dockerfile: ./docker/Dockerfile.service
-  #   depends_on:
-  #     - rabbitmq
-  #   networks:
-  #     - network
-# networks:
-#   default:
-#     attachable: true
-# networks:
-#   network:
-#     name: hw15network
+  #     internal:
+  migration:
+    container_name: hw15goose
+    hostname: hw15goose
+    build:
+      context: ../.
+      dockerfile: ./docker/Dockerfile.goose
+    environment:
+      NOTATION: postgres
+      DSN: user=hw15user password=hw15user dbname=hw15 host=postgres port=5432
+      ACTION: up
+    networks:
+      internal:
+  pgadmin:
+    depends_on:
+      - postgres
+      - migration
+    image: dpage/pgadmin4
+    container_name: hw15pgadmin
+    hostname: hw15pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: hw15user@hw15user.com
+      PGADMIN_DEFAULT_PASSWORD: hw15user
+    networks:
+      public:
+      internal:
+    ports:
+      - 8002:80
+  rabbitmq:
+    depends_on:
+      - postgres
+    image: rabbitmq:3.10.7-management
+    container_name: hw15rabbitmq
+    hostname: hw15rabbitmq
+    restart: always
+    environment:
+      - RABBITMQ_DEFAULT_USER=hw15user
+      - RABBITMQ_DEFAULT_PASS=hw15user
+    ports:
+      - 5661:5671
+      - 5662:5672
+      - 15661:15671
+      - 15673:15672
+      - 15681:15691
+      - 15682:15692
+      - 25662:25672
+      - 4359:4369
+    networks:
+      public:
+      internal:
+    deploy:
+      restart_policy:
+        condition: on-failure
+  sheduler:
+    depends_on:
+      - postgres
+      - rabbitmq
+    container_name: hw15sheduler
+    hostname: hw15sheduler
+    restart: always
+    build:
+      context: ../.
+      args:
+        MICROSERVICE: sheduler
+      dockerfile: ./docker/Dockerfile
+    networks:
+      internal:
+  archiver:
+    depends_on:
+      - rabbitmq
+    container_name: hw15archiver
+    hostname: hw15archiver
+    build:
+      context: ../.
+      args:
+        MICROSERVICE: archiver
+      dockerfile: ./docker/Dockerfile
+    networks:
+      internal:
+  sender:
+    depends_on:
+      - rabbitmq
+    container_name: hw15sender
+    hostname: hw15sender
+    build:
+      context: ../.
+      args:
+        MICROSERVICE: sender
+      dockerfile: ./docker/Dockerfile
+    networks:
+      internal:
 
 networks:
-  calendar:
+  public:
+    name: hw15public
+  internal:
+    name: hw15internal
+    internal: true
 # BUILDKIT_PROGRESS=plain docker-compose -f ./docker/docker-compose.yaml up -d --build --remove-orphans
