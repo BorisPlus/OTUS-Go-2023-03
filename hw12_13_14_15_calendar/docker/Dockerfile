@@ -3,6 +3,7 @@
 FROM golang:1.19 as development
 
 ARG MICROSERVICE
+ARG LDFLAGS
 ENV BIN_FILE /opt/service/service
 ENV SRC_DIR /go/src
 ENV CODE_DIR ${SRC_DIR}/hw12_13_14_15_calendar
@@ -31,7 +32,7 @@ COPY ./internal .
 
 # Special compile with out additional info
 WORKDIR ${SRC_DIR}
-RUN CGO_ENABLED=0 go build -ldflags "-s -w" -o /opt/service/service ./hw12_13_14_15_calendar/cmd/${MICROSERVICE}/
+RUN CGO_ENABLED=0 go build -ldflags "${LDFLAGS}" -o /opt/service/service ./hw12_13_14_15_calendar/cmd/${MICROSERVICE}/
 
 # Slim image
 FROM alpine:3.9 as production

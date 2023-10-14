@@ -9,8 +9,8 @@ rpc:
   host: 0.0.0.0
   port: 5000
 storage:
-  type: gomemory
-  dsn: ""
+  type: pgsqldtb
+  dsn: "user=hw15user password=hw15user host='127.0.0.1' database=hw15calendar search_path=hw15calendar"
 log:
   level: INFO
  
