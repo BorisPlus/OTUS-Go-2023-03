@@ -62,7 +62,7 @@ migrate-sql-up: # make PG_DSN="host=hw15_postgres_prod user=hw15user password=hw
 # Dockerize
 
 docker-configure:
-	docker network create hw15_network_dev --subnet=172.18.0.0/24 2> /dev/null || true
+	docker network create hw15_network_dev --subnet=172.133.0.0/24 2> /dev/null || true
 
 docker-deconfigure:
 	docker rmi -f hw15_calendar         2> /dev/null || true
@@ -96,10 +96,10 @@ docker-build:
 
 docker-run-calendar:
 	MICROSERVICE=calendar 	CONFIG_FILE=calendar.yaml	make docker-build-microservice
-	docker run -it --name=hw15_calendar_dev --net hw15_network_dev --ip 172.18.0.2 -p 8888:8080   -p 5000:5000 -d hw15_calendar:dev 
+	docker run -it --name=hw15_calendar_dev --net hw15_network_dev --ip 172.133.0.2 -p 8888:8080   -p 5000:5000 -d hw15_calendar:dev 
 
 docker-run-rabbitmq:
-	docker run     --name=hw15_rabbitmq_dev --net hw15_network_dev --ip 172.18.0.3 -p 15672:15672 -p 5672:5672 -d -e RABBITMQ_DEFAULT_USER=hw15user -e RABBITMQ_DEFAULT_PASS=hw15user rabbitmq:3.10.7-management
+	docker run     --name=hw15_rabbitmq_dev --net hw15_network_dev --ip 172.133.0.3 -p 15672:15672 -p 5672:5672 -d -e RABBITMQ_DEFAULT_USER=hw15user -e RABBITMQ_DEFAULT_PASS=hw15user rabbitmq:3.10.7-management
 
 docker-run-microservice: docker-build-microservice # Example: make MICROSERVICE=rmqdevops CONFIG_FILE=rmqdevops.yaml docker-run-microservice
 	docker run -it --name=hw15_$(MICROSERVICE)_dev -d hw15_$(MICROSERVICE):dev 
