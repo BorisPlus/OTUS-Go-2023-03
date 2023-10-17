@@ -108,14 +108,14 @@ docker-run: docker-deconfigure \
 			docker-configure
 							make docker-run-rabbitmq
 							sleep 20
-	MICROSERVICE=rmqdevops	make docker-run-microservice
+	MICROSERVICE=rmqdevops	CONFIG_FILE=rmqdevops.yaml make docker-run-microservice
 							make docker-run-calendar
 							sleep 20
-	MICROSERVICE=sheduler 	make docker-run-microservice
+	MICROSERVICE=sheduler 		CONFIG_FILE=sheduler.yaml make docker-run-microservice
 							sleep 20
-	MICROSERVICE=archiver	make docker-run-microservice
+	MICROSERVICE=archiver		CONFIG_FILE=archiver.yaml make docker-run-microservice
 							sleep 20
-	MICROSERVICE=sender 	make docker-run-microservice
+	MICROSERVICE=sender 		CONFIG_FILE=sender.yaml make docker-run-microservice
 	
 docker-start-microservice: # Example: make MICROSERVICE=rmqdevops docker-start-microservice
 	docker start hw15_$(MICROSERVICE)_dev
