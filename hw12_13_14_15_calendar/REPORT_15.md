@@ -39,7 +39,7 @@ Notice "EXPLICABO AUTEM IPSAM MODI QUI" send to "LouiseColeman@Centidel.info"
 Notice "PLACEAT ILLO RECUSANDAE VOLUPTATE" send to "gRay@Katz.com"
 ```
 
-Наблюдаем тестовые 10 принудительно заархивированных:
+Наблюдаем тестовые 10, которые априори должны были быть заархивированы:
 
 ```bash
 docker logs hw15_archiver_dev
@@ -77,6 +77,11 @@ INFO [2023-10-14 22:31:23] Must be archived: 17
 INFO [2023-10-14 22:31:33] Transmitter step.
 INFO [2023-10-14 22:31:37] new candidate.
 ...
+
 ```
 
-## Докеризация нативная
+## Докеризация компоуз
+
+```bash
+make docker-compose-up
+```

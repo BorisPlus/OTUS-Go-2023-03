@@ -10,7 +10,7 @@ rpc:
   port: 5000
 storage:
   type: pgsqldtb
-  dsn: "user=hw15user password=hw15user host='127.0.0.1' database=hw15calendar search_path=hw15calendar"
+  dsn: "user=hw15user password=hw15user host='hw15_postgres_prod' database=hw15 search_path=hw15calendar"
 log:
   level: INFO
  

@@ -1,7 +1,7 @@
 Source:
   DSN: "hw15_calendar_prod:5000"
 Target: 
-  DSN: "amqp://hw15user:hw15user@172.18.0.1:5672/"
+  DSN: "amqp://hw15user:hw15user@hw15_rabbitmq_prod:5672/"
   ExchangeName: notice_exchange
   RoutingKey: shedule
 TimeoutSec: 5

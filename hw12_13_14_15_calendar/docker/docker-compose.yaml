@@ -1,24 +1,20 @@
 version: "3.9"
+networks:
+  public:
+    name: hw15_public_prod
+    driver: bridge
+    ipam:
+     config:
+       - subnet: 172.20.0.0/24
+         gateway: 172.20.0.1
+  private:
+    internal: true
+    name: hw15_private_prod
 services:
-  calendar:
-    container_name: hw15calendar
-    hostname: hw15calendar
-    restart: always
-    build:
-      context: ../.
-      args:
-        MICROSERVICE: calendar
-      dockerfile: ./docker/Dockerfile
-    networks:
-      public:
-      internal:
-    ports:
-      - '8080:8888'
-      - '5000:5000'
   postgres:
     image: postgres:13.3
-    container_name: hw15postgres
-    hostname: hw15postgres
+    container_name: hw15_postgres_prod
+    hostname: hw15_postgres_prod
     restart: always
     environment:
       POSTGRES_DB: "hw15"
@@ -27,125 +23,149 @@ services:
     volumes:
       - .:/docker-entrypoint-initdb.d
     networks:
-      internal:
+      private:
     ports:
-      - 8432:5432
-  # migration:
-  #   image: postgres:13.3
-  #   depends_on:
-  #     - postgres
-  #   container_name: hw15migration
-  #   hostname: hw15migration
-  #   command:  psql postgresql://hw15user:hw15user@postgres:5432/hw15 --command "
-  #             CREATE SCHEMA IF NOT EXISTS hw15calendar;
-  #             CREATE TABLE IF NOT EXISTS hw15calendar.events (
-  #               pk BIGSERIAL PRIMARY KEY,
-  #               title VARCHAR NOT NULL CHECK (title <> ''),
-  #               startAt TIMESTAMP WITH TIME ZONE NOT NULL,
-  #               durationSeconds BIGINT NOT NULL DEFAULT 0,
-  #               description TEXT NOT NULL DEFAULT '',
-  #               notifyEarlySeconds BIGINT,
-  #               "owner" VARCHAR NOT NULL CHECK (title <> ''),
-  #               sheduled BOOLEAN DEFAULT FALSE
-  #             );" 
-  #   networks:
-  #     internal:
-  migration:
-    container_name: hw15goose
-    hostname: hw15goose
+      - 0.0.0.0:5432:5432
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  pg_migration:
+    depends_on:
+      postgres:
+        condition: service_healthy
+    container_name: hw15_goose_prod
+    hostname: hw15_goose_prod
     build:
       context: ../.
       dockerfile: ./docker/Dockerfile.goose
     environment:
       NOTATION: postgres
-      DSN: user=hw15user password=hw15user dbname=hw15 host=postgres port=5432
+      DSN: host=hw15_postgres_prod user=hw15user password=hw15user dbname=hw15 sslmode=disable port=5432
       ACTION: up
     networks:
-      internal:
+      private:
   pgadmin:
-    depends_on:
-      - postgres
-      - migration
     image: dpage/pgadmin4
-    container_name: hw15pgadmin
-    hostname: hw15pgadmin
+    container_name: hw15_pgadmin_prod
+    hostname: hw15_pgadmin_prod
     restart: always
     environment:
       PGADMIN_DEFAULT_EMAIL: hw15user@hw15user.com
       PGADMIN_DEFAULT_PASSWORD: hw15user
     networks:
       public:
-      internal:
+        ipv4_address: 172.20.0.4
+      private:
     ports:
-      - 8002:80
+      - 0.0.0.0:8883:80
   rabbitmq:
-    depends_on:
-      - postgres
     image: rabbitmq:3.10.7-management
-    container_name: hw15rabbitmq
-    hostname: hw15rabbitmq
+    container_name: hw15_rabbitmq_prod
+    hostname: hw15_rabbitmq_prod
     restart: always
     environment:
       - RABBITMQ_DEFAULT_USER=hw15user
       - RABBITMQ_DEFAULT_PASS=hw15user
     ports:
-      - 5661:5671
-      - 5662:5672
-      - 15661:15671
-      - 15673:15672
-      - 15681:15691
-      - 15682:15692
-      - 25662:25672
-      - 4359:4369
+      - 0.0.0.0:5672:5672
+      - 0.0.0.0:15672:15672
     networks:
       public:
-      internal:
+        ipv4_address: 172.20.0.3
+      private:
     deploy:
       restart_policy:
         condition: on-failure
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
+  rmq_migration:
+    depends_on:
+      rabbitmq:
+        condition: service_started
+    container_name: hw15_rmqdevops_prod
+    hostname: hw15_rmqdevops_prod
+    restart: always
+    build:
+      context: ../.
+      args:
+        MICROSERVICE: rmqdevops
+        CONFIG_FILE: rmqdevops.compose.yaml
+      dockerfile: ./docker/Dockerfile
+    networks:
+      private:
   sheduler:
     depends_on:
-      - postgres
-      - rabbitmq
-    container_name: hw15sheduler
-    hostname: hw15sheduler
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    container_name: hw15_sheduler_prod
+    hostname: hw15_sheduler_prod
     restart: always
     build:
       context: ../.
       args:
         MICROSERVICE: sheduler
+        CONFIG_FILE: sheduler.compose.yaml
       dockerfile: ./docker/Dockerfile
     networks:
-      internal:
+      private:
   archiver:
     depends_on:
-      - rabbitmq
-    container_name: hw15archiver
-    hostname: hw15archiver
+      - sheduler
+    container_name: hw15_archiver_prod
+    hostname: hw15_archiver_prod
     build:
       context: ../.
       args:
         MICROSERVICE: archiver
+        CONFIG_FILE: archiver.compose.yaml
       dockerfile: ./docker/Dockerfile
     networks:
-      internal:
+      private:
   sender:
     depends_on:
-      - rabbitmq
-    container_name: hw15sender
-    hostname: hw15sender
+      - sheduler
+    container_name: hw15_sender_prod
+    hostname: hw15_sender_prod
     build:
       context: ../.
       args:
         MICROSERVICE: sender
+        CONFIG_FILE: sender.compose.yaml
       dockerfile: ./docker/Dockerfile
     networks:
-      internal:
-
-networks:
-  public:
-    name: hw15public
-  internal:
-    name: hw15internal
-    internal: true
+      private:
+  calendar:
+    depends_on:
+      postgres:
+        condition: service_healthy
+    image: hw15_calendar_prod
+    container_name: hw15_calendar_prod
+    hostname: hw15_calendar_prod
+    restart: always
+    build:
+      context: ../.
+      args:
+        MICROSERVICE: calendar
+        CONFIG_FILE: calendar.compose.yaml
+      dockerfile: ./docker/Dockerfile
+    networks:
+      public:
+        ipv4_address: 172.20.0.2
+      private:
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:8080/api/version || exit 1
+      interval: 60s
+      retries: 5
+      start_period: 20s
+      timeout: 10s
+    ports:
+      - '0.0.0.0:8888:8080'
+      - '0.0.0.0:5000:5000'
 # BUILDKIT_PROGRESS=plain docker-compose -f ./docker/docker-compose.yaml up -d --build --remove-orphans

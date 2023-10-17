@@ -1,0 +1,17 @@
+version: "3.9"
+services:
+  checker:
+    depends_on:
+      calendar:
+        condition: service_healthy
+    image: hw15_checker_prod
+    container_name: hw15_checker_prod
+    hostname: hw15_checker_prod
+    restart: always
+    build:
+      context: ../.
+      args:
+        MICROSERVICE: checker
+      dockerfile: ./docker/Dockerfile
+    networks:
+      private:

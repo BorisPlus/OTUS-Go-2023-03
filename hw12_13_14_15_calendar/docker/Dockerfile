@@ -4,7 +4,6 @@ FROM golang:1.19 as development
 
 ARG MICROSERVICE
 ARG LDFLAGS
-ENV BIN_FILE /opt/service/service
 ENV SRC_DIR /go/src
 ENV CODE_DIR ${SRC_DIR}/hw12_13_14_15_calendar
 
@@ -38,6 +37,7 @@ RUN CGO_ENABLED=0 go build -ldflags "${LDFLAGS}" -o /opt/service/service ./hw12_
 FROM alpine:3.9 as production
 
 ARG MICROSERVICE
+ARG CONFIG_FILE
 
 LABEL ORGANIZATION="OTUS Online Education"
 LABEL MODULE="${MICROSERVICE}"
@@ -45,7 +45,7 @@ LABEL MAINTAINERS="admin@localhost"
 
 COPY --from=development /opt/service/service /opt/service/service
 
-COPY configs/${MICROSERVICE}.yaml "/etc/service/config.yaml"
+COPY configs/${CONFIG_FILE} "/etc/service/config.yaml"
 
 # One imege - one process
 ENTRYPOINT [ "/opt/service/service", "--config", "/etc/service/config.yaml" ]
