@@ -79,7 +79,7 @@ docker-deconfigure:
 	docker rm  -f hw15_rmqdevops_dev    2> /dev/null || true
 	docker network rm hw15_network_dev  2> /dev/null || true
 
-docker-build-microservice: # Example: make MICROSERVICE=rmqdevops CONFIG_FILE=rmqdevops.compose.yaml docker-build-microservice
+docker-build-microservice: # Example: make MICROSERVICE=rmqdevops CONFIG_FILE=rmqdevops.standalone.yaml docker-build-microservice
 	docker build \
 		--build-arg=LDFLAGS="${LDFLAGS}" \
 		--build-arg=MICROSERVICE="$(MICROSERVICE)" \
@@ -88,34 +88,30 @@ docker-build-microservice: # Example: make MICROSERVICE=rmqdevops CONFIG_FILE=rm
 		-f docker/Dockerfile .
 
 docker-build:
-	MICROSERVICE=calendar 	CONFIG_FILE=calendar.yaml	make docker-build-microservice
-	MICROSERVICE=sheduler 	CONFIG_FILE=sheduler.yaml	make docker-build-microservice
-	MICROSERVICE=archiver 	CONFIG_FILE=archiver.yaml	make docker-build-microservice
-	MICROSERVICE=sender   	CONFIG_FILE=sender.yaml		make docker-build-microservice
-	MICROSERVICE=rmqdevops	CONFIG_FILE=rmqdevops.yaml	make docker-build-microservice
+	MICROSERVICE=calendar 	CONFIG_FILE=calendar.standalone.yaml	make docker-build-microservice
+	MICROSERVICE=sheduler 	CONFIG_FILE=sheduler.standalone.yaml	make docker-build-microservice
+	MICROSERVICE=archiver 	CONFIG_FILE=archiver.standalone.yaml	make docker-build-microservice
+	MICROSERVICE=sender   	CONFIG_FILE=sender.standalone.yaml		make docker-build-microservice
+	MICROSERVICE=rmqdevops	CONFIG_FILE=rmqdevops.standalone.yaml	make docker-build-microservice
 
 docker-run-calendar:
-	MICROSERVICE=calendar 	CONFIG_FILE=calendar.yaml	make docker-build-microservice
+	MICROSERVICE=calendar 	CONFIG_FILE=calendar.standalone.yaml	make docker-build-microservice
 	docker run -it --name=hw15_calendar_dev --net hw15_network_dev --ip 172.133.0.2 -p 8888:8080   -p 5000:5000 -d hw15_calendar:dev 
 
 docker-run-rabbitmq:
 	docker run     --name=hw15_rabbitmq_dev --net hw15_network_dev --ip 172.133.0.3 -p 15672:15672 -p 5672:5672 -d -e RABBITMQ_DEFAULT_USER=hw15user -e RABBITMQ_DEFAULT_PASS=hw15user rabbitmq:3.10.7-management
 
-docker-run-microservice: docker-build-microservice # Example: make MICROSERVICE=rmqdevops CONFIG_FILE=rmqdevops.yaml docker-run-microservice
+docker-run-microservice: docker-build-microservice # Example: make MICROSERVICE=rmqdevops CONFIG_FILE=rmqdevops.standalone.yaml docker-run-microservice
 	docker run -it --name=hw15_$(MICROSERVICE)_dev -d hw15_$(MICROSERVICE):dev 
 
 docker-run: docker-deconfigure \
 			docker-configure
 							make docker-run-rabbitmq
-							sleep 20
-	MICROSERVICE=rmqdevops	CONFIG_FILE=rmqdevops.yaml make docker-run-microservice
+	MICROSERVICE=rmqdevops	CONFIG_FILE=rmqdevops.standalone.yaml make docker-run-microservice
 							make docker-run-calendar
-							sleep 20
-	MICROSERVICE=sheduler 		CONFIG_FILE=sheduler.yaml make docker-run-microservice
-							sleep 20
-	MICROSERVICE=archiver		CONFIG_FILE=archiver.yaml make docker-run-microservice
-							sleep 20
-	MICROSERVICE=sender 		CONFIG_FILE=sender.yaml make docker-run-microservice
+	MICROSERVICE=sheduler 	CONFIG_FILE=sheduler.standalone.yaml make docker-run-microservice
+	MICROSERVICE=archiver	CONFIG_FILE=archiver.standalone.yaml make docker-run-microservice
+	MICROSERVICE=sender 	CONFIG_FILE=sender.standalone.yaml make docker-run-microservice
 	
 docker-start-microservice: # Example: make MICROSERVICE=rmqdevops docker-start-microservice
 	docker start hw15_$(MICROSERVICE)_dev
