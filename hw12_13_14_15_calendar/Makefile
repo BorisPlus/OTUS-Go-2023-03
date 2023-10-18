@@ -96,10 +96,10 @@ docker-build:
 
 docker-run-calendar:
 	MICROSERVICE=calendar 	CONFIG_FILE=calendar.standalone.yaml	make docker-build-microservice
-	docker run -it --name=hw15_calendar_dev --net hw15_network_dev --ip 172.133.0.2 -p 8888:8080   -p 5000:5000 -d hw15_calendar:dev 
+	docker run -it --name=hw15_calendar_dev --net hw15_network_dev --ip 172.133.0.2 -p 0.0.0.0:8888:8080   -p 0.0.0.0:5000:5000 -d hw15_calendar:dev 
 
 docker-run-rabbitmq:
-	docker run     --name=hw15_rabbitmq_dev --net hw15_network_dev --ip 172.133.0.3 -p 15672:15672 -p 5672:5672 -d -e RABBITMQ_DEFAULT_USER=hw15user -e RABBITMQ_DEFAULT_PASS=hw15user rabbitmq:3.10.7-management
+	docker run     --name=hw15_rabbitmq_dev --net hw15_network_dev --ip 172.133.0.3 -p 0.0.0.0:15672:15672 -p 0.0.0.0:5672:5672 -d -e RABBITMQ_DEFAULT_USER=hw15user -e RABBITMQ_DEFAULT_PASS=hw15user rabbitmq:3.10.7-management
 
 docker-run-microservice: docker-build-microservice # Example: make MICROSERVICE=rmqdevops CONFIG_FILE=rmqdevops.standalone.yaml docker-run-microservice
 	docker run -it --name=hw15_$(MICROSERVICE)_dev -d hw15_$(MICROSERVICE):dev 
