@@ -27,7 +27,7 @@ services:
     ports:
       - 0.0.0.0:5432:5432
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -d hw15 -U hw15user"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -100,10 +100,12 @@ services:
       private:
   sheduler:
     depends_on:
-      postgres:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
+      # postgres:
+      #   condition: service_healthy
+      pg_migration:
+        condition: service_completed_successfully
+      rmq_migration:
+        condition: service_completed_successfully
     container_name: hw15_sheduler_prod
     hostname: hw15_sheduler_prod
     restart: always
@@ -117,7 +119,8 @@ services:
       private:
   archiver:
     depends_on:
-      - sheduler
+      rmq_migration:
+        condition: service_completed_successfully
     container_name: hw15_archiver_prod
     hostname: hw15_archiver_prod
     build:
@@ -130,7 +133,8 @@ services:
       private:
   sender:
     depends_on:
-      - sheduler
+      rmq_migration:
+        condition: service_completed_successfully
     container_name: hw15_sender_prod
     hostname: hw15_sender_prod
     build:
@@ -143,8 +147,10 @@ services:
       private:
   calendar:
     depends_on:
-      postgres:
-        condition: service_healthy
+      pg_migration:
+        condition: service_completed_successfully
+      # rmq_migration:
+        # condition: service_completed_successfully
     image: hw15_calendar_prod
     container_name: hw15_calendar_prod
     hostname: hw15_calendar_prod

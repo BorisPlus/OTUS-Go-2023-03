@@ -3,7 +3,7 @@ package config
 import "hw12_13_14_15_calendar/internal/models"
 
 type CheckerConfig struct {
-	HTTP     HTTPConfig
+	HTTP     HTTPClient
 	Storage  StorageConfig
 	Sended   models.RabbitMQSource
 	Archived models.RabbitMQSource

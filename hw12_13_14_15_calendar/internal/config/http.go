@@ -12,3 +12,8 @@ type HTTPConfig struct {
 	WriteTimeout      time.Duration // TODO: time.Duration
 	MaxHeaderBytes    int
 }
+
+type HTTPClient struct {
+	Host string
+	Port uint16
+}

@@ -6,12 +6,13 @@ services:
         condition: service_healthy
     image: hw15_checker_prod
     container_name: hw15_checker_prod
-    hostname: hw15_checker_prod
-    restart: always
+    hostname: checker
     build:
       context: ../.
       args:
         MICROSERVICE: checker
+        CONFIG_FILE: checker.yaml
       dockerfile: ./docker/Dockerfile
     networks:
       private:
+      public:

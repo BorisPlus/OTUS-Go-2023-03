@@ -1,12 +1,12 @@
-http: 
-  host: 172.20.0.1
-  port: 8888
-storage:
-  type: pgsqldtb
-	dsn: "user=hw15user password=hw15user host='hw15_postgres_prod' database=hw15 search_path=hw15calendar"
-sended:
-	dsn: "amqp://hw15user:hw15user@hw15_rabbitmq_prod:5672/"
-  queuename: "q_noticies_send"
-archived:
-	dsn: "amqp://hw15user:hw15user@hw15_rabbitmq_prod:5672/"
-  queuename: "q_noticies_archived"
+HTTP:
+  Host: hw15_calendar_prod
+  Port: 8080
+Storage:
+  Type: pgsqldtb
+  DSN: "user=hw15user password=hw15user host=hw15_postgres_prod port=5432 database=hw15 search_path=hw15calendar sslmode=disable"
+Sended:
+  DSN: "amqp://hw15user:hw15user@hw15_rabbitmq_prod:5672/"
+  QueueName: "q_noticies_send"
+Archived:
+  DSN: "amqp://hw15user:hw15user@hw15_rabbitmq_prod:5672/"
+  QueueName: "q_noticies_archived"

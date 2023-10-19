@@ -41,8 +41,8 @@ func (s *Storage) Close() error {
 
 func (s *Storage) CreateEvent(e *models.Event) (*models.Event, error) {
 	sqlStatement := `
-	INSERT INTO hw12calendar.events(
-		"title", "description", "startat", "durationseconds", "owner", "notifyearlyseconds", "Sheduled"
+	INSERT INTO hw15calendar.events(
+		"title", "description", "startat", "durationseconds", "owner", "notifyearlyseconds", "sheduled"
 	) values($1, $2, $3, $4, $5, $6, $7)
 	RETURNING "pk";`
 	err := s.connection.QueryRow(sqlStatement,
@@ -58,7 +58,7 @@ func (s *Storage) ReadEvent(pk int) (*models.Event, error) {
 	var e models.Event
 	sqlStatement := `
 	SELECT "pk", "title", "description", "startat", "durationseconds", "owner", "notifyearlyseconds", "sheduled"
-	FROM hw12calendar.events WHERE "pk"=$1`
+	FROM hw15calendar.events WHERE "pk"=$1`
 	row := s.connection.QueryRow(sqlStatement, pk)
 	err := row.Scan(&(e.PK),
 		&(e.Title), &(e.Description), &(e.StartAt), &(e.Duration),
@@ -77,7 +77,7 @@ func (s *Storage) UpdateEvent(e *models.Event) (*models.Event, error) {
 		return nil, fmt.Errorf("it is not idented")
 	}
 	sqlStatement := `
-	UPDATE hw12calendar.events 
+	UPDATE hw15calendar.events 
 	SET 
 	"title"=$1, "description"=$2, "startat"=$3, "durationseconds"=$4, 
 	"owner"=$5, "notifyearlyseconds"=$6, "sheduled"=$7
@@ -95,7 +95,7 @@ func (s *Storage) DeleteEvent(e *models.Event) (*models.Event, error) {
 	if e.PK == 0 {
 		return nil, fmt.Errorf("it is not idented")
 	}
-	sqlStatement := `DELETE FROM hw12calendar.events WHERE pk=$1;`
+	sqlStatement := `DELETE FROM hw15calendar.events WHERE pk=$1;`
 	_, err := s.connection.Exec(sqlStatement, e.PK)
 	if err != nil {
 		return nil, err
@@ -109,7 +109,7 @@ func (s *Storage) ListEvents() ([]models.Event, error) {
 	var events []models.Event
 	sqlStatement := `
 	SELECT "pk", "title", "description", "startat", "durationseconds", "owner", "notifyearlyseconds", "sheduled"
-	FROM hw12calendar.events`
+	FROM hw15calendar.events`
 	rows, err := s.connection.Query(sqlStatement)
 	if err != nil {
 		return nil, err
@@ -130,7 +130,7 @@ func (s *Storage) ListNotSheduledEvents() ([]models.Event, error) {
 	var events []models.Event
 	sqlStatement := `
 	SELECT "pk", "title", "description", "startat", "durationseconds", "owner", "notifyearlyseconds", "sheduled"
-	FROM hw12calendar.events
+	FROM hw15calendar.events
 	WHERE "sheduled" IF FALSE`
 	rows, err := s.connection.Query(sqlStatement)
 	if err != nil {

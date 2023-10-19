@@ -46,6 +46,6 @@ LABEL MAINTAINERS="admin@localhost"
 COPY --from=development /opt/service/service /opt/service/service
 
 COPY configs/${CONFIG_FILE} "/etc/service/config.yaml"
-
+RUN echo "CONFIG_FILE=${CONFIG_FILE}"
 # One imege - one process
 ENTRYPOINT [ "/opt/service/service", "--config", "/etc/service/config.yaml" ]

@@ -55,7 +55,7 @@ func main() {
 	}
 
 	mainLogger := logger.NewLogger(mainConfig.Log.Level, os.Stdout)
-	mainLogger.Info("HTTP Config - %+v", mainConfig.HTTP)
+	mainLogger.Info("HTTP Config - %+v", mainConfig)
 	middleware.Init(mainLogger)
 	storage := storage.NewStorageByType(mainConfig.Storage.Type, mainConfig.Storage.DSN)
 	calendar := app.NewApp(mainLogger, storage)

@@ -32,24 +32,27 @@ func init() {
 }
 
 func main() {
+	os.Exit(555)
+
 	pflag.Parse()
 	if configFile == "" {
 		fmt.Println("Please set: '--config=<Path to configuration file>'")
-		return
+		os.Exit(102)
 	}
 	viper.SetConfigType("yaml")
 	file, err := os.Open(configFile)
 	if err != nil {
 		fmt.Println(err)
-		return
+		os.Exit(101)
 	}
 	viper.ReadConfig(file)
 	mainConfig := config.NewCheckerConfig()
 	err = viper.Unmarshal(mainConfig)
 	if err != nil {
 		log.Fatalf("unable to decode into struct, %v", err)
+		os.Exit(100)
 	}
-	datasetSize := 10
+	datasetSize := 1
 	// CREATE DATASET SERIA
 	client := &http.Client{}
 	requestOfCreate := fmt.Sprintf("http://%s:%d/api/events/create", mainConfig.HTTP.Host, mainConfig.HTTP.Port)
@@ -68,82 +71,100 @@ func main() {
 		}
 		notifiedTitles = append(notifiedTitles, event.Title)
 		titles = append(titles, event.Title)
-		payloadOfCreateRaw, _ := json.Marshal(event)
+		payloadOfCreateRaw, err := json.Marshal(event)
+		if err != nil {
+			log.Println("FAIL: error json.Marshal(event)")
+			os.Exit(203)
+		}
 		payloadOfCreate := strings.NewReader(string(payloadOfCreateRaw))
 		request, err := http.NewRequestWithContext(context.Background(), "POST", requestOfCreate, payloadOfCreate)
 		if err != nil {
 			log.Printf("FAIL: error prepare http request: %s\n", requestOfCreate)
-			return
+			os.Exit(103)
 		}
 		request.Header.Set("Content-Type", "application/json")
 		response, err := client.Do(request)
 		if err != nil {
 			log.Printf("FAIL: error decode event http request: %s\n", err)
-			return
+			os.Exit(104)
+		}
+		if response.StatusCode != 200 {
+			log.Printf("FAIL: HTTP-status %d\n", response.StatusCode)
+			response.Body.Close()
+			exitby := 1
+			log.Printf("FAIL: exitby %d\n", exitby)
+			os.Exit(exitby)
 		}
 		response.Body.Close()
 		log.Printf("Put event: %+v\n", event)
 	}
-	_ = notifiedTitles
-	// MUST BE ARCHIVE
-	archivedTitles := []string{}
-	for i := 1; i <= datasetSize; i++ {
-		event := models.Event{
-			Title:       fake.Title(),
-			StartAt:     now.Add(-18000 * time.Minute),
-			Duration:    1800,
-			Description: fake.EmailSubject(),
-			Owner:       fake.EmailAddress(),
-			NotifyEarly: 60,
-		}
-		archivedTitles = append(archivedTitles, event.Title)
-		titles = append(titles, event.Title)
-		payloadOfCreateRaw, _ := json.Marshal(event)
-		payloadOfCreate := strings.NewReader(string(payloadOfCreateRaw))
-		request, err := http.NewRequestWithContext(context.Background(), "POST", requestOfCreate, payloadOfCreate)
-		if err != nil {
-			log.Printf("FAIL: error prepare http request: %s\n", requestOfCreate)
-			return
-		}
-		request.Header.Set("Content-Type", "application/json")
-		response, err := client.Do(request)
-		if err != nil {
-			log.Printf("FAIL: error decode event http request: %s\n", err)
-			return
-		}
-		response.Body.Close()
-		log.Printf("Put event: %+v\n", event)
-	}
-	_ = archivedTitles
-	// WAIT FOR NOTIFY
-	for i := 1; i <= datasetSize; i++ {
-		event := models.Event{
-			Title:       fake.Title(),
-			StartAt:     now.Add(36000 * time.Second),
-			Duration:    1800,
-			Description: fake.EmailSubject(),
-			Owner:       fake.EmailAddress(),
-			NotifyEarly: 1,
-		}
-		titles = append(titles, event.Title)
-		payloadOfCreateRaw, _ := json.Marshal(event)
-		payloadOfCreate := strings.NewReader(string(payloadOfCreateRaw))
-		request, err := http.NewRequestWithContext(context.Background(), "POST", requestOfCreate, payloadOfCreate)
-		if err != nil {
-			log.Printf("FAIL: error prepare http request: %s\n", requestOfCreate)
-			return
-		}
-		request.Header.Set("Content-Type", "application/json")
-		response, err := client.Do(request)
-		if err != nil {
-			log.Printf("FAIL: error decode event http request: %s\n", err)
-			return
-		}
-		response.Body.Close()
-		log.Printf("Put event: %+v\n", event)
-	}
+	// _ = notifiedTitles
+	// // MUST BE ARCHIVE
+	// archivedTitles := []string{}
+	// for i := 1; i <= datasetSize; i++ {
+	// 	event := models.Event{
+	// 		Title:       fake.Title(),
+	// 		StartAt:     now.Add(-18000 * time.Minute),
+	// 		Duration:    1800,
+	// 		Description: fake.EmailSubject(),
+	// 		Owner:       fake.EmailAddress(),
+	// 		NotifyEarly: 60,
+	// 	}
+	// 	archivedTitles = append(archivedTitles, event.Title)
+	// 	titles = append(titles, event.Title)
+	// 	payloadOfCreateRaw, err := json.Marshal(event)
+	// 	if err != nil {
+	// 		log.Println("FAIL: error json.Marshal(event)")
+	// 		os.Exit(205)
+	// 	}
+	// 	payloadOfCreate := strings.NewReader(string(payloadOfCreateRaw))
+	// 	request, err := http.NewRequestWithContext(context.Background(), "POST", requestOfCreate, payloadOfCreate)
+	// 	if err != nil {
+	// 		log.Printf("FAIL: error prepare http request: %s\n", requestOfCreate)
+	// 		os.Exit(105)
+	// 	}
+	// 	request.Header.Set("Content-Type", "application/json")
+	// 	response, err := client.Do(request)
+	// 	if err != nil {
+	// 		log.Printf("FAIL: error decode event http request: %s\n", err)
+	// 		os.Exit(106)
+	// 	}
+	// 	response.Body.Close()
+	// 	log.Printf("Put event: %+v\n", event)
+	// }
+	// _ = archivedTitles
+	// // WAIT FOR NOTIFY
+	// for i := 1; i <= datasetSize; i++ {
+	// 	event := models.Event{
+	// 		Title:       fake.Title(),
+	// 		StartAt:     now.Add(36000 * time.Second),
+	// 		Duration:    1800,
+	// 		Description: fake.EmailSubject(),
+	// 		Owner:       fake.EmailAddress(),
+	// 		NotifyEarly: 1,
+	// 	}
+	// 	titles = append(titles, event.Title)
+	// 	payloadOfCreateRaw, err := json.Marshal(event)
+	// 	if err != nil {
+	// 		log.Println("FAIL: error json.Marshal(event)")
+	// 		os.Exit(207)
+	// 	}
+	// 	payloadOfCreate := strings.NewReader(string(payloadOfCreateRaw))
+	// 	request, err := http.NewRequestWithContext(context.Background(), "POST", requestOfCreate, payloadOfCreate)
+	// 	if err != nil {
+	// 		log.Printf("FAIL: error prepare http request: %s\n", requestOfCreate)
+	// 		os.Exit(107)
+	// 	}
+	// 	request.Header.Set("Content-Type", "application/json")
+	// 	response, err := client.Do(request)
+	// 	if err != nil {
+	// 		log.Printf("FAIL: error decode event http request: %s\n", err)
+	// 		os.Exit(108)
+	// 	}
+	// 	response.Body.Close()
+	// 	log.Printf("Put event: %+v\n", event)
+	// }
 	//
-	fmt.Printf("%+v", mainConfig)
 	// connectionSended, err := amqp.Dial(mainConfig.Sended.DSN)
 	// if err != nil {
 	// 	log.Print(err.Error())
@@ -253,7 +274,7 @@ func main() {
 		SELECT 
 			"pk", "title", "description", "startat", "durationseconds", "owner", "notifyearlyseconds", "sheduled"
 		FROM 
-			hw12calendar.events`
+			hw15calendar.events`
 	rows, err := db.Query(sqlStatement)
 	if err != nil {
 		log.Print(err.Error())
@@ -268,26 +289,29 @@ func main() {
 			log.Print(err.Error())
 			os.Exit(10)
 		}
+		log.Println("log.Println(e)")
+		log.Println(e)
 		if slices.Contains(titles, e.Title) {
 			countTitled += 1
 		} else {
 			os.Exit(11)
 		}
 	}
+	log.Println("SELECT COUNT(*)")
 	// TODO: Count, not any other
 	count := 0
-	row, err := db.Query(`SELECT COUNT(*) FROM hw12calendar.events`)
-	if err != nil {
-		log.Print(err.Error())
-		os.Exit(13)
-	}
-	defer row.Close()
+	row := db.QueryRow(`SELECT COUNT(*) FROM hw15calendar.events`)
 	err = row.Scan(&count)
 	if err != nil {
 		log.Print(err.Error())
 		os.Exit(14)
+		return
 	}
+	log.Println(count)
 	if count != len(titles) {
 		os.Exit(15)
+		return
 	}
+	os.Exit(0)
+	return
 }

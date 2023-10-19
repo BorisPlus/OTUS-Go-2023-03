@@ -35,6 +35,9 @@ build:
 build-microservice: # make MICROSERVICE=calendar build-microservice
 	go build -v -o "$(BIN_DIR)/$(MICROSERVICE)"  -ldflags "$(LDFLAGS)" ./cmd/$(MICROSERVICE)
 
+go-run: # make MICROSERVICE=checker go-run
+	go run ./cmd/$(MICROSERVICE)/ --config ./configs/$(MICROSERVICE).yaml 
+
 run-microservice: build # make MICROSERVICE=calendar run-microservice
 	"./bin/$(MICROSERVICE)" --config ./configs/$(MICROSERVICE).yaml 
 
@@ -106,27 +109,40 @@ docker-run-microservice: docker-build-microservice # Example: make MICROSERVICE=
 
 docker-run: docker-deconfigure \
 			docker-configure
-							make docker-run-rabbitmq
-	MICROSERVICE=rmqdevops	CONFIG_FILE=rmqdevops.standalone.yaml make docker-run-microservice
-							make docker-run-calendar
-	MICROSERVICE=sheduler 	CONFIG_FILE=sheduler.standalone.yaml make docker-run-microservice
-	MICROSERVICE=archiver	CONFIG_FILE=archiver.standalone.yaml make docker-run-microservice
-	MICROSERVICE=sender 	CONFIG_FILE=sender.standalone.yaml make docker-run-microservice
+																	make docker-run-rabbitmq
+	MICROSERVICE=rmqdevops	CONFIG_FILE=rmqdevops.standalone.yaml 	make docker-run-microservice
+																	make docker-run-calendar
+	MICROSERVICE=sheduler 	CONFIG_FILE=sheduler.standalone.yaml 	make docker-run-microservice
+	MICROSERVICE=archiver	CONFIG_FILE=archiver.standalone.yaml 	make docker-run-microservice
+	MICROSERVICE=sender 	CONFIG_FILE=sender.standalone.yaml 		make docker-run-microservice
 	
 docker-start-microservice: # Example: make MICROSERVICE=rmqdevops docker-start-microservice
 	docker start hw15_$(MICROSERVICE)_dev
 
+docker-start-rabbitmq:
+	docker start hw15_rabbitmq_dev
+
 docker-start:
+							make docker-start-rabbitmq
+							sleep 5
 	MICROSERVICE=calendar 	make docker-start-microservice
+							sleep 5
 	MICROSERVICE=sheduler	make docker-start-microservice
+							sleep 5
 	MICROSERVICE=archiver	make docker-start-microservice
+							sleep 5
 	MICROSERVICE=sender		make docker-start-microservice
+							sleep 5
 	MICROSERVICE=rmqdevops	make docker-start-microservice
 
 docker-stop-microservice: # Example: make MICROSERVICE=calendar docker-stop-microservice
 	docker stop hw15_$(MICROSERVICE)_dev
 
+docker-stop-rabbitmq:
+	docker stop hw15_rabbitmq_dev
+
 docker-stop:
+							make docker-stop-rabbitmq
 	MICROSERVICE=calendar 	make docker-stop-microservice
 	MICROSERVICE=sheduler 	make docker-stop-microservice
 	MICROSERVICE=archiver 	make docker-stop-microservice
@@ -168,8 +184,34 @@ docker-compose-down:
 
 # Internal test
 
+integration_test-deconfigure:
+	docker rmi -f hw15_checker_prod		2> /dev/null || true
+	docker rmi -f hw15_dataset_prod		2> /dev/null || true
+	docker rmi -f hw15_archiver_prod	2> /dev/null || true 
+	docker rmi -f hw15_sender_prod		2> /dev/null || true
+	docker rmi -f hw15_sheduler_prod	2> /dev/null || true
+	docker rmi -f hw15_rmqdevops_prod	2> /dev/null || true
+	docker rmi -f hw15_rabbitmq_prod	2> /dev/null || true
+	docker rmi -f hw15_goose_prod		2> /dev/null || true
+	docker rmi -f hw15_pgadmin_prod		2> /dev/null || true
+	docker rmi -f hw15_postgres_prod	2> /dev/null || true
+	docker rmi -f hw15_calendar_prod	2> /dev/null || true
+	docker rm  -f hw15_checker_prod		2> /dev/null || true
+	docker rm  -f hw15_dataset_prod		2> /dev/null || true
+	docker rm  -f hw15_archiver_prod	2> /dev/null || true 
+	docker rm  -f hw15_sender_prod		2> /dev/null || true
+	docker rm  -f hw15_sheduler_prod	2> /dev/null || true
+	docker rm  -f hw15_rmqdevops_prod	2> /dev/null || true
+	docker rm  -f hw15_rabbitmq_prod	2> /dev/null || true
+	docker rm  -f hw15_goose_prod		2> /dev/null || true
+	docker rm  -f hw15_pgadmin_prod		2> /dev/null || true
+	docker rm  -f hw15_postgres_prod	2> /dev/null || true
+	docker rm  -f hw15_calendar_prod	2> /dev/null || true
+	docker network rm hw15_public_prod	2> /dev/null || true
+	docker network rm hw15_private_prod	2> /dev/null || true
+
 integration_test: docker-compose-deconfigure
-	BUILDKIT_PROGRESS=plain docker-compose -f ./docker/docker-compose.yaml -f ./docker/docker-compose.checker.yaml up --exit-code-from checker --abort-on-container-exit
+	BUILDKIT_PROGRESS=plain docker-compose -f ./docker/docker-compose.yaml -f ./docker/docker-compose.checker.yaml up --abort-on-container-exit --exit-code-from checker
 
 # Be careful
 
