@@ -15,4 +15,3 @@ services:
       dockerfile: ./docker/Dockerfile
     networks:
       private:
-      public:

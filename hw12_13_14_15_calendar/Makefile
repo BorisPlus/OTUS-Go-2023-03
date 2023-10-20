@@ -47,17 +47,17 @@ version: build  # make MICROSERVICE=calendar build-microservice
 migrate-sql-up: # make PG_DSN="host=hw15_postgres_prod user=hw15user password=hw15user dbname=hw15 sslmode=disable port=5432" migrate-sql-up
 	goose -dir ./migrations/migrations/ postgres "$(PG_DSN)" up
 
-# migrate-sql-down: 
-# 	goose -dir ./migrations/migrations/ postgres "$(PG_DSN)" down
+migrate-sql-down: 
+	goose -dir ./migrations/migrations/ postgres "$(PG_DSN)" down
 
-# migrate-rmq-up: 
-# 	go run ./cmd/management/rmqdevops/ --config ./configs/rmqdevops.yaml
+migrate-rmq-up: 
+	go run ./cmd/management/rmqdevops/ --config ./configs/rmqdevops.yaml
 
-# migrate-rmq-down: 
-# 	go run ./cmd/management/rmqdevops/ --drop --config ./configs/rmqdevops.yaml
+migrate-rmq-down: 
+	go run ./cmd/management/rmqdevops/ --drop --config ./configs/rmqdevops.yaml
 
-# migrate-rmq-up-with-drop: 
-# 	go run ./cmd/management/rmqdevops/ --with-drop --config ./configs/rmqdevops.yaml
+migrate-rmq-up-with-drop: 
+	go run ./cmd/management/rmqdevops/ --with-drop --config ./configs/rmqdevops.yaml
 
 # dataset-example: 
 # 	go run ./cmd/dataset/ --config ./configs/calendar.yaml
@@ -162,6 +162,7 @@ docker-compose-deconfigure:
 	docker rmi -f hw15_goose_prod		2> /dev/null || true
 	docker rmi -f hw15_pgadmin_prod		2> /dev/null || true
 	docker rmi -f hw15_postgres_prod	2> /dev/null || true
+	docker rmi -f hw15_calendar_prod	2> /dev/null || true
 	docker rm  -f hw15_checker_prod		2> /dev/null || true
 	docker rm  -f hw15_dataset_prod		2> /dev/null || true
 	docker rm  -f hw15_archiver_prod	2> /dev/null || true 
@@ -173,8 +174,8 @@ docker-compose-deconfigure:
 	docker rm  -f hw15_pgadmin_prod		2> /dev/null || true
 	docker rm  -f hw15_postgres_prod	2> /dev/null || true
 	docker rm  -f hw15_calendar_prod	2> /dev/null || true
-	docker network rm hw15_public_prod	2> /dev/null || true
 	docker network rm hw15_private_prod	2> /dev/null || true
+	docker network rm hw15_public_prod	2> /dev/null || true
 
 docker-compose-up: docker-compose-deconfigure
 	BUILDKIT_PROGRESS=plain docker-compose -f ./docker/docker-compose.yaml up --build -d --remove-orphans
@@ -207,21 +208,27 @@ integration_test-deconfigure:
 	docker rm  -f hw15_pgadmin_prod		2> /dev/null || true
 	docker rm  -f hw15_postgres_prod	2> /dev/null || true
 	docker rm  -f hw15_calendar_prod	2> /dev/null || true
-	docker network rm hw15_public_prod	2> /dev/null || true
 	docker network rm hw15_private_prod	2> /dev/null || true
+	docker network rm hw15_public_prod	2> /dev/null || true
 
-integration_test: docker-compose-deconfigure
-	BUILDKIT_PROGRESS=plain docker-compose -f ./docker/docker-compose.yaml -f ./docker/docker-compose.checker.yaml up --abort-on-container-exit --exit-code-from checker
+integration_test: integration_test-deconfigure
+	BUILDKIT_PROGRESS=plain docker-compose -f ./docker/docker-compose.yaml -f ./docker/docker-compose.checker.yaml up --exit-code-from checker
+# docker logs hw15_checker_prod
+# --abort-on-container-exit no need with migrate	
+# --abort-on-container-exit 
+
+integration_test-checker:
+	BUILDKIT_PROGRESS=plain docker-compose -f ./docker/docker-compose.checker.yaml up
 
 # Be careful
 
-prune:
-	docker stop -f $$(docker ps -a -q) || true
-	docker rm -f $$(docker ps -a -q) || true
-	docker rmi -f $$(docker images -q) || true
-	docker image prune -f
-	docker network prune -f
-	docker container prune -f
+# prune:
+# 	docker stop -f $$(docker ps -a -q) || true
+# 	docker rm -f $$(docker ps -a -q) || true
+# 	docker rmi -f $$(docker images -q) || true
+# 	docker image prune -f
+# 	docker network prune -f
+# 	docker container prune -f
 
 #
 

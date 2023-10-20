@@ -70,26 +70,20 @@ services:
       - RABBITMQ_DEFAULT_PASS=hw15user
     ports:
       - 0.0.0.0:5672:5672
-      - 0.0.0.0:15672:15672
+      # - 0.0.0.0:15672:15672
     networks:
-      public:
-        ipv4_address: 172.20.0.3
       private:
-    deploy:
-      restart_policy:
-        condition: on-failure
     healthcheck:
-      test: rabbitmq-diagnostics -q ping
+      test: rabbitmq-diagnostics -q status && rabbitmq-diagnostics -q check_local_alarms && rabbitmq-diagnostics check_port_connectivity
       interval: 30s
       timeout: 30s
-      retries: 3
+      retries: 10
   rmq_migration:
     depends_on:
       rabbitmq:
-        condition: service_started
+        condition: service_healthy
     container_name: hw15_rmqdevops_prod
     hostname: hw15_rmqdevops_prod
-    restart: always
     build:
       context: ../.
       args:
@@ -100,8 +94,6 @@ services:
       private:
   sheduler:
     depends_on:
-      # postgres:
-      #   condition: service_healthy
       pg_migration:
         condition: service_completed_successfully
       rmq_migration:
@@ -149,8 +141,6 @@ services:
     depends_on:
       pg_migration:
         condition: service_completed_successfully
-      # rmq_migration:
-        # condition: service_completed_successfully
     image: hw15_calendar_prod
     container_name: hw15_calendar_prod
     hostname: hw15_calendar_prod
