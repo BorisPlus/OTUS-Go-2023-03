@@ -175,6 +175,8 @@ a3b494527ef4   hw15_goose_integration_test       "/bin/sh -c 'goose -…"   15 m
 496ecd245908   rabbitmq:3.10.7-management        "docker-entrypoint.s…"   15 minutes ago   Up 15 minutes (healthy)     4369/tcp, 5671/tcp, 15671-15672/tcp, 15691-15692/tcp, 25672/tcp, 0.0.0.0:5672->5672/tcp   hw15_rabbitmq_integration_test
 ```
 
+Видно, что `hw15_checker_integration_test` завершился с `Exited (0)`
+
 ## Для себя
 
 * как посредством `docker-compose.integration_test.yaml` не добавлять порты, а переопределять.
