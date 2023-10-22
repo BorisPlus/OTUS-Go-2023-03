@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -20,9 +19,10 @@ import (
 
 	"github.com/icrowley/fake"
 
+	amqp "github.com/rabbitmq/amqp091-go"
 	config "hw12_13_14_15_calendar/internal/config"
+	logger "hw12_13_14_15_calendar/internal/logger"
 	models "hw12_13_14_15_calendar/internal/models"
-	// amqp "github.com/rabbitmq/amqp091-go"
 )
 
 var configFile string
@@ -31,36 +31,40 @@ func init() {
 	pflag.StringVar(&configFile, "config", "", "Path to configuration file")
 }
 
-func main() {
-	os.Exit(555)
+func osExit(exitCode int, l logger.Logger) {
+	l.Warning("ExitCode: %d", exitCode)
+	os.Exit(exitCode)
+}
 
+func main() {
 	pflag.Parse()
 	if configFile == "" {
 		fmt.Println("Please set: '--config=<Path to configuration file>'")
-		os.Exit(102)
+		os.Exit(1)
 	}
 	viper.SetConfigType("yaml")
 	file, err := os.Open(configFile)
 	if err != nil {
 		fmt.Println(err)
-		os.Exit(101)
+		os.Exit(2)
 	}
 	viper.ReadConfig(file)
-	mainConfig := config.NewCheckerConfig()
-	err = viper.Unmarshal(mainConfig)
+	cfg := config.NewCheckerConfig()
+	err = viper.Unmarshal(cfg)
 	if err != nil {
-		log.Fatalf("unable to decode into struct, %v", err)
-		os.Exit(100)
+		fmt.Printf("unable to decode into struct, %v", err)
+		os.Exit(3)
 	}
-	datasetSize := 1
+	logging := logger.NewLogger(cfg.Log.Level, os.Stdout)
 	// CREATE DATASET SERIA
 	client := &http.Client{}
-	requestOfCreate := fmt.Sprintf("http://%s:%d/api/events/create", mainConfig.HTTP.Host, mainConfig.HTTP.Port)
+	requestOfCreate := fmt.Sprintf("http://%s:%d/api/events/create", cfg.HTTP.Host, cfg.HTTP.Port)
 	now := time.Now()
 	titles := []string{}
-	// MUST BY NOTIFIED
-	notifiedTitles := []string{}
-	for i := 1; i <= datasetSize; i++ {
+	// cfgT BY NOTIFIED
+	logging.Debug("SEND COUNT: %d", cfg.Counts.Send)
+	titlesOfSend := []string{}
+	for i := 0; i < cfg.Counts.Send; i++ {
 		event := models.Event{
 			Title:       fake.Title(),
 			StartAt:     now.Add(3000 * time.Second),
@@ -69,207 +73,197 @@ func main() {
 			Owner:       fake.EmailAddress(),
 			NotifyEarly: 3600,
 		}
-		notifiedTitles = append(notifiedTitles, event.Title)
+		logging.Debug("SEND: %s\n", event.Title)
+		titlesOfSend = append(titlesOfSend, event.Title)
 		titles = append(titles, event.Title)
-		payloadOfCreateRaw, err := json.Marshal(event)
+		payload, err := json.Marshal(event)
 		if err != nil {
-			log.Println("FAIL: error json.Marshal(event)")
-			os.Exit(203)
+			logging.Error(err.Error())
+			osExit(10, *logging)
 		}
-		payloadOfCreate := strings.NewReader(string(payloadOfCreateRaw))
+		payloadOfCreate := strings.NewReader(string(payload))
 		request, err := http.NewRequestWithContext(context.Background(), "POST", requestOfCreate, payloadOfCreate)
 		if err != nil {
-			log.Printf("FAIL: error prepare http request: %s\n", requestOfCreate)
-			os.Exit(103)
+			logging.Error("FAIL: error prepare http request: %s\n", requestOfCreate)
+			logging.Error(err.Error())
+			osExit(10, *logging)
 		}
 		request.Header.Set("Content-Type", "application/json")
 		response, err := client.Do(request)
 		if err != nil {
-			log.Printf("FAIL: error decode event http request: %s\n", err)
-			os.Exit(104)
+			logging.Error("FAIL: error decode event http request")
+			logging.Error(err.Error())
+			osExit(12, *logging)
 		}
 		if response.StatusCode != 200 {
-			log.Printf("FAIL: HTTP-status %d\n", response.StatusCode)
 			response.Body.Close()
-			exitby := 1
-			log.Printf("FAIL: exitby %d\n", exitby)
-			os.Exit(exitby)
+			logging.Error("FAIL: HTTP-status %d\n", response.StatusCode)
+			osExit(13, *logging)
 		}
 		response.Body.Close()
-		log.Printf("Put event: %+v\n", event)
+		logging.Debug("Put event: %+v\n", event)
 	}
-	// _ = notifiedTitles
-	// // MUST BE ARCHIVE
-	// archivedTitles := []string{}
-	// for i := 1; i <= datasetSize; i++ {
-	// 	event := models.Event{
-	// 		Title:       fake.Title(),
-	// 		StartAt:     now.Add(-18000 * time.Minute),
-	// 		Duration:    1800,
-	// 		Description: fake.EmailSubject(),
-	// 		Owner:       fake.EmailAddress(),
-	// 		NotifyEarly: 60,
-	// 	}
-	// 	archivedTitles = append(archivedTitles, event.Title)
-	// 	titles = append(titles, event.Title)
-	// 	payloadOfCreateRaw, err := json.Marshal(event)
-	// 	if err != nil {
-	// 		log.Println("FAIL: error json.Marshal(event)")
-	// 		os.Exit(205)
-	// 	}
-	// 	payloadOfCreate := strings.NewReader(string(payloadOfCreateRaw))
-	// 	request, err := http.NewRequestWithContext(context.Background(), "POST", requestOfCreate, payloadOfCreate)
-	// 	if err != nil {
-	// 		log.Printf("FAIL: error prepare http request: %s\n", requestOfCreate)
-	// 		os.Exit(105)
-	// 	}
-	// 	request.Header.Set("Content-Type", "application/json")
-	// 	response, err := client.Do(request)
-	// 	if err != nil {
-	// 		log.Printf("FAIL: error decode event http request: %s\n", err)
-	// 		os.Exit(106)
-	// 	}
-	// 	response.Body.Close()
-	// 	log.Printf("Put event: %+v\n", event)
-	// }
-	// _ = archivedTitles
-	// // WAIT FOR NOTIFY
-	// for i := 1; i <= datasetSize; i++ {
-	// 	event := models.Event{
-	// 		Title:       fake.Title(),
-	// 		StartAt:     now.Add(36000 * time.Second),
-	// 		Duration:    1800,
-	// 		Description: fake.EmailSubject(),
-	// 		Owner:       fake.EmailAddress(),
-	// 		NotifyEarly: 1,
-	// 	}
-	// 	titles = append(titles, event.Title)
-	// 	payloadOfCreateRaw, err := json.Marshal(event)
-	// 	if err != nil {
-	// 		log.Println("FAIL: error json.Marshal(event)")
-	// 		os.Exit(207)
-	// 	}
-	// 	payloadOfCreate := strings.NewReader(string(payloadOfCreateRaw))
-	// 	request, err := http.NewRequestWithContext(context.Background(), "POST", requestOfCreate, payloadOfCreate)
-	// 	if err != nil {
-	// 		log.Printf("FAIL: error prepare http request: %s\n", requestOfCreate)
-	// 		os.Exit(107)
-	// 	}
-	// 	request.Header.Set("Content-Type", "application/json")
-	// 	response, err := client.Do(request)
-	// 	if err != nil {
-	// 		log.Printf("FAIL: error decode event http request: %s\n", err)
-	// 		os.Exit(108)
-	// 	}
-	// 	response.Body.Close()
-	// 	log.Printf("Put event: %+v\n", event)
-	// }
-	//
-	// connectionSended, err := amqp.Dial(mainConfig.Sended.DSN)
-	// if err != nil {
-	// 	log.Print(err.Error())
-	// 	os.Exit(1)
-	// }
-	// defer connectionSended.Close()
-	// channelSended, err := connectionSended.Channel()
-	// if err != nil {
-	// 	log.Print(err.Error())
-	// 	os.Exit(2)
-	// }
-	// defer channelSended.Close()
-	// q, err := channelSended.QueueDeclare(
-	// 	mainConfig.Sended.QueueName, // name
-	// 	false,                       // durable
-	// 	false,                       // delete when unused
-	// 	false,                       // exclusive
-	// 	false,                       // no-wait
-	// 	nil,                         // arguments
-	// )
-	// if err != nil {
-	// 	log.Print(err.Error())
-	// 	os.Exit(12)
-	// }
-	// msgs, err := channelSended.Consume(
-	// 	q.Name, // queue
-	// 	"",     // consumer
-	// 	true,   // auto-ack
-	// 	false,  // exclusive
-	// 	false,  // no-local
-	// 	false,  // no-wait
-	// 	nil,    // args
-	// )
-	// var notice models.Notice
-	// count := 0
-	// for d := range msgs {
-	// 	log.Printf("Received a message: %s", d.Body)
-	// 	json.Unmarshal(d.Body, &notice)
-	// 	if slices.Contains(notifiedTitles, notice.Title) {
-	// 		count += 1
-	// 	} else {
-	// 		os.Exit(3)
-	// 	}
-	// 	if count == 10 {
-	// 		break
-	// 	}
-	// }
-	// channelSended.Close()
-	// connectionSended.Close()
-	// //
-	// connectionArchived, err := amqp.Dial(mainConfig.Archived.DSN)
-	// if err != nil {
-	// 	log.Print(err.Error())
-	// 	os.Exit(4)
-	// }
-	// defer connectionArchived.Close()
-	// channelArchived, err := connectionArchived.Channel()
-	// if err != nil {
-	// 	log.Print(err.Error())
-	// 	os.Exit(5)
-	// }
-	// defer channelArchived.Close()
-	// qArchived, err := channelArchived.QueueDeclare(
-	// 	mainConfig.Archived.QueueName, // name
-	// 	false,                         // durable
-	// 	false,                         // delete when unused
-	// 	false,                         // exclusive
-	// 	false,                         // no-wait
-	// 	nil,                           // arguments
-	// )
-	// if err != nil {
-	// 	log.Print(err.Error())
-	// 	os.Exit(6)
-	// }
-	// msgsArchived, err := channelArchived.Consume(
-	// 	qArchived.Name, // queue
-	// 	"",             // consumer
-	// 	true,           // auto-ack
-	// 	false,          // exclusive
-	// 	false,          // no-local
-	// 	false,          // no-wait
-	// 	nil,            // args
-	// )
-	// countArchived := 0
-	// for d := range msgsArchived {
-	// 	log.Printf("Received a message: %s", d.Body)
-	// 	json.Unmarshal(d.Body, &notice)
-	// 	if slices.Contains(notifiedTitles, notice.Title) {
-	// 		countArchived += 1
-	// 	} else {
-	// 		os.Exit(7)
-	// 	}
-	// 	if count == 10 {
-	// 		break
-	// 	}
-	// }
-	// channelArchived.Close()
-	// connectionArchived.Close()
-	//
-	db, err := sql.Open("postgres", mainConfig.Storage.DSN)
+	// ARCHIVE
+	titlesOfArchived := []string{}
+	titlesOfArchived = append(titlesOfArchived, titlesOfSend...)
+	logging.Debug("ARCHIVE COUNT: %d", cfg.Counts.Archive)
+	for i := 0; i < cfg.Counts.Archive; i++ {
+		event := models.Event{
+			Title:       fake.Title(),
+			StartAt:     now.Add(-18000 * time.Minute),
+			Duration:    1800,
+			Description: fake.EmailSubject(),
+			Owner:       fake.EmailAddress(),
+			NotifyEarly: 60,
+		}
+		titlesOfArchived = append(titlesOfArchived, event.Title)
+		titles = append(titles, event.Title)
+		payload, err := json.Marshal(event)
+		if err != nil {
+			logging.Error(err.Error())
+			osExit(20, *logging)
+		}
+		payloadOfCreate := strings.NewReader(string(payload))
+		request, err := http.NewRequestWithContext(context.Background(), "POST", requestOfCreate, payloadOfCreate)
+		if err != nil {
+			logging.Error("FAIL: error prepare http request: %s\n", requestOfCreate)
+			logging.Error(err.Error())
+			osExit(21, *logging)
+		}
+		request.Header.Set("Content-Type", "application/json")
+		response, err := client.Do(request)
+		if err != nil {
+			logging.Error("FAIL: error decode event http request")
+			logging.Error(err.Error())
+			osExit(22, *logging)
+		}
+		response.Body.Close()
+		logging.Debug("Put event: %+v\n", event)
+	}
+	// WAIT FOR NOTIFY
+	titlesOfDefer := []string{}
+	logging.Debug("DEFER COUNT: %d", cfg.Counts.Defer)
+	for i := 0; i < cfg.Counts.Defer; i++ {
+		event := models.Event{
+			Title:       fake.Title(),
+			StartAt:     now.Add(36000 * time.Second),
+			Duration:    1800,
+			Description: fake.EmailSubject(),
+			Owner:       fake.EmailAddress(),
+			NotifyEarly: 1,
+		}
+		titlesOfDefer = append(titlesOfDefer, event.Title)
+		titles = append(titles, event.Title)
+		payloadOfCreateRaw, err := json.Marshal(event)
+		if err != nil {
+			logging.Error(err.Error())
+			osExit(30, *logging)
+		}
+		payloadOfCreate := strings.NewReader(string(payloadOfCreateRaw))
+		request, err := http.NewRequestWithContext(context.Background(), "POST", requestOfCreate, payloadOfCreate)
+		if err != nil {
+			logging.Error("FAIL: error prepare http request: %s\n", requestOfCreate)
+			logging.Error(err.Error())
+			osExit(31, *logging)
+		}
+		request.Header.Set("Content-Type", "application/json")
+		response, err := client.Do(request)
+		if err != nil {
+			logging.Error(err.Error())
+			osExit(32, *logging)
+		}
+		response.Body.Close()
+		logging.Debug("Put event: %+v\n", event)
+	}
+	// CHECKING
+	connectionSended, err := amqp.Dial(cfg.Sended.DSN)
 	if err != nil {
-		log.Print(err.Error())
-		os.Exit(8)
+		logging.Error(err.Error())
+		osExit(40, *logging)
+	}
+	defer connectionSended.Close()
+	channelSended, err := connectionSended.Channel()
+	if err != nil {
+		logging.Error(err.Error())
+		osExit(41, *logging)
+	}
+	defer channelSended.Close()
+	msgs, err := channelSended.Consume(
+		cfg.Sended.QueueName, // queue
+		"",                   // consumer
+		true,                 // auto-ack
+		false,                // exclusive
+		false,                // no-local
+		false,                // no-wait
+		nil,                  // args
+	)
+	var notice models.Notice
+	checkCountOfSend := 0
+	for d := range msgs {
+		logging.Debug("Received a message: %s", d.Body)
+		json.Unmarshal(d.Body, &notice)
+		if slices.Contains(titlesOfSend, notice.Title) {
+			checkCountOfSend += 1
+		} else {
+			logging.Error("Get unexpected send title: %s", notice.Title)
+			logging.Error("checkCountOfSend: %+v", checkCountOfSend)
+			osExit(43, *logging)
+		}
+		if checkCountOfSend == cfg.Counts.Send {
+			break
+		}
+	}
+	channelSended.Close()
+	connectionSended.Close()
+	logging.Info("OK. Get all notices of sended events")
+	//
+	connectionArchived, err := amqp.Dial(cfg.Archived.DSN)
+	if err != nil {
+		logging.Error(err.Error())
+		osExit(50, *logging)
+	}
+	defer connectionArchived.Close()
+	channelArchived, err := connectionArchived.Channel()
+	if err != nil {
+		logging.Error(err.Error())
+		osExit(51, *logging)
+	}
+	defer channelArchived.Close()
+	msgsArchived, err := channelArchived.Consume(
+		cfg.Archived.QueueName, // queue
+		"",                     // consumer
+		true,                   // auto-ack
+		false,                  // exclusive
+		false,                  // no-local
+		false,                  // no-wait
+		nil,                    // args
+	)
+	countArchived := 0
+	for d := range msgsArchived {
+		logging.Debug("Received a message: %s", d.Body)
+		json.Unmarshal(d.Body, &notice)
+		if slices.Contains(titlesOfArchived, notice.Title) {
+			countArchived += 1
+		} else {
+			logging.Error("Get unexpected archived title: %s", notice.Title)
+			logging.Error("titlesOfArchived: %+v", titlesOfArchived)
+			osExit(53, *logging)
+		}
+		if countArchived == cfg.Counts.Archive+cfg.Counts.Send {
+			break
+		}
+	}
+	channelArchived.Close()
+	connectionArchived.Close()
+	logging.Info("OK. Get all notices of archived events (also after send).")
+	//
+	db, err := sql.Open("postgres", cfg.Storage.DSN)
+	if err != nil {
+		logging.Error(err.Error())
+		osExit(300, *logging)
 	}
 	var e models.Event
+	logging.Debug("SELECT ALL")
 	sqlStatement := `
 		SELECT 
 			"pk", "title", "description", "startat", "durationseconds", "owner", "notifyearlyseconds", "sheduled"
@@ -277,41 +271,39 @@ func main() {
 			hw15calendar.events`
 	rows, err := db.Query(sqlStatement)
 	if err != nil {
-		log.Print(err.Error())
-		os.Exit(9)
+		logging.Error(err.Error())
+		osExit(301, *logging)
 	}
 	defer rows.Close()
-	countTitled := 0
 	for rows.Next() {
-		countTitled += 1
 		err = rows.Scan(&e.PK, &e.Title, &e.Description, &e.StartAt, &e.Duration, &e.Owner, &e.NotifyEarly, &e.Sheduled)
 		if err != nil {
-			log.Print(err.Error())
-			os.Exit(10)
+			logging.Error(err.Error())
+			osExit(302, *logging)
 		}
-		log.Println("log.Println(e)")
-		log.Println(e)
-		if slices.Contains(titles, e.Title) {
-			countTitled += 1
-		} else {
-			os.Exit(11)
+		if !slices.Contains(titles, e.Title) {
+			logging.Error("Get unexpected title %q", e.Title)
+			logging.Error("Get unexpected title %v", titles)
+			osExit(303, *logging)
 		}
 	}
-	log.Println("SELECT COUNT(*)")
+	logging.Info("OK. All selected titles of created events are correct.")
 	// TODO: Count, not any other
+	logging.Debug("SELECT COUNT(*)")
 	count := 0
 	row := db.QueryRow(`SELECT COUNT(*) FROM hw15calendar.events`)
 	err = row.Scan(&count)
 	if err != nil {
-		log.Print(err.Error())
-		os.Exit(14)
-		return
+		logging.Error(err.Error())
+		osExit(304, *logging)
 	}
-	log.Println(count)
-	if count != len(titles) {
-		os.Exit(15)
-		return
+	if count != cfg.Counts.Send+cfg.Counts.Archive+cfg.Counts.Defer {
+		logging.Error("Get unexpected title count %d, expected %d", cfg.Counts.Send+cfg.Counts.Archive+cfg.Counts.Defer, count)
+		osExit(305, *logging)
+	} else {
+		logging.Info("OK. Get expected count of events: %d.", count)
 	}
-	os.Exit(0)
-	return
+	//
+	logging.Info("Everything all right.")
+	// os.Exit(0)
 }

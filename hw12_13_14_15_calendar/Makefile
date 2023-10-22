@@ -59,8 +59,8 @@ migrate-rmq-down:
 migrate-rmq-up-with-drop: 
 	go run ./cmd/management/rmqdevops/ --with-drop --config ./configs/rmqdevops.yaml
 
-# dataset-example: 
-# 	go run ./cmd/dataset/ --config ./configs/calendar.yaml
+dataset-example: 
+	go run ./cmd/dataset/ --config ./configs/calendar.yaml
 
 # Dockerize
 
@@ -68,12 +68,12 @@ docker-configure:
 	docker network create hw15_network_dev --subnet=172.133.0.0/24 2> /dev/null || true
 
 docker-deconfigure:
-	docker rmi -f hw15_calendar         2> /dev/null || true
-	docker rmi -f hw15_rabbitmq         2> /dev/null || true
-	docker rmi -f hw15_sheduler         2> /dev/null || true
-	docker rmi -f hw15_archiver         2> /dev/null || true
-	docker rmi -f hw15_sender           2> /dev/null || true
-	docker rmi -f hw15_rmqdevops        2> /dev/null || true
+	docker rmi -f hw15_calendar_dev     2> /dev/null || true
+	docker rmi -f hw15_rabbitmq_dev     2> /dev/null || true
+	docker rmi -f hw15_sheduler_dev     2> /dev/null || true
+	docker rmi -f hw15_archiver_dev     2> /dev/null || true
+	docker rmi -f hw15_sender_dev       2> /dev/null || true
+	docker rmi -f hw15_rmqdevops_dev    2> /dev/null || true
 	docker rm  -f hw15_calendar_dev     2> /dev/null || true
 	docker rm  -f hw15_rabbitmq_dev     2> /dev/null || true
 	docker rm  -f hw15_sheduler_dev     2> /dev/null || true
@@ -87,7 +87,7 @@ docker-build-microservice: # Example: make MICROSERVICE=rmqdevops CONFIG_FILE=rm
 		--build-arg=LDFLAGS="${LDFLAGS}" \
 		--build-arg=MICROSERVICE="$(MICROSERVICE)" \
 		--build-arg=CONFIG_FILE="$(CONFIG_FILE)" \
-		-t hw15_$(MICROSERVICE):dev \
+		-t hw15_$(MICROSERVICE)_dev:dev \
 		-f docker/Dockerfile .
 
 docker-build:
@@ -99,13 +99,13 @@ docker-build:
 
 docker-run-calendar:
 	MICROSERVICE=calendar 	CONFIG_FILE=calendar.standalone.yaml	make docker-build-microservice
-	docker run -it --name=hw15_calendar_dev --net hw15_network_dev --ip 172.133.0.2 -p 0.0.0.0:8888:8080   -p 0.0.0.0:5000:5000 -d hw15_calendar:dev 
+	docker run -it --name=hw15_calendar_dev --net hw15_network_dev --ip 172.133.0.2 -p 0.0.0.0:8080:8000   -p 0.0.0.0:5080:5000 -d hw15_calendar_dev:dev 
 
 docker-run-rabbitmq:
-	docker run     --name=hw15_rabbitmq_dev --net hw15_network_dev --ip 172.133.0.3 -p 0.0.0.0:15672:15672 -p 0.0.0.0:5672:5672 -d -e RABBITMQ_DEFAULT_USER=hw15user -e RABBITMQ_DEFAULT_PASS=hw15user rabbitmq:3.10.7-management
+	docker run     --name=hw15_rabbitmq_dev --net hw15_network_dev --ip 172.133.0.3 -p 0.0.0.0:18672:15672 -p 0.0.0.0:8672:5672 -d -e RABBITMQ_DEFAULT_USER=hw15user -e RABBITMQ_DEFAULT_PASS=hw15user rabbitmq:3.10.7-management
 
 docker-run-microservice: docker-build-microservice # Example: make MICROSERVICE=rmqdevops CONFIG_FILE=rmqdevops.standalone.yaml docker-run-microservice
-	docker run -it --name=hw15_$(MICROSERVICE)_dev -d hw15_$(MICROSERVICE):dev 
+	docker run -it --name=hw15_$(MICROSERVICE)_dev -d hw15_$(MICROSERVICE)_dev:dev 
 
 docker-run: docker-deconfigure \
 			docker-configure
@@ -180,56 +180,51 @@ docker-compose-deconfigure:
 docker-compose-up: docker-compose-deconfigure
 	BUILDKIT_PROGRESS=plain docker-compose -f ./docker/docker-compose.yaml up --build -d --remove-orphans
 
+docker-compose-up-logs: docker-compose-deconfigure
+	BUILDKIT_PROGRESS=plain docker-compose -f ./docker/docker-compose.yaml up --build
+
 docker-compose-down:
 	docker-compose -f ./docker/docker-compose.yaml down
 
 # Internal test
 
 integration_test-deconfigure:
-	docker rmi -f hw15_checker_prod		2> /dev/null || true
-	docker rmi -f hw15_dataset_prod		2> /dev/null || true
-	docker rmi -f hw15_archiver_prod	2> /dev/null || true 
-	docker rmi -f hw15_sender_prod		2> /dev/null || true
-	docker rmi -f hw15_sheduler_prod	2> /dev/null || true
-	docker rmi -f hw15_rmqdevops_prod	2> /dev/null || true
-	docker rmi -f hw15_rabbitmq_prod	2> /dev/null || true
-	docker rmi -f hw15_goose_prod		2> /dev/null || true
-	docker rmi -f hw15_pgadmin_prod		2> /dev/null || true
-	docker rmi -f hw15_postgres_prod	2> /dev/null || true
-	docker rmi -f hw15_calendar_prod	2> /dev/null || true
-	docker rm  -f hw15_checker_prod		2> /dev/null || true
-	docker rm  -f hw15_dataset_prod		2> /dev/null || true
-	docker rm  -f hw15_archiver_prod	2> /dev/null || true 
-	docker rm  -f hw15_sender_prod		2> /dev/null || true
-	docker rm  -f hw15_sheduler_prod	2> /dev/null || true
-	docker rm  -f hw15_rmqdevops_prod	2> /dev/null || true
-	docker rm  -f hw15_rabbitmq_prod	2> /dev/null || true
-	docker rm  -f hw15_goose_prod		2> /dev/null || true
-	docker rm  -f hw15_pgadmin_prod		2> /dev/null || true
-	docker rm  -f hw15_postgres_prod	2> /dev/null || true
-	docker rm  -f hw15_calendar_prod	2> /dev/null || true
-	docker network rm hw15_private_prod	2> /dev/null || true
-	docker network rm hw15_public_prod	2> /dev/null || true
+	docker rmi -f hw15_checker_integration_test		2> /dev/null || true
+	docker rmi -f hw15_dataset_integration_test		2> /dev/null || true
+	docker rmi -f hw15_archiver_integration_test	2> /dev/null || true 
+	docker rmi -f hw15_sender_integration_test		2> /dev/null || true
+	docker rmi -f hw15_sheduler_integration_test	2> /dev/null || true
+	docker rmi -f hw15_rmqdevops_integration_test	2> /dev/null || true
+	docker rmi -f hw15_rabbitmq_integration_test	2> /dev/null || true
+	docker rmi -f hw15_goose_integration_test		2> /dev/null || true
+	docker rmi -f hw15_pgadmin_integration_test		2> /dev/null || true
+	docker rmi -f hw15_postgres_integration_test	2> /dev/null || true
+	docker rmi -f hw15_calendar_integration_test	2> /dev/null || true
+	docker rm  -f hw15_checker_integration_test		2> /dev/null || true
+	docker rm  -f hw15_dataset_integration_test		2> /dev/null || true
+	docker rm  -f hw15_archiver_integration_test	2> /dev/null || true 
+	docker rm  -f hw15_sender_integration_test		2> /dev/null || true
+	docker rm  -f hw15_sheduler_integration_test	2> /dev/null || true
+	docker rm  -f hw15_rmqdevops_integration_test	2> /dev/null || true
+	docker rm  -f hw15_rabbitmq_integration_test	2> /dev/null || true
+	docker rm  -f hw15_goose_integration_test		2> /dev/null || true
+	docker rm  -f hw15_pgadmin_integration_test		2> /dev/null || true
+	docker rm  -f hw15_postgres_integration_test	2> /dev/null || true
+	docker rm  -f hw15_calendar_integration_test	2> /dev/null || true
+	docker network rm hw15_private_integration_test	2> /dev/null || true
+	docker network rm hw15_public_integration_test	2> /dev/null || true
 
 integration_test: integration_test-deconfigure
-	BUILDKIT_PROGRESS=plain docker-compose -f ./docker/docker-compose.yaml -f ./docker/docker-compose.checker.yaml up --exit-code-from checker
-# docker logs hw15_checker_prod
-# --abort-on-container-exit no need with migrate	
-# --abort-on-container-exit 
-
-integration_test-checker:
-	BUILDKIT_PROGRESS=plain docker-compose -f ./docker/docker-compose.checker.yaml up
+	BUILDKIT_PROGRESS=plain docker-compose -f ./docker/docker-compose.yaml -f ./docker/docker-compose.integration_test.yaml up -d
+	docker logs -f hw15_checker_integration_test 
 
 # Be careful
-
-# prune:
-# 	docker stop -f $$(docker ps -a -q) || true
-# 	docker rm -f $$(docker ps -a -q) || true
-# 	docker rmi -f $$(docker images -q) || true
-# 	docker image prune -f
-# 	docker network prune -f
-# 	docker container prune -f
-
-#
+prune:
+	docker stop -f $$(docker ps -a -q) || true
+	docker rm -f $$(docker ps -a -q) || true
+	docker rmi -f $$(docker images -q) || true
+	docker image prune -f
+	docker network prune -f
+	docker container prune -f
 
 .PHONY: build run build-img run-img version test lint

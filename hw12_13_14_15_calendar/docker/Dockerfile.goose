@@ -3,7 +3,7 @@
 FROM golang:1.19
 
 ENV NOTATION postgres
-ENV DSN "host=hw15_postgres_prod port=5432 dbname=hw15 user=hw15user password=hw15user sslmode=disable"
+ENV DSN "host=hw15_postgres_prod port=9432 dbname=hw15 user=hw15user password=hw15user sslmode=disable"
 ENV ACTION up
 
 # Prepare

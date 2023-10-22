@@ -1,0 +1,91 @@
+version: "3.9"
+networks:
+  public:
+    name: hw15_public_integration_test
+    ipam:
+     config:
+       - subnet: 172.40.0.0/24
+         gateway: 172.40.0.1
+  private:
+    name: hw15_private_integration_test
+services:
+  postgres:
+    image: postgres:13.3
+    container_name: hw15_postgres_integration_test
+    hostname: hw15_postgres_integration_test
+  pg_migration:
+    image: hw15_goose_integration_test
+    container_name: hw15_goose_integration_test
+    hostname: hw15_goose_integration_test
+    environment:
+      DSN: host=hw15_postgres_integration_test user=hw15user password=hw15user dbname=hw15 sslmode=disable port=5432
+  pgadmin:
+    container_name: hw15_pgadmin_integration_test
+    hostname: hw15_pgadmin_integration_test
+    networks:
+      public:
+        ipv4_address: 172.40.0.4
+  rabbitmq:
+    image: rabbitmq:3.10.7-management
+    container_name: hw15_rabbitmq_integration_test
+    hostname: hw15_rabbitmq_integration_test
+  rmq_migration:
+    image: hw15_rmqdevops_integration_test
+    container_name: hw15_rmqdevops_integration_test
+    hostname: hw15_rmqdevops_integration_test
+    build:
+      args:
+        CONFIG_FILE: rmqdevops.integration_test.yaml
+  sheduler:
+    image: hw15_sheduler_integration_test
+    container_name: hw15_sheduler_integration_test
+    hostname: hw15_sheduler_integration_test
+    build:
+      args:
+        CONFIG_FILE: sheduler.integration_test.yaml
+  archiver:
+    image: hw15_archiver_integration_test
+    container_name: hw15_archiver_integration_test
+    hostname: hw15_archiver_integration_test
+    build:
+      args:
+        CONFIG_FILE: archiver.integration_test.yaml
+  sender:
+    image: hw15_sender_integration_test
+    container_name: hw15_sender_integration_test
+    hostname: hw15_sender_integration_test
+    build:
+      args:
+        CONFIG_FILE: sender.integration_test.yaml
+  calendar:
+    image: hw15_calendar_integration_test
+    container_name: hw15_calendar_integration_test
+    hostname: hw15_calendar_integration_test
+    build:
+      args:
+        CONFIG_FILE: calendar.integration_test.yaml
+    networks:
+      public:
+        ipv4_address: 172.40.0.2
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:8000/api/version || exit 1"]
+      interval: 60s
+      retries: 5
+      start_period: 20s
+      timeout: 10s
+  checker:
+    depends_on:
+      calendar:
+        condition: service_healthy
+    image: hw15_checker_integration_test
+    container_name: hw15_checker_integration_test
+    hostname: checker
+    build:
+      context: ../.
+      args:
+        MICROSERVICE: checker
+        CONFIG_FILE: checker.integration_test.yaml
+      dockerfile: ./docker/Dockerfile
+    networks:
+      public:
+      private:

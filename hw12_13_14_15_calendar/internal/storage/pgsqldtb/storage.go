@@ -58,7 +58,7 @@ func (s *Storage) ReadEvent(pk int) (*models.Event, error) {
 	var e models.Event
 	sqlStatement := `
 	SELECT "pk", "title", "description", "startat", "durationseconds", "owner", "notifyearlyseconds", "sheduled"
-	FROM hw15calendar.events WHERE "pk"=$1`
+	FROM hw15calendar.events WHERE "pk"=$1;`
 	row := s.connection.QueryRow(sqlStatement, pk)
 	err := row.Scan(&(e.PK),
 		&(e.Title), &(e.Description), &(e.StartAt), &(e.Duration),
@@ -109,7 +109,7 @@ func (s *Storage) ListEvents() ([]models.Event, error) {
 	var events []models.Event
 	sqlStatement := `
 	SELECT "pk", "title", "description", "startat", "durationseconds", "owner", "notifyearlyseconds", "sheduled"
-	FROM hw15calendar.events`
+	FROM hw15calendar.events;`
 	rows, err := s.connection.Query(sqlStatement)
 	if err != nil {
 		return nil, err
@@ -131,7 +131,7 @@ func (s *Storage) ListNotSheduledEvents() ([]models.Event, error) {
 	sqlStatement := `
 	SELECT "pk", "title", "description", "startat", "durationseconds", "owner", "notifyearlyseconds", "sheduled"
 	FROM hw15calendar.events
-	WHERE "sheduled" IF FALSE`
+	WHERE "sheduled" IS NOT TRUE;`
 	rows, err := s.connection.Query(sqlStatement)
 	if err != nil {
 		return nil, err
