@@ -10,7 +10,7 @@ import (
 	pgsqldtb "hw12_13_14_15_calendar/internal/storage/pgsqldtb"
 )
 
-var postgresDsn = "user=hw12user password=hw12user host='127.0.0.1' database=hw12calendar search_path=hw12calendar"
+var postgresDsn = "user=hw15user password=hw15user host='127.0.0.1' database=hw15 search_path=hw15calendar"
 
 var _ = pgsqldtb.NewStorage(postgresDsn) // TODO: need mock
 

@@ -190,7 +190,7 @@ func TestServerStopByCancel(_ *testing.T) {
 func TestServerCode(t *testing.T) {
 	ctx, ctxCancel := context.WithCancel(context.Background())
 	host := "localhost"
-	var port uint16 = 8080
+	var port uint16 = 8090
 	// Server
 	httpOutput := &bytes.Buffer{}
 	log := logger.NewLogger(logger.INFO, httpOutput)
@@ -198,8 +198,8 @@ func TestServerCode(t *testing.T) {
 	mainLogger := logger.NewLogger(logger.INFO, os.Stdout)
 	calendarApp := app.NewApp(mainLogger, storage.NewStorage())
 	httpServer := NewHTTPServer(
-		"localhost",
-		8080,
+		host,
+		port,
 		10*time.Second,
 		10*time.Second,
 		10*time.Second,

@@ -1,39 +1,16 @@
-BIN := "./bin/calendar.goc"
+BIN_DIR="./bin"
 DOCKER_IMG="calendar:develop"
 
 GIT_HASH := $(shell git log --format="%h" -n 1)
 LDFLAGS := -X main.release="develop" -X main.buildDate=$(shell date -u +%Y-%m-%dT%H:%M:%S) -X main.gitHash=$(GIT_HASH)
 
-build:
-	go build -v -o "./bin/calendar.goc" -ldflags "$(LDFLAGS)" ./cmd/calendar
-	go build -v -o "./bin/sheduler.goc" -ldflags "$(LDFLAGS)" ./cmd/sheduler
-	go build -v -o "./bin/archiver.goc" -ldflags "$(LDFLAGS)" ./cmd/archiver
-	go build -v -o "./bin/sender.goc" -ldflags "$(LDFLAGS)" ./cmd/sender
-	go build -v -o "./bin/mgm_rmqdevops.goc" -ldflags "$(LDFLAGS)" ./cmd/management/rmqdevops
-	go build -v -o "./bin/mgm_dataset.goc" -ldflags "$(LDFLAGS)" ./cmd/management/dataset
-
-run: build
-	$(BIN) --config ./configs/config.yaml
-
-build-img:
-	docker build \
-		--build-arg=LDFLAGS="$(LDFLAGS)" \
-		-t $(DOCKER_IMG) \
-		-f build/Dockerfile .
+# General
 
 protoc:
-	protoc --go-grpc_out=./internal/server/rpc/api --go_out=./internal/server/rpc/api ./internal/server/rpc/protofiles/calendar.proto
-
-run-img: build-img
-	docker run $(DOCKER_IMG)
-
-version: build
-	$(BIN) version
-
-migrate: 
-	goose -dir ./migrations/migrations/ postgres "$(PG_DSN)" up
+	protoc --go-grpc_out=./internal/server/rpc/rpcapi --go_out=./internal/server/rpc/rpcapi ./internal/server/rpc/protofiles/calendar.proto
 
 test:
+	go clean -testcache
 	go test -race ./internal/...
 
 install-lint-deps:
@@ -44,5 +21,47 @@ lint: install-lint-deps
 
 fixlint:
 	golangci-lint run --out-format=github-actions --fix ./...
+
+# Build
+
+build:
+	make MICROSERVICE=calendar 	build-microservice
+	make MICROSERVICE=sheduler 	build-microservice
+	make MICROSERVICE=archiver 	build-microservice
+	make MICROSERVICE=sender 	build-microservice
+	make MICROSERVICE=rmqdevops build-microservice
+	make MICROSERVICE=dataset 	build-microservice
+
+build-microservice: # make MICROSERVICE=calendar build-microservice
+	go build -v -o "$(BIN_DIR)/$(MICROSERVICE)"  -ldflags "$(LDFLAGS)" ./cmd/$(MICROSERVICE)
+
+go-run: # make MICROSERVICE=checker go-run
+	go run ./cmd/$(MICROSERVICE)/ --config ./configs/$(MICROSERVICE).yaml
+
+run-microservice: build # make MICROSERVICE=calendar run-microservice
+	"./bin/$(MICROSERVICE)" --config ./configs/$(MICROSERVICE).yaml
+
+version: build  # make MICROSERVICE=calendar build-microservice
+	"./bin/$(MICROSERVICE)" version
+
+migrate-sql-up: # make PG_DSN="host=hw15_postgres_prod user=hw15user password=hw15user dbname=hw15 sslmode=disable port=5432" migrate-sql-up
+	goose -dir ./migrations/migrations/ postgres "$(PG_DSN)" up
+
+migrate-sql-down:
+	goose -dir ./migrations/migrations/ postgres "$(PG_DSN)" down
+
+migrate-rmq-up:
+	go run ./cmd/management/rmqdevops/ --config ./configs/rmqdevops.yaml
+
+migrate-rmq-down:
+	go run ./cmd/management/rmqdevops/ --drop --config ./configs/rmqdevops.yaml
+
+migrate-rmq-up-with-drop:
+	go run ./cmd/management/rmqdevops/ --with-drop --config ./configs/rmqdevops.yaml
+
+dataset-example:
+	go run ./cmd/dataset/ --config ./configs/calendar.yaml
+
+# 
 
 .PHONY: build run build-img run-img version test lint

@@ -58,21 +58,21 @@ $ cd ./hw12_13_14_15_calendar/cmd/calendar/
 ### Предварительно для Postgres
 
 ```sql
-CREATE USER hw12user WITH PASSWORD 'hw12user';
-CREATE DATABASE hw12calendar OWNER hw12user;
+CREATE USER hw15user WITH PASSWORD 'hw15user';
+CREATE DATABASE hw15calendar OWNER hw15user;
 ```
 
 ```text
 # pg_hba.conf
-host    all    hw12user    127.0.0.1/32    trust
+host    all    hw15user    127.0.0.1/32    trust
 ```
 
 Проверка корректности настройки:
 
 ```bash
-psql -h localhost -p 5432 -d hw12calendar -U hw12user -W
+psql -h localhost -p 5432 -d hw15calendar -U hw15user -W
 
-goose -dir ./migrations/migrations/ postgres "user=hw12user password=hw12user host='127.0.0.1' database=hw12calendar" status
+goose -dir ./migrations/migrations/ postgres "user=hw15user password=hw15user host='127.0.0.1' database=hw15calendar" status
 
     2023/07/25 03:18:59     Applied At                  Migration
     2023/07/25 03:18:59     =======================================
@@ -132,9 +132,9 @@ make lint
     (which golangci-lint > /dev/null) || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b /home/b/go/bin v1.50.1
     golangci-lint run --out-format=github-actions ./...
 
-make migrate PG_DSN="user=hw12user password=hw12user host='127.0.0.1' database=hw12calendar"
+make migrate PG_DSN="user=hw15user password=hw15user host='127.0.0.1' database=hw15calendar"
 
-    goose -dir ./migrations/migrations/ postgres "user=hw12user password=hw12user host='127.0.0.1' database=hw12calendar" up
+    goose -dir ./migrations/migrations/ postgres "user=hw15user password=hw15user host='127.0.0.1' database=hw15calendar" up
     2023/07/25 03:13:51 OK   20230722000001_create_events.sql (17.42ms)
     2023/07/25 03:13:51 goose: no migrations to run. current version: 20230722000001
 ```
