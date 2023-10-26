@@ -13,7 +13,6 @@ use (
 	hw12_13_14_15_calendar/cmd/sheduler
 	hw12_13_14_15_calendar/cmd/sender
 	hw12_13_14_15_calendar/cmd/archiver
-	hw12_13_14_15_calendar/cmd/checker
 	hw10_program_optimization
 	hw11_telnet_client
 	report_templator
