@@ -1,0 +1,13 @@
+Source: 
+  DSN: "amqp://hw15user:hw15user@hw15_rabbitmq_prod:5672/"
+  QueueName: q_noticies_sheduled
+  GetbackToExchangeName: notice_exchange
+  GetbackKey: shedule
+Target:
+  DSN: "amqp://hw15user:hw15user@hw15_rabbitmq_prod:5672/"
+  ExchangeName: notice_exchange
+  RoutingKey: archive
+TimeoutSec: 10
+log:
+  level: INFO
+ 

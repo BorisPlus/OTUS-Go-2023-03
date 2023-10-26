@@ -1,0 +1,166 @@
+version: "3.9"
+networks:
+  public:
+    name: hw15_public_prod
+    driver: bridge
+    ipam:
+     config:
+       - subnet: 172.20.0.0/24
+         gateway: 172.20.0.1
+  private:
+    internal: true
+    name: hw15_private_prod
+services:
+  postgres:
+    image: postgres:13.3
+    container_name: hw15_postgres_prod
+    hostname: hw15_postgres_prod
+    restart: always
+    environment:
+      POSTGRES_DB: "hw15"
+      POSTGRES_USER: "hw15user"
+      POSTGRES_PASSWORD: "hw15user"
+    volumes:
+      - .:/docker-entrypoint-initdb.d
+    networks:
+      private:
+    ports:
+      - 0.0.0.0:5432:5432
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d hw15 -U hw15user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  pg_migration:
+    depends_on:
+      postgres:
+        condition: service_healthy
+    image: hw15_goose_prod
+    container_name: hw15_goose_prod
+    hostname: hw15_goose_prod
+    build:
+      context: ../.
+      dockerfile: ./docker/Dockerfile.goose
+    environment:
+      NOTATION: postgres
+      DSN: host=hw15_postgres_prod user=hw15user password=hw15user dbname=hw15 sslmode=disable port=5432
+      ACTION: up
+    networks:
+      private:
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: hw15_pgadmin_prod
+    hostname: hw15_pgadmin_prod
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: hw15user@hw15user.com
+      PGADMIN_DEFAULT_PASSWORD: hw15user
+    networks:
+      public:
+        ipv4_address: 172.20.0.4
+      private:
+    ports:
+      - 0.0.0.0:8883:80
+  rabbitmq:
+    image: rabbitmq:3.10.7-management
+    container_name: hw15_rabbitmq_prod
+    hostname: hw15_rabbitmq_prod
+    restart: always
+    environment:
+      - RABBITMQ_DEFAULT_USER=hw15user
+      - RABBITMQ_DEFAULT_PASS=hw15user
+    ports:
+      - 0.0.0.0:5672:5672
+      # - 0.0.0.0:15672:15672
+    networks:
+      private:
+    healthcheck:
+      test: rabbitmq-diagnostics -q status && rabbitmq-diagnostics -q check_local_alarms && rabbitmq-diagnostics check_port_connectivity
+      interval: 30s
+      timeout: 30s
+      retries: 10
+  rmq_migration:
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    image: hw15_rmqdevops_prod
+    container_name: hw15_rmqdevops_prod
+    hostname: hw15_rmqdevops_prod
+    build:
+      context: ../.
+      args:
+        MICROSERVICE: rmqdevops
+        CONFIG_FILE: rmqdevops.compose.yaml
+      dockerfile: ./docker/Dockerfile
+    networks:
+      private:
+  sheduler:
+    depends_on:
+      pg_migration:
+        condition: service_completed_successfully
+      rmq_migration:
+        condition: service_completed_successfully
+    image: hw15_sheduler_prod
+    container_name: hw15_sheduler_prod
+    hostname: hw15_sheduler_prod
+    restart: always
+    build:
+      context: ../.
+      args:
+        MICROSERVICE: sheduler
+        CONFIG_FILE: sheduler.compose.yaml
+      dockerfile: ./docker/Dockerfile
+    networks:
+      private:
+  archiver:
+    depends_on:
+      rmq_migration:
+        condition: service_completed_successfully
+    image: hw15_archiver_prod
+    container_name: hw15_archiver_prod
+    hostname: hw15_archiver_prod
+    build:
+      context: ../.
+      args:
+        MICROSERVICE: archiver
+        CONFIG_FILE: archiver.compose.yaml
+      dockerfile: ./docker/Dockerfile
+    networks:
+      private:
+  sender:
+    depends_on:
+      rmq_migration:
+        condition: service_completed_successfully
+    image: hw15_sender_prod
+    container_name: hw15_sender_prod
+    hostname: hw15_sender_prod
+    build:
+      context: ../.
+      args:
+        MICROSERVICE: sender
+        CONFIG_FILE: sender.compose.yaml
+      dockerfile: ./docker/Dockerfile
+    networks:
+      private:
+  calendar:
+    depends_on:
+      pg_migration:
+        condition: service_completed_successfully
+    image: hw15_calendar_prod
+    container_name: hw15_calendar_prod
+    hostname: hw15_calendar_prod
+    restart: always
+    build:
+      context: ../.
+      args:
+        MICROSERVICE: calendar
+        CONFIG_FILE: calendar.compose.yaml
+      dockerfile: ./docker/Dockerfile
+    networks:
+      public:
+        ipv4_address: 172.20.0.2
+      private:
+    ports:
+      - '0.0.0.0:8888:8000'
+      - '0.0.0.0:5000:5000'
+# BUILDKIT_PROGRESS=plain docker-compose -f ./docker/docker-compose.yaml up -d --build --remove-orphans

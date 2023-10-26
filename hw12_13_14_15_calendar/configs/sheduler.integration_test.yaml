@@ -1,0 +1,10 @@
+Source:
+  DSN: "hw15_calendar_integration_test:5000"
+Target: 
+  DSN: "amqp://hw15user:hw15user@hw15_rabbitmq_integration_test:5672/"
+  ExchangeName: notice_exchange
+  RoutingKey: shedule
+TimeoutSec: 5
+log:
+  level: INFO
+ 
