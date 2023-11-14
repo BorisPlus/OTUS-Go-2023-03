@@ -35,6 +35,7 @@ Thumbs.db
 *.log
 *.txt
 *.goc
+go.work.sum
 # test.sh
 **/main
 **/test
