@@ -77,7 +77,7 @@
 
 16) [«Проект»](https://github.com/OtusGolang/final_project)
 
-         [Сервис предпросмотра изображений](https://github.com/BorisPlus/image-preview-service)
+      > [Сервис предпросмотра изображений](https://github.com/BorisPlus/image-preview-service)
 
 ---
 [Инструкция по сдаче ДЗ](https://github.com/OtusGolang/home_work/wiki#%D0%A1%D1%82%D1%83%D0%B4%D0%B5%D0%BD%D1%82%D0%B0%D0%BC).
