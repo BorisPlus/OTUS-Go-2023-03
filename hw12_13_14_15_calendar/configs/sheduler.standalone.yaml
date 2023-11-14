@@ -1,0 +1,10 @@
+Source:
+  DSN: "172.133.0.1:5080"
+Target: 
+  DSN: "amqp://hw15user:hw15user@172.133.0.1:8672/"
+  ExchangeName: notice_exchange
+  RoutingKey: shedule
+TimeoutSec: 5
+log:
+  level: INFO
+ 
